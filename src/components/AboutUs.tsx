@@ -90,8 +90,8 @@ const AboutUs = () => {
           </div>
 
           <div className="about-story-visual">
-            <img src="/hero-bowl.png" alt="Healthy Indian meal" className="about-img about-img--main" />
-            <img src="/hero-plate.png" alt="Balanced plate" className="about-img about-img--accent" />
+            <img src="/indian-thali.png"         alt="Healthy Indian meal" className="about-img about-img--main" />
+            <img src="/grilled-chicken-salad.png" alt="Balanced plate"      className="about-img about-img--accent" />
             <div className="about-img-badge">
               <Award size={18} strokeWidth={2} />
               <span>FSSAI Certified Dietitians</span>

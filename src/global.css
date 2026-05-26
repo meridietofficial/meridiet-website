@@ -24,6 +24,11 @@ html {
   scroll-behavior: smooth;
 }
 
+/* offset all anchor sections so the fixed navbar doesn't cover the heading */
+section[id] {
+  scroll-margin-top: var(--navbar-h);
+}
+
 body {
   font-family: 'Poppins', sans-serif;
   color: var(--text-dark);

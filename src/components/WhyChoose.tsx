@@ -44,8 +44,11 @@ const WhyChoose = () => {
     <section className="why-section" id="why">
 
       {/* decorative food images */}
-      <img src="/hero-bowl.png" alt="" className="why-deco why-deco--bowl" aria-hidden="true" />
-      <img src="/hero-plate.png" alt="" className="why-deco why-deco--plate" aria-hidden="true" />
+      <img src="/rainbow-buddha-bowl.png"   alt="" className="why-deco why-deco--tl" aria-hidden="true" />
+      <img src="/fruit-plate-colorful.png"  alt="" className="why-deco why-deco--tr" aria-hidden="true" />
+      <img src="/grilled-chicken-salad.png" alt="" className="why-deco why-deco--bl" aria-hidden="true" />
+      <img src="/salmon-avocado-bowl.png"   alt="" className="why-deco why-deco--br" aria-hidden="true" />
+      <img src="/avocado-egg-bowl.png"      alt="" className="why-deco why-deco--mc" aria-hidden="true" />
 
       <div className="container">
 

@@ -51,8 +51,9 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
           <div className="hv-blob" />
 
           {/* food images behind phone */}
-          <img src="/hero-bowl.png"  alt="" className="hv-food hv-food-left"  aria-hidden="true" />
-          <img src="/hero-plate.png" alt="" className="hv-food hv-food-right" aria-hidden="true" />
+          <img src="/rainbow-buddha-bowl.png"   alt="" className="hv-food hv-food-left"   aria-hidden="true" />
+          <img src="/fruit-plate-colorful.png" alt="" className="hv-food hv-food-right"  aria-hidden="true" />
+          <img src="/indian-thali.png"         alt="" className="hv-food hv-food-bottom" aria-hidden="true" />
 
           {/* leaf decoration */}
           <img src="/hero-leaf.png" alt="" className="hv-leaf" aria-hidden="true" />

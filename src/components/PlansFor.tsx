@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 
 const plans = [
-  { icon: 'fa-solid fa-scale-balanced', label: 'Weight Loss',    desc: 'Lose weight sustainably',            color: '#3b82f6', bg: '#eff6ff' },
-  { icon: 'fa-solid fa-droplet',        label: 'Diabetes',       desc: 'Control blood sugar naturally',      color: '#ef4444', bg: '#fef2f2' },
-  { icon: 'fa-solid fa-venus',          label: 'PCOS',           desc: 'Balance hormones with food',         color: '#ec4899', bg: '#fdf2f8' },
-  { icon: 'fa-solid fa-stethoscope',    label: 'Thyroid',        desc: 'Support thyroid function',           color: '#8b5cf6', bg: '#f5f3ff' },
-  { icon: 'fa-solid fa-heart',          label: 'Healthy Living', desc: 'Build lifelong healthy habits',      color: '#2d8c4e', bg: '#e8f5ee' },
-  { icon: 'fa-solid fa-leaf',           label: 'Vegetarian',     desc: '100% plant-based nutrition',         color: '#16a34a', bg: '#f0fdf4' },
-  { icon: 'fa-solid fa-seedling',       label: 'Vegan',          desc: 'Dairy-free & plant-powered',         color: '#0d9488', bg: '#f0fdfa' },
-  { icon: 'fa-solid fa-dumbbell',       label: 'Muscle Gain',    desc: 'Build lean muscle & strength',       color: '#f97316', bg: '#fff7ed' },
-  { icon: 'fa-solid fa-baby',           label: 'Pregnancy',      desc: 'Nourish you & your baby',            color: '#f43f5e', bg: '#fff1f2' },
-  { icon: 'fa-solid fa-person-cane',    label: 'Senior Health',  desc: 'Age gracefully with nutrition',      color: '#d97706', bg: '#fffbeb' },
-  { icon: 'fa-solid fa-heart-pulse',    label: 'Heart Health',   desc: 'Protect your cardiovascular health', color: '#dc2626', bg: '#fef2f2' },
-  { icon: 'fa-solid fa-bacterium',      label: 'Gut Health',     desc: 'Heal your gut from inside out',      color: '#7c3aed', bg: '#f5f3ff' },
+  { icon: 'fa-solid fa-scale-balanced', label: 'Weight Loss',    desc: 'Lose weight sustainably',            color: '#3b82f6', bg: '#eff6ff', img: '/salad-plate-top-view.png' },
+  { icon: 'fa-solid fa-droplet',        label: 'Diabetes',       desc: 'Control blood sugar naturally',      color: '#ef4444', bg: '#fef2f2', img: '/veggie-salad-bowl.png' },
+  { icon: 'fa-solid fa-venus',          label: 'PCOS',           desc: 'Balance hormones with food',         color: '#ec4899', bg: '#fdf2f8', img: '/fruit-bowl.png' },
+  { icon: 'fa-solid fa-stethoscope',    label: 'Thyroid',        desc: 'Support thyroid function',           color: '#8b5cf6', bg: '#f5f3ff', img: '/salad-glass-bowl.png' },
+  { icon: 'fa-solid fa-heart',          label: 'Healthy Living', desc: 'Build lifelong healthy habits',      color: '#2d8c4e', bg: '#e8f5ee', img: '/rainbow-buddha-bowl.png' },
+  { icon: 'fa-solid fa-leaf',           label: 'Vegetarian',     desc: '100% plant-based nutrition',         color: '#16a34a', bg: '#f0fdf4', img: '/salad-brown-bowl-left-view.png' },
+  { icon: 'fa-solid fa-seedling',       label: 'Vegan',          desc: 'Dairy-free & plant-powered',         color: '#0d9488', bg: '#f0fdfa', img: '/fruit-bowl-side-view.png' },
+  { icon: 'fa-solid fa-dumbbell',       label: 'Muscle Gain',    desc: 'Build lean muscle & strength',       color: '#f97316', bg: '#fff7ed', img: '/grilled-chicken-salad.png' },
+  { icon: 'fa-solid fa-baby',           label: 'Pregnancy',      desc: 'Nourish you & your baby',            color: '#f43f5e', bg: '#fff1f2', img: '/fruit-plate-colorful.png' },
+  { icon: 'fa-solid fa-person-cane',    label: 'Senior Health',  desc: 'Age gracefully with nutrition',      color: '#d97706', bg: '#fffbeb', img: '/salad-white-bowl.png' },
+  { icon: 'fa-solid fa-heart-pulse',    label: 'Heart Health',   desc: 'Protect your cardiovascular health', color: '#dc2626', bg: '#fef2f2', img: '/salmon-avocado-bowl.png' },
+  { icon: 'fa-solid fa-bacterium',      label: 'Gut Health',     desc: 'Heal your gut from inside out',      color: '#7c3aed', bg: '#f5f3ff', img: '/salad-plate.png' },
 ]
 
 const CARD_STEP = 245
@@ -79,7 +79,15 @@ const PlansFor = () => {
                 } as React.CSSProperties}
                 onClick={() => setActive(i)}
               >
-                <div className="plan-card-top">
+                <div
+                  className="plan-card-top"
+                  style={{
+                    backgroundImage: `url(${p.img})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  } as React.CSSProperties}
+                >
+                  <div className="plan-card-top-overlay" style={{ '--pc': p.color } as React.CSSProperties} />
                   <div className="plan-icon-wrap">
                     <i className={p.icon} />
                   </div>

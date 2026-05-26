@@ -29,12 +29,10 @@ const CTA = ({ onOpenForm }: { onOpenForm: () => void }) => {
           </div>
 
           <div className="cta-decor">
-            <div className="cta-emoji-pile">
-              {['🥗', '🍛', '🥘', '🫓', '🌿', '🥦'].map((e, i) => (
-                <span key={i} className="cta-emoji">
-                  {e}
-                </span>
-              ))}
+            <div className="cta-food-stack">
+              <img src="/indian-thali.png"          alt="Indian thali"   className="cta-food cta-food--back"   />
+              <img src="/rainbow-buddha-bowl.png"   alt="Buddha bowl"    className="cta-food cta-food--mid"    />
+              <img src="/fruit-plate-colorful.png"  alt="Fruit plate"    className="cta-food cta-food--front"  />
             </div>
           </div>
         </div>
