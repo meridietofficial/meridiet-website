@@ -104,6 +104,8 @@ const PlansFor = () => {
           />
         ))}
       </div>
+
+      <p className="plans-more">And many more personalized goals & conditions</p>
     </section>
   )
 }

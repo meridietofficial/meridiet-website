@@ -1,4 +1,5 @@
-import { ClipboardList, UserCheck, FileText, BadgeCheck } from 'lucide-react'
+import React from 'react'
+import { ClipboardList, UserCheck, FileText, BadgeCheck, ChevronRight } from 'lucide-react'
 
 const steps = [
   {
@@ -44,14 +45,22 @@ const HowItWorks = () => {
           {steps.map((s, i) => {
             const Icon = s.icon
             return (
-              <div key={i} className="how-card">
-                <div className="how-card-num">{s.step}</div>
-                <div className="how-card-icon">
-                  <Icon size={32} strokeWidth={1.6} />
+              <React.Fragment key={i}>
+                <div className="how-card">
+                  <div className="how-card-num">{s.step}</div>
+                  <div className="how-card-icon">
+                    <Icon size={24} strokeWidth={1.6} />
+                  </div>
+                  <h3 className="how-card-title">{s.title}</h3>
+                  <p className="how-card-desc">{s.desc}</p>
                 </div>
-                <h3 className="how-card-title">{s.title}</h3>
-                <p className="how-card-desc">{s.desc}</p>
-              </div>
+                {i < steps.length - 1 && (
+                  <div className="how-arrow">
+                    <ChevronRight size={18} strokeWidth={2} />
+                    <ChevronRight size={18} strokeWidth={2} />
+                  </div>
+                )}
+              </React.Fragment>
             )
           })}
         </div>

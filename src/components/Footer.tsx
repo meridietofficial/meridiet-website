@@ -1,3 +1,11 @@
+const socialLinks = [
+  { icon: 'fa-brands fa-instagram',  label: 'Instagram', cls: 'social-icon--insta' },
+  { icon: 'fa-brands fa-facebook-f', label: 'Facebook',  cls: 'social-icon--fb'    },
+  { icon: 'fa-brands fa-x-twitter',  label: 'X',         cls: 'social-icon--tw'    },
+  { icon: 'fa-brands fa-youtube',    label: 'YouTube',   cls: 'social-icon--yt'    },
+  { icon: 'fa-brands fa-linkedin-in',label: 'LinkedIn',  cls: 'social-icon--li'    },
+]
+
 const Footer = () => {
   return (
     <footer className="footer">
@@ -11,25 +19,18 @@ const Footer = () => {
               India's most personalized nutrition platform, crafted by expert dietitians. Real Indian food. Real results.
             </p>
             <div className="footer-social">
-              <a href="#" aria-label="Facebook" className="social-icon">
-                f
-              </a>
-              <a href="#" aria-label="Instagram" className="social-icon">
-                ig
-              </a>
-              <a href="#" aria-label="Twitter" className="social-icon">
-                tw
-              </a>
-              <a href="#" aria-label="YouTube" className="social-icon">
-                yt
-              </a>
+              {socialLinks.map((s, i) => (
+                <a key={i} href="#" aria-label={s.label} className={`social-icon ${s.cls}`}>
+                  <i className={s.icon} />
+                </a>
+              ))}
             </div>
           </div>
 
           <div className="footer-col">
             <h4>Company</h4>
             <a href="#about">About Us</a>
-            <a href="#blog">Blog</a>
+            <a href="#faq">FAQ</a>
             <a href="#">Careers</a>
             <a href="#">Press</a>
           </div>
@@ -45,7 +46,7 @@ const Footer = () => {
           <div className="footer-col">
             <h4>Support</h4>
             <a href="#">Contact Us</a>
-            <a href="#">FAQ</a>
+            <a href="#faq">FAQ</a>
             <a href="#">Privacy Policy</a>
             <a href="#">Terms of Service</a>
           </div>

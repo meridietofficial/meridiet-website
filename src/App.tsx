@@ -9,6 +9,9 @@ import Testimonials from './components/Testimonials'
 import CTA from './components/CTA'
 import Footer from './components/Footer'
 import DietForm from './components/DietForm'
+import Pricing from './components/Pricing'
+import AboutUs from './components/AboutUs'
+import FAQ from './components/FAQ'
 
 function App() {
   const [showForm, setShowForm] = useState(() => window.location.hash === '#form')
@@ -38,8 +41,11 @@ function App() {
         <HowItWorks />
         <PlansFor />
         <SamplePlan />
+        <Pricing />
         <WhyChoose />
         <Testimonials />
+        <AboutUs />
+        <FAQ />
         <CTA onOpenForm={openForm} />
       </main>
       <Footer />

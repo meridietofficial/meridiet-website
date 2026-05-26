@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 type NavbarProps = {
   onOpenForm: () => void
@@ -7,12 +7,19 @@ type NavbarProps = {
 
 const Navbar = ({ onOpenForm, formMode }: NavbarProps) => {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   if (formMode) {
     return (
-      <nav className="navbar">
+      <nav className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
         <div className="container navbar-inner">
-          <a href="#" className="navbar-logo">
+          <a href="./" className="navbar-logo">
             <img src="/logo.png" alt="MeriDiet" className="navbar-logo-img" />
             <span className="navbar-tagline">Personalized &nbsp;·&nbsp; Indian &nbsp;·&nbsp; Yours</span>
           </a>
@@ -30,7 +37,7 @@ const Navbar = ({ onOpenForm, formMode }: NavbarProps) => {
   }
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
       <div className="container navbar-inner">
         <a href="#" className="navbar-logo">
           <img src="/logo.png" alt="MeriDiet" className="navbar-logo-img" />
@@ -54,7 +61,7 @@ const Navbar = ({ onOpenForm, formMode }: NavbarProps) => {
             <a href="#about">About Us</a>
           </li>
           <li>
-            <a href="#blog">Blog</a>
+            <a href="#faq">FAQ</a>
           </li>
         </ul>
 
