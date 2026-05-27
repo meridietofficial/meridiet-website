@@ -54,7 +54,7 @@ const Footer = () => {
           <div className="footer-col">
             <h4>Contact</h4>
             <p className="footer-contact-item">📧 hello@meridiet.in</p>
-            <p className="footer-contact-item">📱 +91 98765 43210</p>
+            <p className="footer-contact-item">📱 +91 960 960 6009</p>
             <p className="footer-contact-item">🏢 Mumbai, India</p>
           </div>
         </div>

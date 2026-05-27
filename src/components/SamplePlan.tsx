@@ -9,7 +9,7 @@ const mealData = [
   },
   {
     icon: 'fa-solid fa-mug-hot', meal: 'Breakfast', time: '8:00 AM',
-    color: '#2d8c4e', bg: '#e8f5ee',
+    color: '#1E8E3E', bg: '#EEF4E8',
     img: '/indian-thali.png',
     day1: 'Moong Dal Chilla + Green Chutney',
     day2: 'Vegetable Upma + Coconut Chutney',

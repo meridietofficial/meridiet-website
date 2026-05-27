@@ -13,15 +13,6 @@ const CTA = ({ onOpenForm }: { onOpenForm: () => void }) => {
               <button className="btn-primary cta-btn" onClick={onOpenForm}>
                 Get My Diet Plan →
               </button>
-              <a
-                href="https://wa.me/91XXXXXXXXXX"
-                className="cta-whatsapp"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <span className="wa-icon">💬</span>
-                Chat on WhatsApp
-              </a>
             </div>
             <p className="cta-note">
               ✓ Free plan &nbsp;|&nbsp; ✓ No spam &nbsp;|&nbsp; ✓ 100% Indian food

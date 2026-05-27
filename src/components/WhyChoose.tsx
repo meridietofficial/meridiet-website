@@ -23,20 +23,20 @@ const features = [
 ]
 
 const columns = [
-  { label: 'MeriDiet',          icon: ShieldCheck,  highlight: true,  color: '#fff'    },
   { label: 'Generic Diet Pills', icon: Pill,         highlight: false, color: '#94a3b8' },
+  { label: 'MeriDiet',          icon: ShieldCheck,  highlight: true,  color: '#fff'    },
   { label: 'Nutritionist',      icon: Stethoscope,  highlight: false, color: '#94a3b8' },
 ]
 
 const data: boolean[][] = [
-  [true,  false, true ],
-  [true,  false, false],
-  [true,  false, true ],
-  [true,  false, false],
-  [true,  false, false],
-  [true,  false, false],
-  [true,  false, false],
-  [true,  false, false],
+  [false, true,  true ],
+  [false, true,  false],
+  [false, true,  true ],
+  [false, true,  false],
+  [false, true,  false],
+  [false, true,  false],
+  [false, true,  false],
+  [false, true,  false],
 ]
 
 const WhyChoose = () => {
@@ -142,10 +142,10 @@ const WhyChoose = () => {
               <div className="compare-feat" style={{ fontWeight: 600, color: 'var(--text-dark)' }}>
                 Ready to start?
               </div>
+              <div className="compare-cell" />
               <div className="compare-cell highlighted">
                 <a href="#get-plan" className="compare-cta-btn">Get Plan →</a>
               </div>
-              <div className="compare-cell" />
               <div className="compare-cell" />
             </div>
 

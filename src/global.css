@@ -7,16 +7,18 @@
 }
 
 :root {
-  --green: #2d8c4e;
-  --green-light: #3aac62;
-  --green-dark: #1e6b3a;
-  --green-bg: #f0faf4;
+  --green: #1E8E3E;
+  --green-light: #27a34d;
+  --green-dark: #166C31;
+  --green-bg: #EEF4E8;
   --orange: #f4842c;
-  --text-dark: #1a1a1a;
-  --text-mid: #444;
+  --text-dark: #111111;
+  --text-mid: #5F6368;
   --text-light: #777;
-  --border: #e5e7eb;
+  --border: #E5E7EB;
   --white: #ffffff;
+  --bg-main: #F8F8F4;
+  --bg-soft: #EEF4E8;
   --navbar-h: 74px;
 }
 
@@ -32,7 +34,7 @@ section[id] {
 body {
   font-family: 'Poppins', sans-serif;
   color: var(--text-dark);
-  background: var(--white);
+  background: var(--bg-main);
   line-height: 1.6;
 }
 
@@ -71,7 +73,7 @@ img {
 }
 
 .btn-primary:hover {
-  background: var(--green-dark);
+  background: #166C31;
 }
 
 .btn-outline {
@@ -105,7 +107,7 @@ img {
 }
 
 .section-title {
-  font-size: 36px;
+  font-size: 40px;
   font-weight: 800;
   line-height: 1.2;
   color: var(--text-dark);
@@ -120,7 +122,7 @@ img {
 
 @media (max-width: 768px) {
   .section-title {
-    font-size: 26px;
+    font-size: 28px;
   }
 
   .container {

@@ -29,7 +29,7 @@ const plans = [
     popular: true,
     badge: '🔥 Most Popular',
     savings: null,
-    accentColor: '#2d8c4e',
+    accentColor: '#1E8E3E',
     features: [
       '28-day personalized diet plan',
       '3 meals + 2 snacks daily',

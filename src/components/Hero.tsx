@@ -6,9 +6,9 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
         {/* ── Left content ── */}
         <div className="hero-content">
           <h1 className="hero-title">
-            Get Your Personalized{' '}
-            <span className="highlight">Indian Diet Plan</span>{' '}
-            in Minutes
+            <span className="hero-title-line">Get Your Personalized</span>
+            <span className="hero-title-line highlight">Indian Diet Plan</span>
+            <span className="hero-title-line">in Minutes</span>
           </h1>
           <p className="hero-desc">
             Answer a few simple questions about your body, lifestyle, food habits,
@@ -61,43 +61,12 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
           {/* lime */}
           <span className="hv-lime" aria-hidden="true">🍋</span>
 
-          {/* phone mockup */}
-          <div className="hv-phone">
-            <div className="hv-notch" />
-            <div className="hv-screen">
-              <div className="hv-screen-logo">MeriDiet 🌿</div>
-
-              <div className="hv-screen-greeting">
-                <strong>Hi, Ananya 👋</strong>
-                <span>Your personalized plan</span>
-              </div>
-
-              <div className="hv-cal-card">
-                <span className="hv-cal-lbl">Daily Calorie Target</span>
-                <span className="hv-cal-num">1400 kcal</span>
-                <div className="hv-cal-macros">
-                  <div><span>Carbs</span><strong>45%</strong></div>
-                  <div><span>Protein</span><strong>30%</strong></div>
-                  <div><span>Fats</span><strong>25%</strong></div>
-                </div>
-              </div>
-
-              <p className="hv-plan-hd">Today's Plan</p>
-
-              {[
-                { meal: 'Breakfast', desc: 'Oats Upma with Veggies & Curd', e: '🥣' },
-                { meal: 'Lunch',     desc: 'Rajma, Brown Rice, Salad & Curd', e: '🍛' },
-              ].map((item) => (
-                <div key={item.meal} className="hv-meal-row">
-                  <div className="hv-meal-text">
-                    <span className="hv-meal-lbl">{item.meal}</span>
-                    <span className="hv-meal-desc">{item.desc}</span>
-                  </div>
-                  <div className="hv-meal-thumb">{item.e}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+          {/* phone mockup — real screenshot */}
+          <img
+            src="/meri%20diet%20mobile%20view.png"
+            alt="MeriDiet App"
+            className="hv-phone-img"
+          />
         </div>
       </div>
 
