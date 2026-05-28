@@ -68,7 +68,7 @@ function App() {
   return (
     <>
       <ScrollToTop />
-      <Navbar onOpenForm={openForm} formMode={showForm} />
+      <Navbar onOpenForm={openForm} onCloseForm={closeForm} formMode={showForm} />
       <div className="navbar-push" />
       <Routes>
         <Route path="/" element={<HomePage onOpenForm={openForm} />} />
