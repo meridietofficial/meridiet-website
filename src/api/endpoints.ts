@@ -6,6 +6,11 @@ const ENDPOINTS = {
   dietForm: {
     submit: '/diet-form',
   },
+  user: {
+    profile:        '/user/profile',
+    updateAvatar:   '/user/avatar',
+    changePassword: '/user/change-password',
+  },
 } as const
 
 export default ENDPOINTS

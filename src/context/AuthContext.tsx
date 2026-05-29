@@ -5,6 +5,7 @@ type AuthCtx = {
   user: AuthUser | null
   token: string | null
   saveAuth: (user: AuthUser, token: string) => void
+  updateUser: (user: AuthUser) => void
   clearAuth: () => void
 }
 
@@ -29,6 +30,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('meri_diet_token', token)
   }
 
+  function updateUser(user: AuthUser) {
+    setUser(user)
+    localStorage.setItem('meri_diet_user', JSON.stringify(user))
+  }
+
   function clearAuth() {
     setUser(null)
     setToken(null)
@@ -37,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, saveAuth, clearAuth }}>
+    <AuthContext.Provider value={{ user, token, saveAuth, updateUser, clearAuth }}>
       {children}
     </AuthContext.Provider>
   )

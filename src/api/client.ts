@@ -1,5 +1,7 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://api.meridiet.com/api/v1'
 
+console.log("base url :", BASE_URL)
+
 export class ApiError extends Error {
   constructor(message: string) {
     super(message)
@@ -25,9 +27,25 @@ async function request<T>(endpoint: string, options: RequestInit): Promise<T> {
   return data as T
 }
 
+function getAuthOnlyHeaders(extra?: HeadersInit): HeadersInit {
+  const token = localStorage.getItem('meri_diet_token')
+  return {
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(extra ?? {}),
+  }
+}
+
 const apiClient = {
   apiGet<T>(endpoint: string, headers?: HeadersInit) {
     return request<T>(endpoint, { method: 'GET', headers: getHeaders(headers) })
+  },
+
+  apiPostForm<T>(endpoint: string, formData: FormData, headers?: HeadersInit) {
+    return request<T>(endpoint, {
+      method: 'POST',
+      headers: getAuthOnlyHeaders(headers),
+      body: formData,
+    })
   },
 
   apiPost<T>(endpoint: string, body?: unknown, headers?: HeadersInit) {

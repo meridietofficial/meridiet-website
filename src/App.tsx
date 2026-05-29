@@ -1,82 +1,55 @@
-import { useEffect, useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
-import ScrollToTop from './components/ScrollToTop'
-import Hero from './components/Hero'
-import HowItWorks from './components/HowItWorks'
-import PlansFor from './components/PlansFor'
-import SamplePlan from './components/SamplePlan'
-import WhyChoose from './components/WhyChoose'
-import Testimonials from './components/Testimonials'
-import CTA from './components/CTA'
 import Footer from './components/Footer'
-import DietForm from './components/DietForm'
-import Pricing from './components/Pricing'
-import AboutUs from './components/AboutUs'
-import FAQ from './components/FAQ'
+import ScrollToTop from './components/ScrollToTop'
 
-function HomePage({ onOpenForm }: { onOpenForm: () => void }) {
+const HomePage      = lazy(() => import('./pages/HomePage'))
+const AboutUs       = lazy(() => import('./components/AboutUs'))
+const FAQ           = lazy(() => import('./components/FAQ'))
+const DietForm      = lazy(() => import('./components/DietForm'))
+const UserProfile   = lazy(() => import('./components/UserProfile'))
+const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'))
+const TermsConditions = lazy(() => import('./components/TermsConditions'))
+const RefundPolicy  = lazy(() => import('./components/RefundPolicy'))
+const ContactUs     = lazy(() => import('./components/ContactUs'))
+
+function PageLoader() {
   return (
-    <main>
-      <Hero onOpenForm={onOpenForm} />
-      <HowItWorks />
-      <PlansFor />
-      <SamplePlan />
-      <Pricing />
-      <WhyChoose />
-      <Testimonials />
-      <CTA onOpenForm={onOpenForm} />
-    </main>
+    <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="page-loader-spinner" />
+    </div>
   )
 }
 
-function AboutPage() {
-  return (
-    <main>
-      <AboutUs />
-    </main>
-  )
-}
-
-function FAQPage() {
-  return (
-    <main>
-      <FAQ />
-    </main>
-  )
+function FormPage() {
+  const navigate = useNavigate()
+  return <DietForm onClose={() => navigate('/')} />
 }
 
 function App() {
-  const [showForm, setShowForm] = useState(() => window.location.hash === '#form')
-
-  const openForm = () => {
-    setShowForm(true)
-    history.pushState(null, '', '#form')
-  }
-
-  const closeForm = () => {
-    setShowForm(false)
-    history.pushState(null, '', window.location.pathname)
-  }
-
-  useEffect(() => {
-    const onPop = () => setShowForm(window.location.hash === '#form')
-    window.addEventListener('popstate', onPop)
-    return () => window.removeEventListener('popstate', onPop)
-  }, [])
+  const navigate = useNavigate()
+  const openForm = () => navigate('/form')
 
   return (
     <>
       <ScrollToTop />
-      <Navbar onOpenForm={openForm} onCloseForm={closeForm} formMode={showForm} />
+      <Navbar onOpenForm={openForm} />
       <div className="navbar-push" />
-      <Routes>
-        <Route path="/" element={<HomePage onOpenForm={openForm} />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/faq" element={<FAQPage />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/"                  element={<HomePage onOpenForm={openForm} />} />
+          <Route path="/about"             element={<main><AboutUs /></main>} />
+          <Route path="/faq"               element={<main><FAQ /></main>} />
+          <Route path="/profile"           element={<UserProfile />} />
+          <Route path="/form"              element={<FormPage />} />
+          <Route path="/privacy-policy"    element={<main><PrivacyPolicy /></main>} />
+          <Route path="/terms-conditions"  element={<main><TermsConditions /></main>} />
+          <Route path="/refund-policy"     element={<main><RefundPolicy /></main>} />
+          <Route path="/contact"           element={<main><ContactUs /></main>} />
+        </Routes>
+      </Suspense>
       <Footer />
-      {showForm && <DietForm onClose={closeForm} />}
     </>
   )
 }

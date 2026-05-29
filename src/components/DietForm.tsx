@@ -1,16 +1,17 @@
 import { useEffect, useRef, useState } from 'react'
+import { IN_STATES, getCitiesOfState } from '../data/indiaCities'
 import DatePicker from './DatePicker'
+import SearchableSelect from './SearchableSelect'
 import dietFormApi from '../api/dietForm'
 import { ApiError } from '../api/client'
 import { useToast } from '../context/ToastContext'
+import { useAuth } from '../context/AuthContext'
 
 const STEPS = [
   { label: 'Basic Details', sub: 'Tell us about yourself' },
-  { label: 'Goals', sub: 'What do you want to achieve?' },
   { label: 'Lifestyle', sub: 'Your daily habits' },
   { label: 'Food Preferences', sub: 'What do you eat & prefer?' },
   { label: 'Health & Medical', sub: 'Your health matters' },
-  { label: 'Budget & Convenience', sub: 'What works for you?' },
   { label: 'Contact Details', sub: "Let's stay in touch" },
 ]
 
@@ -62,9 +63,10 @@ const INIT: FormData = {
   contactName: '',
   whatsapp: '',
   email: '',
-  deliveryMethod: 'whatsapp',
+  deliveryMethod: ['whatsapp'],
   city: '',
   state: '',
+  stateCode: '',
   finalNotes: '',
 }
 
@@ -116,9 +118,10 @@ type FormData = {
   contactName: string
   whatsapp: string
   email: string
-  deliveryMethod: string
+  deliveryMethod: string[]
   city: string
   state: string
+  stateCode: string
   finalNotes: string
 }
 
@@ -135,20 +138,17 @@ const TIMES = [
   '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM',
   '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM',
 ]
-const CITIES = [
-  'Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Hyderabad', 'Kolkata', 'Pune', 'Ahmedabad', 'Jaipur',
-  'Lucknow', 'Chandigarh', 'Surat', 'Indore', 'Bhopal', 'Nagpur', 'Patna', 'Vadodara', 'Other',
-]
-const STATES = [
-  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
-  'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh',
-  'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan',
-  'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
-  'Delhi (NCT)', 'Other',
-]
 
 /* ─── Step 1 ─────────────────────────────────────────────── */
 const TODAY = new Date().toISOString().split('T')[0]
+
+const GOALS = [
+  { k: 'Weight Loss', e: '⚖️', d: 'Lose weight & feel lighter' },
+  { k: 'Fat Loss', e: '🏋️', d: 'Reduce body fat & improve shape' },
+  { k: 'Muscle Gain', e: '💪', d: 'Build muscle & get stronger' },
+  { k: 'PCOS Support', e: '♀️', d: 'Manage PCOS symptoms naturally' },
+  { k: 'Healthy Lifestyle', e: '🌱', d: 'Maintain overall health & wellness' },
+]
 
 function calcAge(dob: string): string {
   if (!dob) return ''
@@ -160,14 +160,14 @@ function calcAge(dob: string): string {
   return age >= 0 && age <= 120 ? String(age) : ''
 }
 
-const Step1 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
+const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err: Errors }) => {
   return (
   <div className="df-step-content">
     <div className="df-step-hd">
-      <div className="df-hd-icon">👤</div>
+      <div className="df-hd-icon">📋</div>
       <div className="df-hd-text">
-        <h2>Basic Details</h2>
-        <p>Let's start with some basic information about you.</p>
+        <h2>Basic Details &amp; Health Goals</h2>
+        <p>Tell us about yourself and what you want to achieve.</p>
       </div>
       <span className="df-conf-badge">🔒 100% Confidential</span>
     </div>
@@ -293,54 +293,31 @@ const Step1 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
       </div>
     </div>
 
-    <div className="df-field">
-      <label className="df-label">How would you describe your body type?</label>
-      <div className="df-body-row">
-        {[
-          { k: 'Slim', e: '🧍' },
-          { k: 'Average', e: '🚶' },
-          { k: 'Overweight', e: '🏃' },
-          { k: 'Obese', e: '👤' },
-          { k: 'Athletic', e: '💪' },
-        ].map((b) => (
+    {/* ── Goals section ── */}
+    <div className="df-card-field">
+      <label className="df-label">Your Health Goal <span className="df-req">*</span></label>
+      <p className="df-field-sub">Choose the one that best describes what you want to achieve.</p>
+      <div className={`df-goals-grid${err.goals ? ' df-group--err' : ''}`}>
+        {GOALS.map((g) => (
           <button
-            key={b.k}
-            className={`df-body-card ${d.bodyType === b.k ? 'sel' : ''}`}
-            onClick={() => set('bodyType', b.k)}
+            key={g.k}
+            className={`df-goal-card ${d.goals.includes(g.k) ? 'sel' : ''}`}
+            onClick={() => set('goals', [g.k])}
           >
-            {d.bodyType === b.k && <span className="df-chk">✓</span>}
-            <span className="df-body-fig">{b.e}</span>
-            <span>{b.k}</span>
+            {d.goals.includes(g.k) && <span className="df-goal-chk">✓</span>}
+            <span className="df-goal-icon">{g.e}</span>
+            <strong>{g.k}</strong>
+            <span className="df-goal-desc">{g.d}</span>
           </button>
         ))}
       </div>
-    </div>
-
-    <div className="df-field">
-      <label className="df-label">Any specific other information you'd like to share?</label>
-      <textarea
-        className="df-textarea"
-        rows={3}
-        placeholder="E.g. recent weight changes, family history, etc."
-        value={d.basicNotes}
-        onChange={(e) => set('basicNotes', e.target.value)}
-      />
+      <FieldErr msg={err.goals} />
     </div>
   </div>
   )
 }
 
-/* ─── Step 2 ─────────────────────────────────────────────── */
-const GOALS = [
-  { k: 'Weight Loss', e: '⚖️', d: 'Lose weight & feel lighter' },
-  { k: 'Fat Loss', e: '🏋️', d: 'Reduce body fat & improve shape' },
-  { k: 'Muscle Gain', e: '💪', d: 'Build muscle & get stronger' },
-  { k: 'PCOS Support', e: '♀️', d: 'Manage PCOS symptoms naturally' },
-  { k: 'Diabetes Management', e: '💉', d: 'Control blood sugar & improve health' },
-  { k: 'Thyroid Support', e: '🦋', d: 'Support thyroid health & balance' },
-  { k: 'Healthy Lifestyle', e: '🌱', d: 'Maintain overall health & wellness' },
-]
-
+/* ─── Step 2 (kept for reference, not rendered) ─────────── */
 const Step2 = ({ d, tog, err }: { d: FormData; tog: ToglFn; err: Errors }) => (
   <div className="df-step-content">
     <div className="df-step-hd">
@@ -430,82 +407,28 @@ const Step3 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => (
       <FieldErr msg={err.activityLevel} />
     </div>
 
-    {/* Sleep + Water */}
-    <div className="df-grid-2">
-      <div className="df-card-field">
-        <label className="df-label">Sleep Duration <span className="df-req">*</span></label>
-        <p className="df-field-sub">How many hours do you sleep daily?</p>
-        <div className="ls-pill-group">
-          {SLEEP.map((s, i) => (
-            <button
-              key={s}
-              className={`ls-pill${d.sleepDuration === SLEEP_V[i] ? ' sel' : ''}`}
-              onClick={() => set('sleepDuration', SLEEP_V[i])}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-        <FieldErr msg={err.sleepDuration} />
+    {/* Work Type */}
+    <div className="df-card-field">
+      <label className="df-label">Work Type <span className="df-req">*</span></label>
+      <p className="df-field-sub">What type of work do you do?</p>
+      <div className="ls-icon-row">
+        {WORK_TYPE.map((w) => (
+          <button
+            key={w.v}
+            className={`ls-icon-pill${d.workType === w.v ? ' sel' : ''}`}
+            onClick={() => set('workType', w.v)}
+          >
+            <span>{w.icon}</span>
+            <span>{w.v}</span>
+          </button>
+        ))}
       </div>
-      <div className="df-card-field">
-        <label className="df-label">Water Intake <span className="df-req">*</span></label>
-        <p className="df-field-sub">How much water do you drink daily?</p>
-        <div className="ls-pill-group">
-          {WATER.map((w, i) => (
-            <button
-              key={w}
-              className={`ls-pill${d.waterIntake === WATER_V[i] ? ' sel' : ''}`}
-              onClick={() => set('waterIntake', WATER_V[i])}
-            >
-              {w}
-            </button>
-          ))}
-        </div>
-        <FieldErr msg={err.waterIntake} />
-      </div>
-    </div>
-
-    {/* Work Type + Workout Frequency */}
-    <div className="df-grid-2">
-      <div className="df-card-field">
-        <label className="df-label">Work Type <span className="df-req">*</span></label>
-        <p className="df-field-sub">What type of work do you do?</p>
-        <div className="ls-icon-row">
-          {WORK_TYPE.map((w) => (
-            <button
-              key={w.v}
-              className={`ls-icon-pill${d.workType === w.v ? ' sel' : ''}`}
-              onClick={() => set('workType', w.v)}
-            >
-              <span>{w.icon}</span>
-              <span>{w.v}</span>
-            </button>
-          ))}
-        </div>
-        <FieldErr msg={err.workType} />
-      </div>
-      <div className="df-card-field">
-        <label className="df-label">Workout Frequency <span className="df-req">*</span></label>
-        <p className="df-field-sub">How often do you workout?</p>
-        <div className="ls-pill-group">
-          {FREQ.map((f, i) => (
-            <button
-              key={f}
-              className={`ls-pill${d.workoutFrequency === FREQ_V[i] ? ' sel' : ''}`}
-              onClick={() => set('workoutFrequency', FREQ_V[i])}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
-        <FieldErr msg={err.workoutFrequency} />
-      </div>
+      <FieldErr msg={err.workType} />
     </div>
 
     {/* Workout Type */}
     <div className="df-card-field">
-      <label className="df-label">Workout Type <span className="df-opt">(Optional)</span></label>
+      <label className="df-label">Workout Type <span className="df-req">*</span></label>
       <p className="df-field-sub">What type of workouts do you prefer?</p>
       <div className="ls-workout-grid">
         {WORKOUT_TYPE.map((w) => (
@@ -520,30 +443,7 @@ const Step3 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => (
           </button>
         ))}
       </div>
-    </div>
-
-    {/* Daily Steps */}
-    <div className="df-card-field">
-      <label className="df-label">Daily Step Count <span className="df-opt">(Optional)</span></label>
-      <p className="df-field-sub">On average, how many steps do you take daily?</p>
-      <div className="ls-pill-group ls-pill-group--steps">
-        {[
-          { label: '< 2k',    value: '< 2,000' },
-          { label: '2k–5k',   value: '2,000 – 5,000' },
-          { label: '5k–8k',   value: '5,000 – 8,000' },
-          { label: '8k–12k',  value: '8,000 – 12,000' },
-          { label: '> 12k',   value: '> 12,000' },
-        ].map(({ label, value }) => (
-          <button
-            key={value}
-            className={`ls-pill ls-pill--step${d.dailySteps === value ? ' sel' : ''}`}
-            onClick={() => set('dailySteps', value)}
-          >
-            {label}
-            {d.dailySteps === value && <span className="ls-step-icon">🦶</span>}
-          </button>
-        ))}
-      </div>
+      <FieldErr msg={err.workoutType} />
     </div>
 
     <div className="df-tip-box">💡 Tip: Be honest! The more accurate your answers, the better your plan will be.</div>
@@ -675,7 +575,7 @@ const Step4 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
 
     <div className="df-grid-2">
       <div className="df-card-field">
-        <label className="df-label">Foods You Dislike</label>
+        <label className="df-label">Foods You Dislike <span className="df-opt">(Optional)</span></label>
         <p className="df-field-sub">Any foods you want to avoid?</p>
         <div className="df-input-wrap">
           <span className="df-icon">🚫</span>
@@ -782,7 +682,15 @@ const Step5 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
           <button
             key={c.v}
             className={`hl-chip${d.medicalConditions.includes(c.v) ? ' sel' : ''}`}
-            onClick={() => tog('medicalConditions', c.v)}
+            onClick={() => {
+              if (c.v === 'None') {
+                set('medicalConditions', ['None'])
+              } else {
+                const without = d.medicalConditions.filter(x => x !== 'None' && x !== c.v)
+                const next = d.medicalConditions.includes(c.v) ? without : [...without, c.v]
+                set('medicalConditions', next)
+              }
+            }}
           >
             <span>{c.icon}</span>
             <span>{c.v}</span>
@@ -791,9 +699,16 @@ const Step5 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
         ))}
       </div>
       {d.medicalConditions.includes('Other') && (
-        <input className="df-input" style={{ marginTop: 10 }} type="text"
-          placeholder="Please specify your condition"
-          value={d.otherCondition} onChange={(e) => set('otherCondition', e.target.value)} />
+        <div className="df-input-wrap" style={{ marginTop: 10 }}>
+          <input
+            className="df-input"
+            type="text"
+            placeholder="Please specify your condition"
+            value={d.otherCondition}
+            onChange={(e) => set('otherCondition', e.target.value)}
+            style={{ paddingLeft: 12 }}
+          />
+        </div>
       )}
       <FieldErr msg={err.medicalConditions} />
     </div>
@@ -826,68 +741,43 @@ const Step5 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
       <FieldErr msg={err.onMedication} />
     </div>
 
-    {/* Intolerances + Digestive + Smoke */}
+    {/* Digestive + Smoke */}
     <div className="df-grid-2">
       <div className="df-card-field">
-        <label className="df-label">Food intolerances?</label>
-        <p className="df-field-sub">Select all that apply</p>
-        <div className="hl-chip-group">
-          {INTOLERANCES.map((c) => (
+        <label className="df-label">Digestive Health <span className="df-req">*</span></label>
+        <p className="df-field-sub">How would you describe your digestion?</p>
+        <div className="hl-digest-row">
+          {DIGESTION_OPTS.map((o) => (
             <button
-              key={c.v}
-              className={`hl-chip${d.foodIntolerances.includes(c.v) ? ' sel' : ''}`}
-              onClick={() => tog('foodIntolerances', c.v)}
+              key={o.v}
+              className={`hl-digest-card${d.digestiveHealth === o.v ? ' sel' : ''}`}
+              style={d.digestiveHealth === o.v ? { borderColor: o.color, background: `${o.color}15` } : {}}
+              onClick={() => set('digestiveHealth', o.v)}
             >
-              <span>{c.icon}</span>
-              <span>{c.v}</span>
-              {d.foodIntolerances.includes(c.v) && <span className="hl-chip-x">✓</span>}
+              <span className="hl-digest-icon">{o.icon}</span>
+              <span className="hl-digest-lbl">{o.v}</span>
             </button>
           ))}
         </div>
-        {d.foodIntolerances.includes('Other') && (
-          <input className="df-input" style={{ marginTop: 10 }} type="text"
-            placeholder="Please specify"
-            value={d.otherIntolerance} onChange={(e) => set('otherIntolerance', e.target.value)} />
-        )}
+        <FieldErr msg={err.digestiveHealth} />
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-        <div className="df-card-field">
-          <label className="df-label">Digestive Health <span className="df-req">*</span></label>
-          <p className="df-field-sub">How would you describe your digestion?</p>
-          <div className="hl-digest-row">
-            {DIGESTION_OPTS.map((o) => (
-              <button
-                key={o.v}
-                className={`hl-digest-card${d.digestiveHealth === o.v ? ' sel' : ''}`}
-                style={d.digestiveHealth === o.v ? { borderColor: o.color, background: `${o.color}15` } : {}}
-                onClick={() => set('digestiveHealth', o.v)}
-              >
-                <span className="hl-digest-icon">{o.icon}</span>
-                <span className="hl-digest-lbl">{o.v}</span>
-              </button>
-            ))}
-          </div>
-          <FieldErr msg={err.digestiveHealth} />
+      <div className="df-card-field">
+        <label className="df-label">Smoke or alcohol? <span className="df-req">*</span></label>
+        <div className="hl-chip-group">
+          {SMOKE_OPTS.map((o) => (
+            <button
+              key={o.v}
+              className={`hl-chip${d.smokeAlcohol === o.v ? ' sel' : ''}`}
+              onClick={() => set('smokeAlcohol', o.v)}
+            >
+              <span>{o.icon}</span>
+              <span>{o.v}</span>
+              {d.smokeAlcohol === o.v && <span className="hl-chip-x">✓</span>}
+            </button>
+          ))}
         </div>
-
-        <div className="df-card-field">
-          <label className="df-label">Smoke or alcohol? <span className="df-req">*</span></label>
-          <div className="hl-chip-group">
-            {SMOKE_OPTS.map((o) => (
-              <button
-                key={o.v}
-                className={`hl-chip${d.smokeAlcohol === o.v ? ' sel' : ''}`}
-                onClick={() => set('smokeAlcohol', o.v)}
-              >
-                <span>{o.icon}</span>
-                <span>{o.v}</span>
-                {d.smokeAlcohol === o.v && <span className="hl-chip-x">✓</span>}
-              </button>
-            ))}
-          </div>
-          <FieldErr msg={err.smokeAlcohol} />
-        </div>
+        <FieldErr msg={err.smokeAlcohol} />
       </div>
     </div>
 
@@ -1071,7 +961,18 @@ const DELIVERY_OPTS = [
   { k: 'email',   icon: '📧', lbl: 'Email',     sub: 'Delivered to your inbox',      badge: null },
 ]
 
-const Step7 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => (
+const Step7 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
+  const { user } = useAuth()
+  const { showToast } = useToast()
+  const phoneFromUser = !!(user?.phone_number)
+  const methods = d.deliveryMethod as string[]
+  const hasMethod = (k: string) => methods.includes(k)
+  const toggleMethod = (k: string) => {
+    const next = hasMethod(k) ? methods.filter(x => x !== k) : [...methods, k]
+    if (next.length > 0) set('deliveryMethod', next)
+  }
+
+  return (
   <div className="df-step-content">
     <div className="df-step-hd">
       <div className="df-hd-icon">🎉</div>
@@ -1106,41 +1007,61 @@ const Step7 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => (
         </div>
 
         <div className="df-field">
-          <label className="df-label">WhatsApp Number <span className="df-req">*</span></label>
+          <label className="df-label">
+            Phone / WhatsApp Number
+            {hasMethod('whatsapp') && <span className="df-req"> *</span>}
+          </label>
           <div className="df-phone-row">
             <select className="df-phone-code"><option>+91</option></select>
             <div className={`df-input-wrap${err.whatsapp ? ' df-input-wrap--err' : ''}`} style={{ flex: 1 }}>
               <span className="df-icon">📱</span>
-              <input className="df-input" type="tel" placeholder="10-digit WhatsApp number"
+              <input className="df-input" type="tel" placeholder="10-digit number"
                 value={d.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} />
+              {phoneFromUser
+                ? <span className="df-verified-badge">✓ Verified</span>
+                : d.whatsapp.trim().length >= 10 && (
+                  <button
+                    type="button"
+                    className="df-verify-btn"
+                    onClick={() => showToast('OTP sent to your number!', 'success')}
+                  >
+                    Verify
+                  </button>
+                )
+              }
             </div>
           </div>
           <FieldErr msg={err.whatsapp} />
         </div>
 
         <div className="df-field">
-          <label className="df-label">Email Address <span className="df-opt">(Optional)</span></label>
-          <div className="df-input-wrap">
+          <label className="df-label">
+            Email Address
+            {hasMethod('email') && <span className="df-req"> *</span>}
+            {!hasMethod('email') && <span className="df-opt"> (Optional)</span>}
+          </label>
+          <div className={`df-input-wrap${err.email ? ' df-input-wrap--err' : ''}`}>
             <span className="df-icon">📧</span>
             <input className="df-input" type="email" placeholder="Enter your email address"
               value={d.email} onChange={(e) => set('email', e.target.value)} />
           </div>
+          <FieldErr msg={err.email} />
         </div>
       </div>
 
       {/* Delivery method */}
       <div className="df-card-field">
         <label className="df-label">Where should we send your plan?</label>
-        <p className="df-field-sub">Select your preferred delivery method</p>
+        <p className="df-field-sub">You can select both WhatsApp and email</p>
         <div className="ct-delivery-grid">
           {DELIVERY_OPTS.map((m) => (
             <button
               key={m.k}
-              className={`ct-delivery-card${d.deliveryMethod === m.k ? ' sel' : ''}`}
-              onClick={() => set('deliveryMethod', m.k)}
+              className={`ct-delivery-card${hasMethod(m.k) ? ' sel' : ''}`}
+              onClick={() => toggleMethod(m.k)}
             >
               {m.badge && <span className="ct-delivery-badge">{m.badge}</span>}
-              {d.deliveryMethod === m.k && <span className="ct-delivery-check">✓</span>}
+              {hasMethod(m.k) && <span className="ct-delivery-check">✓</span>}
               <span className="ct-delivery-icon">{m.icon}</span>
               <strong className="ct-delivery-lbl">{m.lbl}</strong>
               <span className="ct-delivery-sub">{m.sub}</span>
@@ -1161,22 +1082,37 @@ const Step7 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => (
         <p className="df-field-sub">Helps us suggest locally available ingredients</p>
         <div className="ct-location-grid">
           <div className="df-field">
-            <label className="df-label">City <span className="df-req">*</span></label>
-            <select className={`df-select${err.city ? ' df-select--err' : ''}`}
-              value={d.city} onChange={(e) => set('city', e.target.value)}>
-              <option value="">Select your city</option>
-              {CITIES.map((c) => <option key={c}>{c}</option>)}
-            </select>
-            <FieldErr msg={err.city} />
+            <label className="df-label">State <span className="df-req">*</span></label>
+            <SearchableSelect
+              options={IN_STATES.map(s => ({ value: s.isoCode, label: s.name }))}
+              value={d.stateCode}
+              onChange={(code) => {
+                const name = IN_STATES.find(s => s.isoCode === code)?.name ?? ''
+                set('stateCode', code)
+                set('state', name)
+                set('city', '')
+              }}
+              placeholder="Select your state"
+              searchPlaceholder="Search state..."
+              hasError={!!err.state}
+            />
+            <FieldErr msg={err.state} />
           </div>
           <div className="df-field">
-            <label className="df-label">State <span className="df-req">*</span></label>
-            <select className={`df-select${err.state ? ' df-select--err' : ''}`}
-              value={d.state} onChange={(e) => set('state', e.target.value)}>
-              <option value="">Select your state</option>
-              {STATES.map((s) => <option key={s}>{s}</option>)}
-            </select>
-            <FieldErr msg={err.state} />
+            <label className="df-label">City <span className="df-req">*</span></label>
+            <SearchableSelect
+              options={d.stateCode
+                ? getCitiesOfState(d.stateCode).map(c => ({ value: c.name, label: c.name }))
+                : []
+              }
+              value={d.city}
+              onChange={(city) => set('city', city)}
+              placeholder={d.stateCode ? 'Select your city' : 'Select state first'}
+              searchPlaceholder="Search city..."
+              disabled={!d.stateCode}
+              hasError={!!err.city}
+            />
+            <FieldErr msg={err.city} />
           </div>
         </div>
       </div>
@@ -1208,7 +1144,8 @@ const Step7 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => (
       ))}
     </div>
   </div>
-)
+  )
+}
 
 /* ─── Sidebar – Step 1 ────────────────────────────────────── */
 const SidebarStep1 = ({ step }: { step: number }) => (
@@ -1261,43 +1198,46 @@ const SidebarStep1 = ({ step }: { step: number }) => (
 /* ─── Sidebar – Steps 2–7 ─────────────────────────────────── */
 const SidebarMain = ({ step }: { step: number }) => (
   <aside className="df-sidebar">
+    <div className="df-sidebar-inner">
 
-    <div className="df-sb-privacy">
-      <span className="df-sb-priv-icon">🔒</span>
-      <p>Your information is safe with us. We never share your data with anyone.</p>
-    </div>
-
-    <nav className="df-sb-steps">
-      {STEPS.map((s, i) => {
-        const num = i + 1
-        const done = num < step
-        const active = num === step
-        return (
-          <div key={i} className="df-sb-step-wrap">
-            <div className={`df-sb-step ${active ? 'active' : ''} ${done ? 'done' : ''}`}>
-              <div className="df-sb-dot">{done ? '✓' : num}</div>
-              <div className="df-sb-info">
-                <span className="df-sb-lbl">{s.label}</span>
-                <span className="df-sb-sub">{s.sub}</span>
-              </div>
-            </div>
-            {i < STEPS.length - 1 && <div className={`df-sb-line ${done ? 'done' : ''}`} />}
-          </div>
-        )
-      })}
-    </nav>
-
-    <div className="df-sb-help">
-      <span className="df-sb-help-icon">💬</span>
-      <div>
-        <p className="df-sb-help-title">Need Help?</p>
-        <p className="df-sb-help-sub">
-          Chat with our team on{' '}
-          <a href="https://wa.me/919876543210" target="_blank" rel="noreferrer">
-            WhatsApp
-          </a>
-        </p>
+      <div className="df-sb-privacy">
+        <span className="df-sb-priv-icon">🔒</span>
+        <p>Your information is safe with us. We never share your data with anyone.</p>
       </div>
+
+      <nav className="df-sb-steps">
+        {STEPS.map((s, i) => {
+          const num = i + 1
+          const done = num < step
+          const active = num === step
+          return (
+            <div key={i} className="df-sb-step-wrap">
+              <div className={`df-sb-step ${active ? 'active' : ''} ${done ? 'done' : ''}`}>
+                <div className="df-sb-dot">{done ? '✓' : num}</div>
+                <div className="df-sb-info">
+                  <span className="df-sb-lbl">{s.label}</span>
+                  <span className="df-sb-sub">{s.sub}</span>
+                </div>
+              </div>
+              {i < STEPS.length - 1 && <div className={`df-sb-line ${done ? 'done' : ''}`} />}
+            </div>
+          )
+        })}
+      </nav>
+
+      <div className="df-sb-help">
+        <span className="df-sb-help-icon">💬</span>
+        <div>
+          <p className="df-sb-help-title">Need Help?</p>
+          <p className="df-sb-help-sub">
+            Chat with our team on{' '}
+            <a href="https://wa.me/919876543210" target="_blank" rel="noreferrer">
+              WhatsApp
+            </a>
+          </p>
+        </div>
+      </div>
+
     </div>
   </aside>
 )
@@ -1323,43 +1263,39 @@ function validateStep(s: number, d: FormData): Errors {
       if (d.weightUnit === 'kg'  && (w < 1 || w > 300)) e.weight = 'Weight must be between 1 and 300 kg'
       if (d.weightUnit === 'lbs' && (w < 1 || w > 660)) e.weight = 'Weight must be between 1 and 660 lbs'
     }
-  }
-  if (s === 2) {
     if (d.goals.length === 0) e.goals = 'Please select at least one goal'
   }
-  if (s === 3) {
-    if (!d.activityLevel)    e.activityLevel    = 'Please select your activity level'
-    if (!d.sleepDuration)    e.sleepDuration    = 'Please select your sleep duration'
-    if (!d.waterIntake)      e.waterIntake      = 'Please select your water intake'
-    if (!d.workType)         e.workType         = 'Please select your work type'
-    if (!d.workoutFrequency) e.workoutFrequency = 'Please select your workout frequency'
+  if (s === 2) {
+    if (!d.activityLevel) e.activityLevel = 'Please select your activity level'
+    if (!d.workType)      e.workType      = 'Please select your work type'
+    if (!d.workoutType)   e.workoutType   = 'Please select your workout type'
   }
-  if (s === 4) {
+  if (s === 3) {
     if (!d.dietType) e.dietType = 'Please select your diet type'
   }
-  if (s === 5) {
+  if (s === 4) {
     if (d.medicalConditions.length === 0) e.medicalConditions = 'Please select at least one option'
     if (!d.onMedication)                  e.onMedication      = 'Please select an option'
     if (!d.digestiveHealth)               e.digestiveHealth   = 'Please select your digestive health'
     if (!d.smokeAlcohol)                  e.smokeAlcohol      = 'Please select an option'
   }
-  if (s === 6) {
-    if (!d.budget)                   e.budget         = 'Please select your budget'
-    if (d.mealPreference.length === 0) e.mealPreference = 'Please select at least one option'
-    if (!d.prepTime)                 e.prepTime        = 'Please select your meal prep time'
-  }
-  if (s === 7) {
-    if (!d.contactName.trim())                                        e.contactName = 'Contact name is required'
-    if (!d.whatsapp.trim())                                           e.whatsapp    = 'WhatsApp number is required'
-    else if (!/^\d{10}$/.test(d.whatsapp.replace(/\s|-/g, '')))      e.whatsapp    = 'Enter a valid 10-digit number'
-    if (!d.city)                                                      e.city        = 'Please select your city'
-    if (!d.state)                                                     e.state       = 'Please select your state'
+  if (s === 5) {
+    const methods = d.deliveryMethod as string[]
+    if (!d.contactName.trim()) e.contactName = 'Contact name is required'
+    if (methods.includes('whatsapp')) {
+      if (!d.whatsapp.trim()) e.whatsapp = 'WhatsApp number is required'
+      else if (!/^\d{10}$/.test(d.whatsapp.replace(/\s|-/g, ''))) e.whatsapp = 'Enter a valid 10-digit number'
+    }
+    if (methods.includes('email') && !d.email.trim()) e.email = 'Email address is required'
+    if (!d.city)  e.city  = 'Please select your city'
+    if (!d.state) e.state = 'Please select your state'
   }
   return e
 }
 
 const DietForm = ({ onClose }: { onClose: () => void }) => {
   const { showToast } = useToast()
+  const { user } = useAuth()
   const [step, setStep] = useState(1)
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
   const [data, setData] = useState<FormData>(INIT)
@@ -1370,8 +1306,24 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = ''
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  // Auto-fill contact name from step 1 whenever fullName changes
+  useEffect(() => {
+    if (data.fullName) {
+      setData(p => ({ ...p, contactName: data.fullName }))
+    }
+  }, [data.fullName])
+
+  // Pre-fill phone & email from logged-in user on mount
+  useEffect(() => {
+    if (user) {
+      setData(p => ({
+        ...p,
+        ...(user.phone_number && !p.whatsapp ? { whatsapp: user.phone_number } : {}),
+        ...(user.email        && !p.email    ? { email: user.email }            : {}),
+      }))
     }
   }, [])
 
@@ -1407,7 +1359,7 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
           <h2>Your Plan is on its way!</h2>
           <p>
             Thank you, <strong>{data.contactName || data.fullName || 'there'}</strong>! We'll send your
-            personalized diet plan to your {data.deliveryMethod === 'whatsapp' ? 'WhatsApp' : 'email'} within
+            personalized diet plan to your {(data.deliveryMethod as string[]).map(m => m === 'whatsapp' ? 'WhatsApp' : 'Email').join(' & ')} within
             24 hours.
           </p>
           <button className="btn-primary df-success-btn" onClick={onClose}>
@@ -1427,7 +1379,7 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
           <div className="df-panel">
             <div className="df-topbar">
               <span className="df-step-counter">
-                Step <strong>{step}</strong> of 7
+                Step <strong>{step}</strong> of 5
               </span>
               {/* <span className="df-secure">🔒 100% Secure &amp; Confidential</span> */}
             </div>
@@ -1451,13 +1403,11 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
 
             <div className="df-content-area">
               <div key={step} className={`df-step-anim df-step-anim--${direction}`}>
-                {step === 1 && <Step1 d={data} set={set} err={errors} />}
-                {step === 2 && <Step2 d={data} tog={tog} err={errors} />}
-                {step === 3 && <Step3 d={data} set={set} err={errors} />}
-                {step === 4 && <Step4 d={data} set={set} tog={tog} err={errors} />}
-                {step === 5 && <Step5 d={data} set={set} tog={tog} err={errors} />}
-                {step === 6 && <Step6 d={data} set={set} tog={tog} err={errors} />}
-                {step === 7 && <Step7 d={data} set={set} err={errors} />}
+                {step === 1 && <Step1 d={data} set={set} tog={tog} err={errors} />}
+                {step === 2 && <Step3 d={data} set={set} err={errors} />}
+                {step === 3 && <Step4 d={data} set={set} tog={tog} err={errors} />}
+                {step === 4 && <Step5 d={data} set={set} tog={tog} err={errors} />}
+                {step === 5 && <Step7 d={data} set={set} err={errors} />}
               </div>
             </div>
 
@@ -1465,7 +1415,7 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
               <button className="df-back-btn" onClick={() => (step === 1 ? onClose() : go(step - 1))}>
                 ← {step === 1 ? 'Close' : 'Back'}
               </button>
-              {step < 7 ? (
+              {step < 5 ? (
                 <button className="btn-primary df-next-btn" onClick={() => go(step + 1)}>
                   Next Step →
                 </button>
@@ -1474,7 +1424,7 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
                   className="btn-primary df-next-btn"
                   disabled={submitting}
                   onClick={async () => {
-                    const e = validateStep(7, data)
+                    const e = validateStep(5, data)
                     if (Object.keys(e).length > 0) { setErrors(e); return }
                     setSubmitting(true)
                     try {
@@ -1520,7 +1470,7 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
         <div className="df-form-timing">
           <span>Takes only 5–7 minutes</span>
           <span className="df-form-timing-dot">●</span>
-          <span>7 Simple Steps</span>
+          <span>5 Simple Steps</span>
           <span className="df-form-timing-dot">●</span>
           <span>Lifetime of Benefits</span>
         </div>

@@ -5,11 +5,9 @@ import { useAuth } from '../context/AuthContext'
 
 type NavbarProps = {
   onOpenForm: () => void
-  onCloseForm?: () => void
-  formMode?: boolean
 }
 
-const Navbar = ({ onOpenForm, onCloseForm, formMode }: NavbarProps) => {
+const Navbar = ({ onOpenForm }: NavbarProps) => {
   const { user, clearAuth } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
@@ -17,6 +15,8 @@ const Navbar = ({ onOpenForm, onCloseForm, formMode }: NavbarProps) => {
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const { pathname } = useLocation()
+
+  const formMode = pathname === '/form'
   const s = (hash: string) => pathname === '/' ? hash : `/${hash}`
 
   useEffect(() => {
@@ -25,7 +25,6 @@ const Navbar = ({ onOpenForm, onCloseForm, formMode }: NavbarProps) => {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -46,8 +45,8 @@ const Navbar = ({ onOpenForm, onCloseForm, formMode }: NavbarProps) => {
     return (
       <nav className={`navbar${scrolled ? ' navbar--scrolled' : ''}`}>
         <div className="container navbar-inner">
-          <Link to="/" className="navbar-logo" onClick={onCloseForm}>
-            <img src="/logo.png" alt="MeriDiet" className="navbar-logo-img" />
+          <Link to="/" className="navbar-logo">
+            <img src="/logo-header.png" alt="MeriDiet" className="navbar-logo-img" />
           </Link>
 
           <div className="navbar-form-info">
@@ -71,6 +70,13 @@ const Navbar = ({ onOpenForm, onCloseForm, formMode }: NavbarProps) => {
                   <div className="navbar-dropdown-name">{user.full_name}</div>
                   <div className="navbar-dropdown-email">{user.email}</div>
                   <hr className="navbar-dropdown-divider" />
+                  <Link
+                    to="/profile"
+                    className="navbar-dropdown-profile"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    My Profile
+                  </Link>
                   <button
                     className="navbar-dropdown-logout"
                     onClick={() => { clearAuth(); setDropdownOpen(false) }}
@@ -91,7 +97,7 @@ const Navbar = ({ onOpenForm, onCloseForm, formMode }: NavbarProps) => {
       <nav className={`navbar${isHeroTop ? ' navbar--hero' : ''}${scrolled ? ' navbar--scrolled' : ''}`}>
         <div className="container navbar-inner">
           <Link to="/" className="navbar-logo">
-            <img src="/logo.png" alt="MeriDiet" className="navbar-logo-img" />
+            <img src="/logo-header.png" alt="MeriDiet" className="navbar-logo-img" />
           </Link>
 
           <ul className={`navbar-links ${menuOpen ? 'open' : ''}`}>
@@ -121,6 +127,13 @@ const Navbar = ({ onOpenForm, onCloseForm, formMode }: NavbarProps) => {
                     <div className="navbar-dropdown-name">{user.full_name}</div>
                     <div className="navbar-dropdown-email">{user.email}</div>
                     <hr className="navbar-dropdown-divider" />
+                    <Link
+                      to="/profile"
+                      className="navbar-dropdown-profile"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      My Profile
+                    </Link>
                     <button
                       className="navbar-dropdown-logout"
                       onClick={() => { clearAuth(); setDropdownOpen(false) }}
