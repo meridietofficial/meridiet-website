@@ -164,8 +164,8 @@ export function mapFormToPayload(d: FormData) {
 
   // ── Step 3: Food Preferences ──
   set('diet_type',          lookup(DIET_TYPE, String(d.dietType ?? '')))
-  set('cuisine_preference', d.cuisinePreference
-    ? [lookup(CUISINE, String(d.cuisinePreference))]
+  set('cuisine_preference', (d.cuisinePreference as string[] | undefined)?.length
+    ? (d.cuisinePreference as string[]).map((v: string) => lookup(CUISINE, v))
     : undefined)
   set('preferred_meals', (d.preferredMeals as string[] ?? []).map(v => PREFERRED_MEALS[v] ?? v))
   set('food_allergies',  d.foodAllergies

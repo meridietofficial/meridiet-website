@@ -29,11 +29,6 @@ const Footer = () => {
             </div>
           </div>
 
-          <div className="footer-qr-col">
-            <img src="/qr-code.png" alt="Scan to visit MeriDiet" className="footer-qr-img" />
-            <span className="footer-qr-label">Scan to get started</span>
-          </div>
-
           <div className="footer-col">
             <h4>Company</h4>
             <Link to="/about">About Us</Link>

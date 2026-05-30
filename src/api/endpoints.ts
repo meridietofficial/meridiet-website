@@ -11,6 +11,10 @@ const ENDPOINTS = {
     updateAvatar:   '/user/avatar',
     changePassword: '/user/change-password',
   },
+  dietitian: {
+    register: '/dietitian/register',
+    awsKeys:  '/aws-keys/',   // replace with your actual endpoint
+  },
 } as const
 
 export default ENDPOINTS

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation } from 'react-router-dom'
 import AuthModal from './AuthModal'
 import { useAuth } from '../context/AuthContext'
 
@@ -14,9 +14,9 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
   const [authOpen, setAuthOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const { pathname } = useLocation()
+  const { pathname, hash } = useLocation()
 
-  const formMode = pathname === '/form'
+  const formMode = pathname === '/form' || pathname === '/join-as-dietitian'
   const s = (hash: string) => pathname === '/' ? hash : `/${hash}`
 
   useEffect(() => {
@@ -101,12 +101,11 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
           </Link>
 
           <ul className={`navbar-links ${menuOpen ? 'open' : ''}`}>
-            <li><Link to={s('#how-it-works')}>How It Works</Link></li>
-            <li><Link to={s('#plans')}>Plans</Link></li>
-            <li><Link to={s('#sample-diet')}>Sample Diet</Link></li>
-            <li><Link to={s('#pricing')}>Pricing</Link></li>
-            <li><Link to="/about">About Us</Link></li>
-            <li><Link to="/faq">FAQ</Link></li>
+            <li><NavLink to="/" end className={({ isActive }) => isActive && pathname !== '/' || hash === '#how-it-works' ? '' : isActive ? 'active' : ''}>Home</NavLink></li>
+            <li><NavLink to="/about">About Us</NavLink></li>
+            <li><Link to={s('#how-it-works')} className={hash === '#how-it-works' ? 'active' : ''}>How It Works</Link></li>
+            <li><NavLink to="/for-dietitians">For Dietitians</NavLink></li>
+            <li><NavLink to="/blog">Blog</NavLink></li>
           </ul>
 
           <div className="navbar-actions">

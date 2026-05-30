@@ -1,5 +1,5 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
@@ -12,7 +12,9 @@ const UserProfile   = lazy(() => import('./components/UserProfile'))
 const PrivacyPolicy = lazy(() => import('./components/PrivacyPolicy'))
 const TermsConditions = lazy(() => import('./components/TermsConditions'))
 const RefundPolicy  = lazy(() => import('./components/RefundPolicy'))
-const ContactUs     = lazy(() => import('./components/ContactUs'))
+const ContactUs       = lazy(() => import('./components/ContactUs'))
+const ForDietitians   = lazy(() => import('./pages/ForDietitians'))
+const JoinDietitian   = lazy(() => import('./pages/JoinDietitian'))
 
 function PageLoader() {
   return (
@@ -27,9 +29,13 @@ function FormPage() {
   return <DietForm onClose={() => navigate('/')} />
 }
 
+const NO_FOOTER_ROUTES = ['/form', '/join-as-dietitian']
+
 function App() {
-  const navigate = useNavigate()
-  const openForm = () => navigate('/form')
+  const navigate  = useNavigate()
+  const { pathname } = useLocation()
+  const openForm  = () => navigate('/form')
+  const showFooter = !NO_FOOTER_ROUTES.includes(pathname)
 
   return (
     <>
@@ -47,9 +53,11 @@ function App() {
           <Route path="/terms-conditions"  element={<main><TermsConditions /></main>} />
           <Route path="/refund-policy"     element={<main><RefundPolicy /></main>} />
           <Route path="/contact"           element={<main><ContactUs /></main>} />
+          <Route path="/for-dietitians"   element={<ForDietitians />} />
+          <Route path="/join-as-dietitian" element={<JoinDietitian />} />
         </Routes>
       </Suspense>
-      <Footer />
+      {showFooter && <Footer />}
     </>
   )
 }

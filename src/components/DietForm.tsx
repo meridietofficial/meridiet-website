@@ -35,7 +35,7 @@ const INIT: FormData = {
   workoutType: '',
   dailySteps: '',
   dietType: '',
-  cuisinePreference: '',
+  cuisinePreference: [],
   preferredMeals: [],
   foodAllergies: '',
   foodsDislike: '',
@@ -68,6 +68,7 @@ const INIT: FormData = {
   state: '',
   stateCode: '',
   finalNotes: '',
+  planType: '',
 }
 
 type FormData = {
@@ -90,7 +91,7 @@ type FormData = {
   workoutType: string
   dailySteps: string
   dietType: string
-  cuisinePreference: string
+  cuisinePreference: string[]
   preferredMeals: string[]
   foodAllergies: string
   foodsDislike: string
@@ -123,6 +124,7 @@ type FormData = {
   state: string
   stateCode: string
   finalNotes: string
+  planType: string
 }
 
 type SetFn = (k: keyof FormData, v: FormData[keyof FormData]) => void
@@ -457,19 +459,25 @@ const DIET_TYPES = [
   { v: 'Eggetarian',     icon: '🥚', desc: 'Vegetarian + eggs' },
 ]
 const CUISINES = [
-  { v: 'North Indian',   icon: '🫓' },
-  { v: 'South Indian',   icon: '🌶️' },
-  { v: 'Bengali',        icon: '🐟' },
-  { v: 'Gujarati',       icon: '🥜' },
-  { v: 'Punjabi',        icon: '🧈' },
-  { v: 'Maharashtrian',  icon: '🥘' },
-  { v: 'No Preference',  icon: '✌️' },
-]
-const MEAL_PREFS = [
-  { v: 'Home Cooked',     icon: '🍳' },
-  { v: 'Restaurant Food', icon: '🍽️' },
-  { v: 'Meal Prep',       icon: '📦' },
-  { v: 'No Preference',   icon: '😊' },
+  { v: 'North Indian',    icon: '🫓' },
+  { v: 'South Indian',    icon: '🌶️' },
+  { v: 'Bengali',         icon: '🐟' },
+  { v: 'Gujarati',        icon: '🥜' },
+  { v: 'Punjabi',         icon: '🧈' },
+  { v: 'Maharashtrian',   icon: '🥘' },
+  { v: 'Rajasthani',      icon: '🏜️' },
+  { v: 'Goan',            icon: '🌴' },
+  { v: 'Kerala',          icon: '🥥' },
+  { v: 'Mughlai',         icon: '🍖' },
+  { v: 'Hyderabadi',      icon: '🍛' },
+  { v: 'Odia',            icon: '🍚' },
+  { v: 'Bihari',          icon: '🌾' },
+  { v: 'Kashmiri',        icon: '🏔️' },
+  { v: 'Chettinad',       icon: '🌿' },
+  { v: 'Continental',     icon: '🥗' },
+  { v: 'Mediterranean',   icon: '🫒' },
+  { v: 'Chinese',         icon: '🥡' },
+  { v: 'No Preference',   icon: '✌️' },
 ]
 const ALLERGIES = [
   { v: 'None',           icon: '✅' },
@@ -518,40 +526,20 @@ const Step4 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
       <FieldErr msg={err.dietType} />
     </div>
 
-    {/* Cuisine + Preferred Meals */}
-    <div className="df-grid-2">
-      <div className="df-card-field">
-        <label className="df-label">Cuisine Preference</label>
-        <p className="df-field-sub">Which cuisine do you prefer?</p>
-        <div className="ls-pill-group">
-          {CUISINES.map((c) => (
-            <button
-              key={c.v}
-              className={`ls-pill fp-cuisine-pill${d.cuisinePreference === c.v ? ' sel' : ''}`}
-              onClick={() => set('cuisinePreference', c.v)}
-            >
-              <span>{c.icon}</span>
-              <span>{c.v}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="df-card-field">
-        <label className="df-label">Preferred Meals</label>
-        <p className="df-field-sub">Select all that apply</p>
-        <div className="fp-meal-grid">
-          {MEAL_PREFS.map((m) => (
-            <button
-              key={m.v}
-              className={`fp-meal-card${d.preferredMeals.includes(m.v) ? ' sel' : ''}`}
-              onClick={() => tog('preferredMeals', m.v)}
-            >
-              {d.preferredMeals.includes(m.v) && <span className="fp-meal-check">✓</span>}
-              <span className="fp-meal-icon">{m.icon}</span>
-              <span className="fp-meal-label">{m.v}</span>
-            </button>
-          ))}
-        </div>
+    {/* Cuisine Preference — multi-select */}
+    <div className="df-card-field">
+      <label className="df-label">Cuisine Preference <span className="df-opt">(Select all that apply)</span></label>
+      <div className="ls-pill-group">
+        {CUISINES.map((c) => (
+          <button
+            key={c.v}
+            className={`ls-pill fp-cuisine-pill${d.cuisinePreference.includes(c.v) ? ' sel' : ''}`}
+            onClick={() => tog('cuisinePreference', c.v)}
+          >
+            <span>{c.icon}</span>
+            <span>{c.v}</span>
+          </button>
+        ))}
       </div>
     </div>
 
@@ -595,7 +583,7 @@ const Step4 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
     </div>
 
     {/* Meal Timings */}
-    <div className="df-card-field">
+    <div className="df-card-field" style={{ display: 'none' }}>
       <label className="df-label">Meal Timings</label>
       <p className="df-field-sub">What is your usual meal schedule?</p>
       <div className="fp-timings-grid">
@@ -956,6 +944,12 @@ const Step6 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
 )
 
 /* ─── Step 7 ─────────────────────────────────────────────── */
+const PLAN_OPTS = [
+  { v: '1 Week',   price: '₹199', icon: '⚡', desc: '7-day personalized plan', badge: null },
+  { v: '1 Month',  price: '₹499', icon: '👑', desc: '28-day plan + dietitian consult', badge: '🔥 Most Popular' },
+  { v: '3 Months', price: '₹999', icon: '📅', desc: '3 months + monthly check-ins', badge: '⭐ Best Value' },
+]
+
 const DELIVERY_OPTS = [
   { k: 'whatsapp', icon: '💬', lbl: 'WhatsApp', sub: 'Instant delivery on WhatsApp', badge: '⚡ Recommended' },
   { k: 'email',   icon: '📧', lbl: 'Email',     sub: 'Delivered to your inbox',      badge: null },
@@ -980,6 +974,29 @@ const Step7 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
         <h2>Almost done! Just a few details</h2>
         <p>We'll use this to deliver your personalized diet plan.</p>
       </div>
+    </div>
+
+    {/* Plan Selection */}
+    <div className="df-card-field">
+      <label className="df-label">Choose Your Plan <span className="df-req">*</span></label>
+      <p className="df-field-sub">Select the plan that works best for you</p>
+      <div className="ct-plan-grid">
+        {PLAN_OPTS.map((p) => (
+          <button
+            key={p.v}
+            className={`ct-plan-card${d.planType === p.v ? ' sel' : ''}`}
+            onClick={() => set('planType', p.v)}
+          >
+            {p.badge && <span className="ct-plan-badge">{p.badge}</span>}
+            {d.planType === p.v && <span className="ct-plan-check">✓</span>}
+            <span className="ct-plan-icon">{p.icon}</span>
+            <strong className="ct-plan-name">{p.v}</strong>
+            <span className="ct-plan-price">{p.price}</span>
+            <span className="ct-plan-desc">{p.desc}</span>
+          </button>
+        ))}
+      </div>
+      <FieldErr msg={err.planType} />
     </div>
 
     {/* Contact + Delivery */}
@@ -1281,6 +1298,7 @@ function validateStep(s: number, d: FormData): Errors {
   }
   if (s === 5) {
     const methods = d.deliveryMethod as string[]
+    if (!d.planType) e.planType = 'Please select a plan'
     if (!d.contactName.trim()) e.contactName = 'Contact name is required'
     if (methods.includes('whatsapp')) {
       if (!d.whatsapp.trim()) e.whatsapp = 'WhatsApp number is required'
