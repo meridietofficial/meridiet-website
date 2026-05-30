@@ -1,15 +1,18 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { X, Eye, EyeOff, Mail, Lock, User, Phone, ChevronDown, Check } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { X, Eye, EyeOff, Mail, Lock, User, Phone, ChevronDown, Check, Stethoscope } from 'lucide-react'
 import authApi from '../api/auth'
 import { ApiError } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 
 type Tab = 'login' | 'signup'
+export type UserType = 'user' | 'dietitian'
 
 type Props = {
   onClose: () => void
   initialTab?: Tab
+  initialUserType?: UserType
 }
 
 const PHONE_CODES = [
@@ -25,10 +28,12 @@ const PHONE_CODES = [
   { code: '+94',  iso: 'lk', name: 'Sri Lanka' },
 ]
 
-const AuthModal = ({ onClose, initialTab = 'login' }: Props) => {
+const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: Props) => {
   const { saveAuth } = useAuth()
   const { showToast } = useToast()
+  const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>(initialTab)
+  const [userType, setUserType] = useState<UserType>(initialUserType)
   const [showPass, setShowPass] = useState(false)
   const [loading, setLoading] = useState(false)
   const overlayRef = useRef<HTMLDivElement>(null)
@@ -98,6 +103,11 @@ const AuthModal = ({ onClose, initialTab = 'login' }: Props) => {
     }
   }
 
+  const goToDietitianSignup = () => {
+    onClose()
+    navigate('/join-as-dietitian')
+  }
+
   const selectedCountry = PHONE_CODES.find(c => c.code === signupPhoneCode) ?? PHONE_CODES[0]
   const [codeOpen, setCodeOpen] = useState(false)
   const codeRef = useRef<HTMLDivElement>(null)
@@ -125,22 +135,25 @@ const AuthModal = ({ onClose, initialTab = 'login' }: Props) => {
           <img src="/logo.png" alt="MeriDiet" />
         </div>
 
-        <div className="auth-tabs">
+        {/* ── User / Dietitian slider ── */}
+        <div className="auth-type-toggle">
           <button
-            className={`auth-tab${tab === 'login' ? ' auth-tab--active' : ''}`}
-            onClick={() => setTab('login')}
+            className={`auth-type-btn${userType === 'user' ? ' auth-type-btn--active' : ''}`}
+            onClick={() => { setUserType('user'); setTab('login') }}
           >
-            Login
+            <User size={14} />
+            User
           </button>
           <button
-            className={`auth-tab${tab === 'signup' ? ' auth-tab--active' : ''}`}
-            onClick={() => setTab('signup')}
+            className={`auth-type-btn${userType === 'dietitian' ? ' auth-type-btn--active' : ''}`}
+            onClick={() => { setUserType('dietitian'); setTab('login') }}
           >
-            Sign Up
+            <Stethoscope size={14} />
+            Dietitian
           </button>
         </div>
 
-        {/* ── LOGIN ── */}
+        {/* ── LOGIN (same for both user types) ── */}
         {tab === 'login' && (
           <form className="auth-form" onSubmit={handleLogin}>
             <div className="auth-field">
@@ -186,14 +199,23 @@ const AuthModal = ({ onClose, initialTab = 'login' }: Props) => {
             </button>
 
             <p className="auth-switch">
-              Don't have an account?{' '}
-              <button type="button" onClick={() => setTab('signup')}>Sign up free</button>
+              {userType === 'user' ? (
+                <>
+                  Don't have an account?{' '}
+                  <button type="button" onClick={() => setTab('signup')}>Sign up free</button>
+                </>
+              ) : (
+                <>
+                  Not registered yet?{' '}
+                  <button type="button" onClick={goToDietitianSignup}>Register as Dietitian</button>
+                </>
+              )}
             </p>
           </form>
         )}
 
-        {/* ── SIGN UP ── */}
-        {tab === 'signup' && (
+        {/* ── SIGN UP (user only) ── */}
+        {tab === 'signup' && userType === 'user' && (
           <form className="auth-form" onSubmit={handleSignup}>
 
             <div className="auth-field">

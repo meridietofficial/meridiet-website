@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import dietitianApi, { uploadDocuments } from '../api/dietitian'
 import { ApiError } from '../api/client'
 import { useToast } from '../context/ToastContext'
+import AuthModal from '../components/AuthModal'
 
 const STEPS = [
   { num: 1, label: 'Basic Information' },
@@ -53,6 +54,7 @@ const Err = ({ msg }: { msg?: string }) =>
 const JoinDietitian = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const [loginOpen, setLoginOpen] = useState(false)
   const [step, setStep]       = useState(1)
   const [data, setData]       = useState<Form>(INIT)
   const [errors, setErrors]   = useState<Partial<Record<keyof Form, string>>>({})
@@ -387,9 +389,17 @@ const JoinDietitian = () => {
         </div>
 
         <p className="jd2-login-note">
-          Already have an account? <a href="#">Login</a>
+          Already have an account?{' '}
+          <button type="button" className="jd2-login-link" onClick={() => setLoginOpen(true)}>Login</button>
         </p>
       </div>
+
+      {loginOpen && (
+        <AuthModal
+          onClose={() => setLoginOpen(false)}
+          initialUserType="dietitian"
+        />
+      )}
     </div>
   )
 }

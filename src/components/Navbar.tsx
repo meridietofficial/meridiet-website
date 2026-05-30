@@ -101,11 +101,25 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
           </Link>
 
           <ul className={`navbar-links ${menuOpen ? 'open' : ''}`}>
-            <li><NavLink to="/" end className={({ isActive }) => isActive && pathname !== '/' || hash === '#how-it-works' ? '' : isActive ? 'active' : ''}>Home</NavLink></li>
-            <li><NavLink to="/about">About Us</NavLink></li>
-            <li><Link to={s('#how-it-works')} className={hash === '#how-it-works' ? 'active' : ''}>How It Works</Link></li>
-            <li><NavLink to="/for-dietitians">For Dietitians</NavLink></li>
-            <li><NavLink to="/blog">Blog</NavLink></li>
+            <li><NavLink to="/" end onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive && pathname !== '/' || hash === '#how-it-works' ? '' : isActive ? 'active' : ''}>Home</NavLink></li>
+            <li><NavLink to="/about" onClick={() => setMenuOpen(false)}>About Us</NavLink></li>
+            <li><Link to={s('#how-it-works')} className={hash === '#how-it-works' ? 'active' : ''} onClick={() => setMenuOpen(false)}>How It Works</Link></li>
+            <li><NavLink to="/for-dietitians" onClick={() => setMenuOpen(false)}>For Dietitians</NavLink></li>
+            <li><NavLink to="/blog" onClick={() => setMenuOpen(false)}>Blog</NavLink></li>
+            <li className="navbar-mobile-actions">
+              <button className="btn-primary navbar-cta" onClick={() => { setMenuOpen(false); onOpenForm() }}>
+                Get My Diet Plan
+              </button>
+              {user ? (
+                <button className="navbar-login" onClick={() => { setMenuOpen(false); setDropdownOpen(p => !p) }}>
+                  {initials} · My Profile
+                </button>
+              ) : (
+                <button className="navbar-login" onClick={() => { setMenuOpen(false); setAuthOpen(true) }}>
+                  Login / Sign Up
+                </button>
+              )}
+            </li>
           </ul>
 
           <div className="navbar-actions">
@@ -161,7 +175,12 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
         </div>
       </nav>
 
-      {authOpen && <AuthModal onClose={() => setAuthOpen(false)} />}
+      {authOpen && (
+        <AuthModal
+          onClose={() => setAuthOpen(false)}
+          initialUserType={pathname === '/for-dietitians' ? 'dietitian' : 'user'}
+        />
+      )}
     </>
   )
 }
