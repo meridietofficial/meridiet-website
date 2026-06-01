@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { X, Eye, EyeOff, Mail, Lock, User, Phone, ChevronDown, Check, Stethoscope } from 'lucide-react'
+import { useGoogleLogin } from '@react-oauth/google'
 import authApi from '../api/auth'
 import { ApiError } from '../api/client'
 import { useAuth } from '../context/AuthContext'
@@ -111,6 +112,34 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
     navigate('/join-as-dietitian')
   }
 
+  const handleGoogleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      setLoading(true)
+      try {
+        const gInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
+        }).then(r => r.json())
+
+        const res = await authApi.googleLogin({
+          google_id:  gInfo.sub,
+          email:      gInfo.email,
+          full_name:  gInfo.name,
+          avatar_url: gInfo.picture ?? '',
+          user_type:  userType,
+        })
+        saveAuth(res.data.user, res.data.token)
+        showToast('Logged in with Google!', 'success')
+        onClose()
+        if (res.data.user.role === 'dietitian') navigate('/dietitian-dashboard')
+      } catch (err) {
+        showToast(err instanceof ApiError ? err.message : 'Google login failed. Please try again.', 'error')
+      } finally {
+        setLoading(false)
+      }
+    },
+    onError: () => showToast('Google sign-in was cancelled or failed.', 'error'),
+  })
+
   const selectedCountry = PHONE_CODES.find(c => c.code === signupPhoneCode) ?? PHONE_CODES[0]
   const [codeOpen, setCodeOpen] = useState(false)
   const codeRef = useRef<HTMLDivElement>(null)
@@ -196,7 +225,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
 
             <div className="auth-divider"><span>or continue with</span></div>
 
-            <button type="button" className="auth-google">
+            <button type="button" className="auth-google" onClick={() => handleGoogleLogin()}>
               <i className="fa-brands fa-google" />
               Continue with Google
             </button>
@@ -319,7 +348,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
 
             <div className="auth-divider"><span>or continue with</span></div>
 
-            <button type="button" className="auth-google">
+            <button type="button" className="auth-google" onClick={() => handleGoogleLogin()}>
               <i className="fa-brands fa-google" />
               Continue with Google
             </button>

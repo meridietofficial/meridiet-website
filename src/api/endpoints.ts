@@ -2,6 +2,7 @@ const ENDPOINTS = {
   auth: {
     register: '/auth/register',
     login:    '/auth/login',
+    google:   '/auth/google',
   },
   dietForm: {
     submit: '/diet-form',

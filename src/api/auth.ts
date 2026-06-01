@@ -26,6 +26,14 @@ const authApi = {
 
   login: (body: Record<string, unknown>) =>
     apiClient.apiPost<AuthResponse>(ENDPOINTS.auth.login, body),
+
+  googleLogin: (body: {
+    google_id: string
+    email: string
+    full_name: string
+    avatar_url: string
+    user_type: 'user' | 'dietitian'
+  }) => apiClient.apiPost<AuthResponse>(ENDPOINTS.auth.google, body),
 }
 
 export default authApi
