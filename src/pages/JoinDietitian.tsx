@@ -4,6 +4,7 @@ import dietitianApi, { uploadDocuments } from '../api/dietitian'
 import { ApiError } from '../api/client'
 import { useToast } from '../context/ToastContext'
 import AuthModal from '../components/AuthModal'
+import { IN_STATES } from '../data/indiaCities'
 
 const STEPS = [
   { num: 1, label: 'Basic Information' },
@@ -55,6 +56,7 @@ const JoinDietitian = () => {
   const navigate = useNavigate()
   const { showToast } = useToast()
   const [loginOpen, setLoginOpen] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const [step, setStep]       = useState(1)
   const [data, setData]       = useState<Form>(INIT)
   const [errors, setErrors]   = useState<Partial<Record<keyof Form, string>>>({})
@@ -227,7 +229,9 @@ const JoinDietitian = () => {
                   <div className={`jd2-input-wrap${errors.phone ? ' err' : ''}`}>
                     <i className="jd2-ico fa-solid fa-phone" />
                     <input className="jd2-input" type="tel" placeholder="Enter your 10-digit number"
-                      value={data.phone} onChange={e => set('phone', e.target.value)} />
+                      maxLength={10}
+                      value={data.phone}
+                      onChange={e => set('phone', e.target.value.replace(/\D/g, ''))} />
                   </div>
                   <Err msg={errors.phone} />
                 </div>
@@ -249,7 +253,7 @@ const JoinDietitian = () => {
                     <i className="jd2-ico fa-solid fa-map-location-dot" />
                     <select className="jd2-input jd2-select" value={data.state} onChange={e => set('state', e.target.value)}>
                       <option value="">Select state</option>
-                      {['Andhra Pradesh','Delhi','Gujarat','Karnataka','Kerala','Madhya Pradesh','Maharashtra','Punjab','Rajasthan','Tamil Nadu','Telangana','Uttar Pradesh','West Bengal'].map(s => <option key={s}>{s}</option>)}
+                      {IN_STATES.map(s => <option key={s.isoCode} value={s.name}>{s.name}</option>)}
                     </select>
                   </div>
                   <Err msg={errors.state} />
@@ -270,8 +274,11 @@ const JoinDietitian = () => {
                   <label className="jd2-label">Password <span className="jd2-req">*</span></label>
                   <div className={`jd2-input-wrap${errors.password ? ' err' : ''}`}>
                     <i className="jd2-ico fa-solid fa-lock" />
-                    <input className="jd2-input" type="password" placeholder="Minimum 8 characters"
+                    <input className="jd2-input" type={showPassword ? 'text' : 'password'} placeholder="Minimum 8 characters"
                       value={data.password} onChange={e => set('password', e.target.value)} />
+                    <button type="button" className="jd2-eye-btn" onClick={() => setShowPassword(p => !p)}>
+                      <i className={`fa-regular ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} />
+                    </button>
                   </div>
                   <Err msg={errors.password} />
                 </div>

@@ -69,13 +69,16 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
                 <div className="navbar-dropdown">
                   <div className="navbar-dropdown-name">{user.full_name}</div>
                   <div className="navbar-dropdown-email">{user.email}</div>
+                  <span className={`navbar-role-badge${user.role === 'dietitian' ? ' navbar-role-badge--dietitian' : ''}`}>
+                    {user.role === 'dietitian' ? '🩺 Dietitian' : '👤 User'}
+                  </span>
                   <hr className="navbar-dropdown-divider" />
                   <Link
-                    to="/profile"
+                    to={user.role === 'dietitian' ? '/dietitian-dashboard' : '/profile'}
                     className="navbar-dropdown-profile"
                     onClick={() => setDropdownOpen(false)}
                   >
-                    My Profile
+                    {user.role === 'dietitian' ? 'My Dashboard' : 'My Profile'}
                   </Link>
                   <button
                     className="navbar-dropdown-logout"
@@ -104,6 +107,7 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
             <li><NavLink to="/" end onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive && pathname !== '/' || hash === '#how-it-works' ? '' : isActive ? 'active' : ''}>Home</NavLink></li>
             <li><NavLink to="/about" onClick={() => setMenuOpen(false)}>About Us</NavLink></li>
             <li><Link to={s('#how-it-works')} className={hash === '#how-it-works' ? 'active' : ''} onClick={() => setMenuOpen(false)}>How It Works</Link></li>
+            <li><NavLink to="/consult-dietitian" onClick={() => setMenuOpen(false)}>Consult Dietitian</NavLink></li>
             <li><NavLink to="/for-dietitians" onClick={() => setMenuOpen(false)}>For Dietitians</NavLink></li>
             <li><NavLink to="/blog" onClick={() => setMenuOpen(false)}>Blog</NavLink></li>
             <li className="navbar-mobile-actions">
@@ -129,23 +133,35 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
 
             {user ? (
               <div className="navbar-user" ref={dropdownRef}>
-                <button className="navbar-avatar" onClick={() => setDropdownOpen(p => !p)}>
-                  {user.avatar_url
-                    ? <img src={user.avatar_url} alt={user.full_name} />
-                    : <span>{initials}</span>
-                  }
+                <button className="navbar-user-chip" onClick={() => setDropdownOpen(p => !p)}>
+                  <span className="navbar-chip-avatar">
+                    {user.avatar_url
+                      ? <img src={user.avatar_url} alt={user.full_name} />
+                      : <span>{initials}</span>
+                    }
+                  </span>
+                  <span className="navbar-chip-text">
+                    <span className="navbar-chip-name">{user.full_name}</span>
+                    <span className={`navbar-chip-role${user.role === 'dietitian' ? ' navbar-chip-role--dietitian' : ''}`}>
+                      {user.role === 'dietitian' ? 'Dietitian' : 'User'}
+                    </span>
+                  </span>
+                  <svg className="navbar-chip-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
                 </button>
                 {dropdownOpen && (
                   <div className="navbar-dropdown">
                     <div className="navbar-dropdown-name">{user.full_name}</div>
                     <div className="navbar-dropdown-email">{user.email}</div>
+                    <span className={`navbar-role-badge${user.role === 'dietitian' ? ' navbar-role-badge--dietitian' : ''}`}>
+                      {user.role === 'dietitian' ? '🩺 Dietitian' : '👤 User'}
+                    </span>
                     <hr className="navbar-dropdown-divider" />
                     <Link
-                      to="/profile"
+                      to={user.role === 'dietitian' ? '/dietitian-dashboard' : '/profile'}
                       className="navbar-dropdown-profile"
                       onClick={() => setDropdownOpen(false)}
                     >
-                      My Profile
+                      {user.role === 'dietitian' ? 'My Dashboard' : 'My Profile'}
                     </Link>
                     <button
                       className="navbar-dropdown-logout"

@@ -68,7 +68,7 @@ const INIT: FormData = {
   state: '',
   stateCode: '',
   finalNotes: '',
-  planType: '',
+  planType: '1 Month',
 }
 
 type FormData = {
@@ -1213,7 +1213,7 @@ const SidebarStep1 = ({ step }: { step: number }) => (
 )
 
 /* ─── Sidebar – Steps 2–7 ─────────────────────────────────── */
-const SidebarMain = ({ step }: { step: number }) => (
+const SidebarMain = ({ step, planType, onSelectPlan }: { step: number; planType: string; onSelectPlan: (v: string) => void }) => (
   <aside className="df-sidebar">
     <div className="df-sidebar-inner">
 
@@ -1241,6 +1241,32 @@ const SidebarMain = ({ step }: { step: number }) => (
           )
         })}
       </nav>
+
+      {/* ── Our Plans ── */}
+      <div className="df-sb-plans">
+        <p className="df-sb-plans-title">Our Plans</p>
+        {PLAN_OPTS.map(p => {
+          const selected = planType === p.v
+          return (
+            <button
+              key={p.v}
+              className={`df-sb-plan-card${p.badge?.includes('Popular') ? ' df-sb-plan-card--popular' : ''}${selected ? ' df-sb-plan-card--selected' : ''}`}
+              onClick={() => onSelectPlan(p.v)}
+            >
+              {selected && <span className="df-sb-plan-check">✓</span>}
+              {p.badge && <span className="df-sb-plan-badge">{p.badge}</span>}
+              <div className="df-sb-plan-top">
+                <span className="df-sb-plan-icon">{p.icon}</span>
+                <div>
+                  <p className="df-sb-plan-name">{p.v}</p>
+                  <p className="df-sb-plan-desc">{p.desc}</p>
+                </div>
+                <span className="df-sb-plan-price">{p.price}</span>
+              </div>
+            </button>
+          )
+        })}
+      </div>
 
       <div className="df-sb-help">
         <span className="df-sb-help-icon">💬</span>
@@ -1391,7 +1417,7 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
   return (
     <div className="df-overlay" ref={overlayRef}>
       <div className="df-layout">
-        <SidebarMain step={step} />
+        <SidebarMain step={step} planType={data.planType} onSelectPlan={v => set('planType', v)} />
 
         <div className="df-right">
           <div className="df-panel">

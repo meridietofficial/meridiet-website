@@ -71,6 +71,9 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
       saveAuth(res.data.user, res.data.token)
       showToast('Welcome back! You are now logged in.', 'success')
       onClose()
+      if (res.data.user.role === 'dietitian') {
+        navigate('/dietitian-dashboard')
+      }
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : 'Login failed. Please try again.', 'error')
     } finally {

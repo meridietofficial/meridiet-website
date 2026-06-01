@@ -1,4 +1,5 @@
 import Hero from '../components/Hero'
+import DietitianShowcase from '../components/DietitianShowcase'
 import HowItWorks from '../components/HowItWorks'
 import PlansFor from '../components/PlansFor'
 import SamplePlan from '../components/SamplePlan'
@@ -10,6 +11,7 @@ import CTA from '../components/CTA'
 const HomePage = ({ onOpenForm }: { onOpenForm: () => void }) => (
   <main>
     <Hero onOpenForm={onOpenForm} />
+    <DietitianShowcase />
     <HowItWorks />
     <PlansFor />
     <SamplePlan />
