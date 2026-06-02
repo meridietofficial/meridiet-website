@@ -1,10 +1,12 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import dietitianApi, { uploadDocuments } from '../api/dietitian'
 import { ApiError } from '../api/client'
 import { useToast } from '../context/ToastContext'
 import AuthModal from '../components/AuthModal'
 import { IN_STATES } from '../data/indiaCities'
+import SearchableSelect from '../components/SearchableSelect'
+import type { SelectOption } from '../components/SearchableSelect'
 
 const STEPS = [
   { num: 1, label: 'Basic Information' },
@@ -12,10 +14,94 @@ const STEPS = [
   { num: 3, label: 'Verification' },
 ]
 
+const DEGREES: SelectOption[] = [
+  { value: '', label: 'Undergraduate Degrees', isGroup: true },
+  { value: 'B.Sc. Nutrition & Dietetics',            label: 'B.Sc. Nutrition & Dietetics' },
+  { value: 'B.Sc. Food Science & Nutrition',         label: 'B.Sc. Food Science & Nutrition' },
+  { value: 'B.Sc. Clinical Nutrition',               label: 'B.Sc. Clinical Nutrition' },
+  { value: 'B.Sc. Dietetics',                        label: 'B.Sc. Dietetics' },
+  { value: 'B.Sc. Food & Nutrition',                 label: 'B.Sc. Food & Nutrition' },
+  { value: 'B.Sc. Food Technology',                  label: 'B.Sc. Food Technology' },
+  { value: 'B.Sc. Home Science (Nutrition)',          label: 'B.Sc. Home Science (Nutrition)' },
+  { value: 'B.Sc. Home Science (Food & Nutrition)',   label: 'B.Sc. Home Science (Food & Nutrition)' },
+  { value: 'B.Sc. Biochemistry',                     label: 'B.Sc. Biochemistry' },
+  { value: 'B.Sc. Biotechnology',                    label: 'B.Sc. Biotechnology' },
+  { value: 'B.Sc. Agriculture (Food Science)',        label: 'B.Sc. Agriculture (Food Science)' },
+  { value: 'B.H.Sc. Home Science',                   label: 'B.H.Sc. Home Science' },
+
+  { value: '', label: 'Postgraduate Degrees', isGroup: true },
+  { value: 'M.Sc. Nutrition & Dietetics',            label: 'M.Sc. Nutrition & Dietetics' },
+  { value: 'M.Sc. Clinical Nutrition & Dietetics',   label: 'M.Sc. Clinical Nutrition & Dietetics' },
+  { value: 'M.Sc. Food Science & Nutrition',         label: 'M.Sc. Food Science & Nutrition' },
+  { value: 'M.Sc. Food & Nutrition',                 label: 'M.Sc. Food & Nutrition' },
+  { value: 'M.Sc. Dietetics',                        label: 'M.Sc. Dietetics' },
+  { value: 'M.Sc. Food Technology',                  label: 'M.Sc. Food Technology' },
+  { value: 'M.Sc. Home Science (Food & Nutrition)',   label: 'M.Sc. Home Science (Food & Nutrition)' },
+  { value: 'M.Sc. Sports Nutrition',                 label: 'M.Sc. Sports Nutrition' },
+  { value: 'M.Sc. Public Health Nutrition',          label: 'M.Sc. Public Health Nutrition' },
+  { value: 'M.Sc. Community Nutrition',              label: 'M.Sc. Community Nutrition' },
+  { value: 'M.Sc. Human Nutrition',                  label: 'M.Sc. Human Nutrition' },
+  { value: 'M.Sc. Maternal & Child Nutrition',       label: 'M.Sc. Maternal & Child Nutrition' },
+  { value: 'M.Sc. Biochemistry',                     label: 'M.Sc. Biochemistry' },
+  { value: 'M.Sc. Applied Nutrition',                label: 'M.Sc. Applied Nutrition' },
+
+  { value: '', label: 'PG Diploma & Diploma', isGroup: true },
+  { value: 'PG Diploma in Dietetics',                          label: 'PG Diploma in Dietetics' },
+  { value: 'PG Diploma in Clinical Nutrition & Dietetics',     label: 'PG Diploma in Clinical Nutrition & Dietetics' },
+  { value: 'PG Diploma in Nutrition & Dietetics',              label: 'PG Diploma in Nutrition & Dietetics' },
+  { value: 'PG Diploma in Sports Nutrition',                   label: 'PG Diploma in Sports Nutrition' },
+  { value: 'PG Diploma in Food Science & Nutrition',           label: 'PG Diploma in Food Science & Nutrition' },
+  { value: 'PG Diploma in Dietetics & Applied Nutrition',      label: 'PG Diploma in Dietetics & Applied Nutrition' },
+  { value: 'PG Diploma in Child Nutrition & Dietetics',        label: 'PG Diploma in Child Nutrition & Dietetics' },
+  { value: 'PG Diploma in Diabetes Education',                 label: 'PG Diploma in Diabetes Education' },
+  { value: 'PG Diploma in Community Nutrition',                label: 'PG Diploma in Community Nutrition' },
+  { value: 'PGDDN – PG Diploma in Dietetics & Nutrition (IGNOU)', label: 'PGDDN – PG Diploma in Dietetics & Nutrition (IGNOU)' },
+  { value: 'Diploma in Nutrition & Health Education (DNHE)',   label: 'Diploma in Nutrition & Health Education (DNHE)' },
+  { value: 'Diploma in Dietetics & Nutrition',                 label: 'Diploma in Dietetics & Nutrition' },
+
+  { value: '', label: 'Doctorate', isGroup: true },
+  { value: 'Ph.D. Nutrition',                        label: 'Ph.D. Nutrition' },
+  { value: 'Ph.D. Food Science & Nutrition',         label: 'Ph.D. Food Science & Nutrition' },
+  { value: 'Ph.D. Clinical Nutrition',               label: 'Ph.D. Clinical Nutrition' },
+  { value: 'Ph.D. Nutritional Biochemistry',         label: 'Ph.D. Nutritional Biochemistry' },
+  { value: 'Ph.D. Food & Nutrition',                 label: 'Ph.D. Food & Nutrition' },
+  { value: 'Ph.D. Dietetics',                        label: 'Ph.D. Dietetics' },
+  { value: 'Ph.D. Home Science (Nutrition)',         label: 'Ph.D. Home Science (Nutrition)' },
+
+  { value: '', label: 'Medical Degrees', isGroup: true },
+  { value: 'MBBS',                                   label: 'MBBS' },
+  { value: 'MD Medicine',                            label: 'MD Medicine' },
+  { value: 'MD Biochemistry',                        label: 'MD Biochemistry' },
+  { value: 'DNB (General Medicine)',                 label: 'DNB (General Medicine)' },
+
+  { value: '', label: 'Professional Certifications', isGroup: true },
+  { value: 'Certified Diabetes Educator (CDE)',      label: 'Certified Diabetes Educator (CDE)' },
+  { value: 'Certified Sports Nutritionist',          label: 'Certified Sports Nutritionist' },
+  { value: 'Certified Nutrition Specialist (CNS)',   label: 'Certified Nutrition Specialist (CNS)' },
+  { value: 'Registered Dietitian (RD)',              label: 'Registered Dietitian (RD)' },
+  { value: 'Other',                                  label: 'Other' },
+]
+
 const SPECIALIZATIONS = [
   'Weight Management', 'Sports Nutrition', 'Clinical Nutrition',
-  'Pediatric Nutrition', 'PCOS / Hormonal', 'Diabetes Care',
-  'Gut Health', 'General Wellness',
+  'Pediatric Nutrition', 'PCOS / Hormonal Imbalance', 'Diabetes Care',
+  'Gut Health & IBS', 'General Wellness', 'Thyroid Management',
+  'Renal / Kidney Nutrition', 'Cardiac Nutrition', 'Oncology Nutrition',
+  'Pre & Postnatal Nutrition', 'Geriatric Nutrition', 'Eating Disorders',
+  'Food Allergy & Intolerance', 'Vegan / Plant-Based Nutrition',
+  'Bariatric Nutrition', 'Immune & Functional Nutrition',
+  'Keto / Low-Carb Nutrition', 'Fatty Liver & Liver Health',
+  'Cholesterol & Lipid Management', 'Hypertension & Heart Health',
+  'Anaemia & Iron Deficiency', 'Bone Health & Osteoporosis',
+  'Skin & Hair Nutrition', 'Mental Health & Nutrition',
+]
+
+const EXPERIENCE_OPTIONS = [
+  { value: 'Less than 1 year', label: '< 1 Year',   sub: 'Fresher' },
+  { value: '1 – 3 years',      label: '1 – 3 Yrs',  sub: 'Junior'  },
+  { value: '3 – 5 years',      label: '3 – 5 Yrs',  sub: 'Mid-level' },
+  { value: '5 – 10 years',     label: '5 – 10 Yrs', sub: 'Senior'  },
+  { value: '10+ years',        label: '10+ Yrs',    sub: 'Expert'  },
 ]
 
 const PLATFORMS = [
@@ -33,7 +119,7 @@ const TIMINGS = [
 
 type Form = {
   fullName: string; email: string; phone: string
-  city: string; state: string; password: string
+  city: string; state: string; stateCode: string; password: string
   qualification: string; experience: string; license: string
   specializations: string[]
   platforms: string[]; timings: string[]
@@ -42,7 +128,7 @@ type Form = {
 
 const INIT: Form = {
   fullName: '', email: '', phone: '',
-  city: '', state: '', password: '',
+  city: '', state: '', stateCode: '', password: '',
   qualification: '', experience: '', license: '',
   specializations: [],
   platforms: [], timings: [],
@@ -51,6 +137,93 @@ const INIT: Form = {
 
 const Err = ({ msg }: { msg?: string }) =>
   msg ? <p className="jd2-err">⚠ {msg}</p> : null
+
+/* ── Specialization tag-input ── */
+function SpecializationInput({
+  value, onChange,
+}: { value: string[]; onChange: (v: string[]) => void }) {
+  const [query, setQuery]   = useState('')
+  const [open, setOpen]     = useState(false)
+  const wrapRef             = useRef<HTMLDivElement>(null)
+  const inputRef            = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false); setQuery('')
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const suggestions = SPECIALIZATIONS.filter(
+    s => s.toLowerCase().includes(query.toLowerCase()) && !value.includes(s)
+  )
+  const canAddCustom = query.trim() && !SPECIALIZATIONS.includes(query.trim()) && !value.includes(query.trim())
+
+  const add = (item: string) => {
+    onChange([...value, item])
+    setQuery(''); setOpen(false); inputRef.current?.focus()
+  }
+
+  const remove = (item: string) => onChange(value.filter(v => v !== item))
+
+  return (
+    <div className="jd2-spec-wrap" ref={wrapRef}>
+      {/* Tags */}
+      {value.length > 0 && (
+        <div className="jd2-spec-tags">
+          {value.map(v => (
+            <span key={v} className="jd2-spec-tag">
+              {v}
+              <button type="button" className="jd2-spec-tag-remove" onClick={() => remove(v)}>✕</button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Input */}
+      <div className="jd2-spec-input-row">
+        <input
+          ref={inputRef}
+          className="jd2-spec-input"
+          placeholder={value.length ? 'Search to add more…' : 'Search specialization…'}
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+        />
+        {query.trim() && (
+          <button type="button" className="jd2-spec-add-btn"
+            onClick={() => (canAddCustom ? add(query.trim()) : suggestions[0] && add(suggestions[0]))}>
+            + Add
+          </button>
+        )}
+      </div>
+
+      {/* Dropdown */}
+      {open && (query.trim() || suggestions.length > 0) && (
+        <div className="jd2-spec-dropdown">
+          {suggestions.map(s => (
+            <button key={s} type="button" className="jd2-spec-option" onClick={() => add(s)}>
+              <span>{s}</span>
+              <span className="jd2-spec-plus">+</span>
+            </button>
+          ))}
+          {canAddCustom && (
+            <button type="button" className="jd2-spec-option jd2-spec-option--custom" onClick={() => add(query.trim())}>
+              <span>Add "<strong>{query.trim()}</strong>"</span>
+              <span className="jd2-spec-plus">+</span>
+            </button>
+          )}
+          {!suggestions.length && !canAddCustom && (
+            <p className="jd2-spec-empty">Already added or type something new</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 const JoinDietitian = () => {
   const navigate = useNavigate()
@@ -62,6 +235,23 @@ const JoinDietitian = () => {
   const [errors, setErrors]   = useState<Partial<Record<keyof Form, string>>>({})
   const [submitted, setSubmitted] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [cities, setCities]       = useState<string[]>([])
+  const [citiesLoading, setCitiesLoading] = useState(false)
+
+  useEffect(() => {
+    if (!data.state) { setCities([]); return }
+    setCitiesLoading(true)
+    setCities([])
+    fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ country: 'India', state: data.state }),
+    })
+      .then(r => r.json())
+      .then(res => { if (!res.error) setCities(res.data ?? []) })
+      .catch(() => {})
+      .finally(() => setCitiesLoading(false))
+  }, [data.state])
   const [docs, setDocs]     = useState<Record<string, File | null>>({
     profilePhoto: null, degreeCert: null, regCert: null, idProof: null,
   })
@@ -118,16 +308,16 @@ const JoinDietitian = () => {
         const docUrls = await uploadDocuments(docs as Record<'profilePhoto' | 'degreeCert' | 'regCert' | 'idProof', File | null>)
 
         const body = {
-          fullName:             data.fullName,
-          email:                data.email,
-          phone:                data.phone,
-          state:                data.state,
-          city:                 data.city,
-          password:             data.password,
-          highestDegree:        data.qualification,
-          registrationNumber:   data.license,
-          experience:           data.experience,
-          specialization:       data.specializations[0] ?? '',
+          fullName:           data.fullName,
+          email:              data.email,
+          phone:              data.phone,
+          state:              data.state,
+          city:               data.city,
+          password:           data.password,
+          registrationNumber: data.license,
+          experience:         data.experience,
+          specialization:     data.specializations,
+          degrees: [{ degree: data.qualification, institute: '', year: '' }],
           documents: {
             profilePhoto:            docUrls.profilePhoto,
             degreeCertificate:       docUrls.degreeCert,
@@ -249,13 +439,18 @@ const JoinDietitian = () => {
                 </div>
                 <div className="jd2-field">
                   <label className="jd2-label">State <span className="jd2-req">*</span></label>
-                  <div className={`jd2-input-wrap${errors.state ? ' err' : ''}`}>
-                    <i className="jd2-ico fa-solid fa-map-location-dot" />
-                    <select className="jd2-input jd2-select" value={data.state} onChange={e => set('state', e.target.value)}>
-                      <option value="">Select state</option>
-                      {IN_STATES.map(s => <option key={s.isoCode} value={s.name}>{s.name}</option>)}
-                    </select>
-                  </div>
+                  <SearchableSelect
+                    options={IN_STATES.map(s => ({ value: s.isoCode, label: s.name }))}
+                    value={data.stateCode}
+                    onChange={code => {
+                      const name = IN_STATES.find(s => s.isoCode === code)?.name ?? ''
+                      setData(p => ({ ...p, stateCode: code, state: name, city: '' }))
+                      setErrors(p => { const n = { ...p }; delete n.state; delete n.city; return n })
+                    }}
+                    placeholder="Select your state"
+                    searchPlaceholder="Search state..."
+                    hasError={!!errors.state}
+                  />
                   <Err msg={errors.state} />
                 </div>
               </div>
@@ -263,11 +458,15 @@ const JoinDietitian = () => {
               <div className="jd2-row">
                 <div className="jd2-field">
                   <label className="jd2-label">City <span className="jd2-req">*</span></label>
-                  <div className={`jd2-input-wrap${errors.city ? ' err' : ''}`}>
-                    <i className="jd2-ico fa-solid fa-location-dot" />
-                    <input className="jd2-input" placeholder="Enter your city"
-                      value={data.city} onChange={e => set('city', e.target.value)} />
-                  </div>
+                  <SearchableSelect
+                    options={cities.map(c => ({ value: c, label: c }))}
+                    value={data.city}
+                    onChange={city => set('city', city)}
+                    placeholder={citiesLoading ? 'Loading cities…' : !data.state ? 'Select a state first' : 'Select your city'}
+                    searchPlaceholder="Search city..."
+                    disabled={!data.state || citiesLoading}
+                    hasError={!!errors.city}
+                  />
                   <Err msg={errors.city} />
                 </div>
                 <div className="jd2-field">
@@ -291,22 +490,35 @@ const JoinDietitian = () => {
             <div className="jd2-fields">
               <div className="jd2-row">
                 <div className="jd2-field">
-                  <label className="jd2-label">Highest Degree <span className="jd2-req">*</span></label>
-                  <div className={`jd2-input-wrap${errors.qualification ? ' err' : ''}`}>
-                    <select className="jd2-input jd2-select" style={{ paddingLeft: 12 }} value={data.qualification} onChange={e => set('qualification', e.target.value)}>
-                      <option value="">Select your degree</option>
-                      <option>B.Sc. Nutrition & Dietetics</option>
-                      <option>M.Sc. Clinical Nutrition</option>
-                      <option>M.Sc. Food & Nutrition</option>
-                      <option>PG Diploma in Dietetics</option>
-                      <option>Ph.D. Nutrition</option>
-                      <option>Other</option>
-                    </select>
-                  </div>
+                  <label className="jd2-label">
+                    Highest Degree <span className="jd2-req">*</span>
+                    <span className="jd2-tooltip-wrap">
+                      <span className="jd2-tooltip-icon">ℹ</span>
+                      <span className="jd2-tooltip-box">
+                        Can't find your degree? Choose <strong>"Other"</strong> at the bottom of the list.
+                      </span>
+                    </span>
+                  </label>
+                  <SearchableSelect
+                    options={DEGREES}
+                    value={data.qualification}
+                    onChange={v => set('qualification', v)}
+                    placeholder="Select your degree"
+                    searchPlaceholder="Search degree..."
+                    hasError={!!errors.qualification}
+                  />
                   <Err msg={errors.qualification} />
                 </div>
                 <div className="jd2-field">
-                  <label className="jd2-label">Registration Number <span className="jd2-req">*</span></label>
+                  <label className="jd2-label">
+                    Registration Number <span className="jd2-req">*</span>
+                    <span className="jd2-tooltip-wrap">
+                      <span className="jd2-tooltip-icon">ℹ</span>
+                      <span className="jd2-tooltip-box">
+                        Don't have a registration number? Type <strong>N/A</strong>
+                      </span>
+                    </span>
+                  </label>
                   <div className={`jd2-input-wrap${errors.license ? ' err' : ''}`}>
                     <i className="jd2-ico fa-regular fa-id-card" />
                     <input className="jd2-input" placeholder="Enter registration number"
@@ -318,26 +530,28 @@ const JoinDietitian = () => {
 
               <div className="jd2-field">
                 <label className="jd2-label">Experience <span className="jd2-req">*</span></label>
-                <div className={`jd2-input-wrap${errors.experience ? ' err' : ''}`}>
-                  <select className="jd2-input jd2-select" style={{ paddingLeft: 12 }} value={data.experience} onChange={e => set('experience', e.target.value)}>
-                    <option value="">Select your experience</option>
-                    <option>Less than 1 year</option>
-                    <option>1 – 3 years</option>
-                    <option>3 – 5 years</option>
-                    <option>5 – 10 years</option>
-                    <option>10+ years</option>
-                  </select>
+                <div className={`jd2-exp-chips${errors.experience ? ' err' : ''}`}>
+                  {EXPERIENCE_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      type="button"
+                      className={`jd2-exp-chip${data.experience === opt.value ? ' active' : ''}`}
+                      onClick={() => set('experience', opt.value)}
+                    >
+                      <span className="jd2-exp-chip-label">{opt.label}</span>
+                      <span className="jd2-exp-chip-sub">{opt.sub}</span>
+                    </button>
+                  ))}
                 </div>
                 <Err msg={errors.experience} />
               </div>
 
               <div className="jd2-field">
-                <label className="jd2-label">Specialization <span className="jd2-opt">(if any)</span></label>
-                <div className="jd2-input-wrap">
-                  <i className="jd2-ico fa-solid fa-star" />
-                  <input className="jd2-input" placeholder="Enter your specialization"
-                    value={data.specializations[0] ?? ''} onChange={e => set('specializations', e.target.value ? [e.target.value] : [])} />
-                </div>
+                <label className="jd2-label">Specializations <span className="jd2-opt">(if any)</span></label>
+                <SpecializationInput
+                  value={data.specializations}
+                  onChange={v => set('specializations', v)}
+                />
               </div>
 
               <div className="jd2-field">

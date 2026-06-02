@@ -33,10 +33,10 @@ export type DietitianRegistrationBody = {
   state: string
   city: string
   password: string
-  highestDegree: string
   registrationNumber: string
   experience: string
-  specialization: string
+  specialization: string[]
+  degrees: { degree: string; institute: string; year: string }[]
   documents: {
     profilePhoto: string
     degreeCertificate: string

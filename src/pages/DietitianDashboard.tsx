@@ -89,6 +89,11 @@ export default function DietitianDashboard() {
     navigate('/')
   }
 
+  const handleNavClick = (label: string) => {
+    setActiveNav(label)
+    if (label === 'Profile') navigate('/dietitian-profile')
+  }
+
   return (
     <div className="dd-root">
 
@@ -107,7 +112,7 @@ export default function DietitianDashboard() {
             <button
               key={item.label}
               className={`dd-nav-item${activeNav === item.label ? ' dd-nav-item--active' : ''}`}
-              onClick={() => setActiveNav(item.label)}
+              onClick={() => handleNavClick(item.label)}
             >
               <span className="dd-nav-icon">{item.icon}</span>
               <span className="dd-nav-label">{item.label}</span>

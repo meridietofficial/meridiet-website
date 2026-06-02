@@ -4,6 +4,7 @@ import { ChevronDown, Search } from 'lucide-react'
 export type SelectOption = {
   value: string
   label: string
+  isGroup?: boolean   // true → renders as a non-clickable section header
 }
 
 type Props = {
@@ -27,12 +28,11 @@ const SearchableSelect = ({
 }: Props) => {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const wrapRef = useRef<HTMLDivElement>(null)
+  const wrapRef  = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!open) return
-    // auto-focus search input when dropdown opens
     setTimeout(() => inputRef.current?.focus(), 0)
     const handler = (e: MouseEvent) => {
       if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
@@ -44,11 +44,24 @@ const SearchableSelect = ({
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
 
-  const filtered = options.filter(o =>
-    o.label.toLowerCase().includes(search.toLowerCase())
-  )
+  // When searching, keep group headers only if they precede at least one match
+  const filtered: SelectOption[] = (() => {
+    if (!search.trim()) return options
+    const q = search.toLowerCase()
+    const result: SelectOption[] = []
+    let pendingGroup: SelectOption | null = null
+    for (const opt of options) {
+      if (opt.isGroup) {
+        pendingGroup = opt
+      } else if (opt.label.toLowerCase().includes(q)) {
+        if (pendingGroup) { result.push(pendingGroup); pendingGroup = null }
+        result.push(opt)
+      }
+    }
+    return result
+  })()
 
-  const selectedLabel = options.find(o => o.value === value)?.label ?? ''
+  const selectedLabel = options.find(o => !o.isGroup && o.value === value)?.label ?? ''
 
   return (
     <div className={`ss-wrap${disabled ? ' ss-wrap--disabled' : ''}`} ref={wrapRef}>
@@ -76,33 +89,27 @@ const SearchableSelect = ({
               onChange={e => setSearch(e.target.value)}
             />
             {search && (
-              <button
-                type="button"
-                className="ss-clear"
-                onClick={() => setSearch('')}
-              >
-                ×
-              </button>
+              <button type="button" className="ss-clear" onClick={() => setSearch('')}>×</button>
             )}
           </div>
 
           <div className="ss-list">
             {filtered.length > 0 ? (
-              filtered.map(o => (
-                <button
-                  key={o.value}
-                  type="button"
-                  className={`ss-option${o.value === value ? ' sel' : ''}`}
-                  onClick={() => {
-                    onChange(o.value)
-                    setOpen(false)
-                    setSearch('')
-                  }}
-                >
-                  {o.label}
-                  {o.value === value && <span className="ss-option-check">✓</span>}
-                </button>
-              ))
+              filtered.map((o, i) =>
+                o.isGroup ? (
+                  <div key={`g-${i}`} className="ss-group-header">{o.label}</div>
+                ) : (
+                  <button
+                    key={o.value}
+                    type="button"
+                    className={`ss-option${o.value === value ? ' sel' : ''}`}
+                    onClick={() => { onChange(o.value); setOpen(false); setSearch('') }}
+                  >
+                    {o.label}
+                    {o.value === value && <span className="ss-option-check">✓</span>}
+                  </button>
+                )
+              )
             ) : (
               <p className="ss-empty">No results for "{search}"</p>
             )}

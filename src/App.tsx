@@ -18,6 +18,7 @@ const JoinDietitian     = lazy(() => import('./pages/JoinDietitian'))
 const ConsultDietitian    = lazy(() => import('./pages/ConsultDietitian'))
 const DietitianProfile    = lazy(() => import('./pages/DietitianProfile'))
 const DietitianDashboard  = lazy(() => import('./pages/DietitianDashboard'))
+const DietitianMyProfile  = lazy(() => import('./pages/DietitianMyProfile'))
 
 function PageLoader() {
   return (
@@ -32,8 +33,8 @@ function FormPage() {
   return <DietForm onClose={() => navigate('/')} />
 }
 
-const NO_NAVBAR_ROUTES = ['/dietitian-dashboard']
-const NO_FOOTER_ROUTES = ['/form', '/join-as-dietitian', '/dietitian-dashboard']
+const NO_NAVBAR_ROUTES = ['/dietitian-dashboard', '/dietitian-profile']
+const NO_FOOTER_ROUTES = ['/form', '/join-as-dietitian', '/dietitian-dashboard', '/dietitian-profile']
 
 function App() {
   const navigate  = useNavigate()
@@ -63,6 +64,7 @@ function App() {
           <Route path="/for-dietitians"       element={<ForDietitians />} />
           <Route path="/join-as-dietitian"    element={<JoinDietitian />} />
           <Route path="/dietitian-dashboard"  element={<DietitianDashboard />} />
+          <Route path="/dietitian-profile"   element={<DietitianMyProfile />} />
         </Routes>
       </Suspense>
       {showFooter && <Footer />}
