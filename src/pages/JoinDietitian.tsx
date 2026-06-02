@@ -349,7 +349,7 @@ const JoinDietitian = () => {
         <div className="jd2-success-emoji">🎉</div>
         <h2>Application Submitted!</h2>
         <p>Thank you <strong>{data.fullName}</strong>! Our team will review your profile and reach out within 48 hours.</p>
-        <a href="/for-dietitians" className="btn-primary">Back to Dietitians Page</a>
+        <button type="button" className="btn-primary" onClick={() => navigate('/for-dietitians')}>Back to Dietitians Page</button>
       </div>
     </div>
   )
