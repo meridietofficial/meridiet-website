@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import apiClient from './client'
 import ENDPOINTS from './endpoints'
 
@@ -102,6 +102,35 @@ async function uploadFileToS3(
   }
 }
 
+// ── Upload a single file to S3, return its public URL ────────
+export async function uploadSingleDocument(file: File, folder: string): Promise<string> {
+  const credentials = await getAwsKeys()
+  return uploadFileToS3(file, folder, credentials)
+}
+
+// ── Delete a file from S3 by its public URL (best-effort, never throws) ──
+export async function deleteDocument(url: string | null | undefined): Promise<void> {
+  if (!url) return
+  try {
+    const credentials = await getAwsKeys()
+    // Only touch objects that actually live in our bucket
+    if (!url.startsWith(credentials.baseUrl)) return
+    const key = decodeURIComponent(new URL(url).pathname).replace(/^\/+/, '')
+    if (!key) return
+    const client = new S3Client({
+      region: credentials.region,
+      credentials: {
+        accessKeyId:     credentials.accessKeyId,
+        secretAccessKey: credentials.secretAccessKey,
+      },
+    })
+    await client.send(new DeleteObjectCommand({ Bucket: credentials.bucket, Key: key }))
+    console.log('[S3 Delete] ✓ Deleted old file:', key)
+  } catch (err) {
+    console.warn('[S3 Delete] Could not delete old file:', err)
+  }
+}
+
 // ── Upload all documents, return S3 URLs ─────────────────────
 export async function uploadDocuments(
   docs: Record<DocKeys, File | null>
@@ -145,10 +174,66 @@ export async function uploadDocuments(
   return Object.fromEntries(results.map(r => [r.key, r.url])) as Record<DocKeys, string>
 }
 
+// ── Dietitian profile (GET, JWT-protected) ───────────────────
+export type DietitianProfile = {
+  id: number
+  user_id: number
+  full_name: string
+  email: string
+  phone_code: string | null
+  phone_number: string | null
+  avatar_url: string | null
+  is_active: number
+  date_of_birth: string | null
+  gender: string | null
+  bio: string | null
+  state: string | null
+  city: string | null
+  registration_number: string | null
+  experience: string | null
+  specialization: string[]
+  languages: string[]
+  services: string[]
+  degrees: { year: string | null; degree: string; institute: string }[]
+  awards: { title?: string; organization?: string; year?: string }[]
+  availability: Record<string, string[]> | null
+  is_verified: number
+  is_online: number
+  documents: {
+    profile_photo: string | null
+    degree_certificate: string | null
+    registration_certificate: string | null
+    id_proof: string | null
+    experience_certificate: string | null
+  }
+  created_at: string
+  updated_at: string
+}
+
+type DietitianProfileResponse = {
+  success: boolean
+  message: string
+  data: DietitianProfile
+}
+
 // ── Submit registration to your backend ──────────────────────
 const dietitianApi = {
   register(body: DietitianRegistrationBody) {
     return apiClient.apiPost(ENDPOINTS.dietitian.register, body)
+  },
+
+  async getProfile(): Promise<DietitianProfile> {
+    const res = await apiClient.apiGet<DietitianProfileResponse>(ENDPOINTS.dietitian.profile)
+    return res.data
+  },
+
+  async updateProfile(body: Record<string, unknown>): Promise<DietitianProfile> {
+    const res = await apiClient.apiPut<DietitianProfileResponse>(ENDPOINTS.dietitian.profile, body)
+    return res.data
+  },
+
+  changePassword(body: { current_password: string; new_password: string }) {
+    return apiClient.apiPut<{ success: boolean; message: string }>(ENDPOINTS.dietitian.changePassword, body)
   },
 }
 

@@ -13,8 +13,10 @@ const ENDPOINTS = {
     changePassword: '/user/change-password',
   },
   dietitian: {
-    register: '/dietitian/register',
-    awsKeys:  '/aws-keys/',   // replace with your actual endpoint
+    register:       '/dietitian/register',
+    profile:        '/dietitian/profile',
+    changePassword: '/dietitian/change-password',
+    awsKeys:        '/aws-keys/',   // replace with your actual endpoint
   },
 } as const
 

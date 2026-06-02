@@ -68,7 +68,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
     e.preventDefault()
     setLoading(true)
     try {
-      const res = await authApi.login({ email_phone: loginEmail, password: loginPassword })
+      const res = await authApi.login({ email_phone: loginEmail, password: loginPassword, role: userType })
       saveAuth(res.data.user, res.data.token)
       showToast('Welcome back! You are now logged in.', 'success')
       onClose()
