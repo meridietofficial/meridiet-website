@@ -40,6 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null)
     localStorage.removeItem('meri_diet_user')
     localStorage.removeItem('meri_diet_token')
+    // The "skip" on the profile-setup prompt is only for the active session —
+    // a fresh login should prompt again until the profile is actually completed.
+    sessionStorage.removeItem('meri_diet_dietitian_setup_skipped')
   }
 
   return (

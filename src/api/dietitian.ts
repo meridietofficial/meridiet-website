@@ -216,10 +216,113 @@ type DietitianProfileResponse = {
   data: DietitianProfile
 }
 
+// ── Specializations (public, for filters/tabs) ───────────────
+export type Specialization = {
+  value: string        // canonical value stored on dietitians (use for filtering)
+  label: string        // short display label (use for chips/tabs)
+  slug: string
+  icon: string | null
+  image_url: string | null
+  count: number        // how many dietitians have this specialization
+  is_active: boolean
+  is_custom: boolean
+}
+
+type SpecializationsResponse = {
+  success: boolean
+  message: string
+  data: Specialization[]
+}
+
+// ── Dietitian list (public, card shape) ──────────────────────
+export type AvailableDate = {
+  date: string          // ISO date, e.g. "2026-06-05"
+  day: string           // e.g. "Friday"
+  slots: string[]       // working-hour ranges, e.g. ["09:00-18:00"]
+}
+
+export type NextAvailable = {
+  date: string
+  day: string
+  slot: string          // a single range, e.g. "09:00-18:00"
+}
+
+export type DietitianCard = {
+  id: number
+  full_name: string
+  title: string
+  avatar_url: string | null
+  rating: number          // placeholder (0) until reviews exist
+  reviews: number         // placeholder (0) until reviews exist
+  experience: string
+  location: string
+  specialization: string[]
+  languages: string[]
+  next_available: NextAvailable | null
+  available_dates: AvailableDate[]
+  availability: string            // e.g. "online" | "offline"
+  is_verified: number | boolean   // backend sends 1/0
+}
+
+export type DietitianListParams = {
+  search?: string
+  specialization?: string
+  gender?: string
+  location?: string
+  language?: string
+  experience?: string            // bucket: 0-2 | 3-5 | 5-10 | 10+
+  min_years?: number
+  max_years?: number
+  available_now?: boolean
+  sort?: 'top_rated' | 'most_reviewed' | 'available_now' | 'experience'
+  page?: number
+  limit?: number
+}
+
+export type PaginationMeta = { page: number; limit: number; total: number; totalPages: number }
+
+type DietitianListResponse = {
+  success: boolean
+  message: string
+  data: DietitianCard[]
+  meta: PaginationMeta
+}
+
+type ConsultationFeeResponse = {
+  success: boolean
+  message: string
+  data: { amount?: number; fee?: number; consultation_fee?: number; currency?: string }
+}
+
 // ── Submit registration to your backend ──────────────────────
 const dietitianApi = {
   register(body: DietitianRegistrationBody) {
     return apiClient.apiPost(ENDPOINTS.dietitian.register, body)
+  },
+
+  async getSpecializations(): Promise<Specialization[]> {
+    const res = await apiClient.apiGet<SpecializationsResponse>(ENDPOINTS.dietitian.specializations)
+    return res.data
+  },
+
+  async getConsultationFee(): Promise<number> {
+    const res = await apiClient.apiGet<ConsultationFeeResponse>(ENDPOINTS.consultation.fee)
+    const d = res.data
+    // Tolerate a few likely field names until the exact shape is confirmed
+    return Number(d.amount ?? d.fee ?? d.consultation_fee ?? 0)
+  },
+
+  async listDietitians(params: DietitianListParams = {}): Promise<{ data: DietitianCard[]; meta: PaginationMeta }> {
+    const qs = new URLSearchParams()
+    Object.entries(params).forEach(([key, val]) => {
+      if (val === undefined || val === '' || val === false) return
+      qs.append(key, String(val))
+    })
+    const query = qs.toString()
+    const res = await apiClient.apiGet<DietitianListResponse>(
+      `${ENDPOINTS.dietitian.list}${query ? `?${query}` : ''}`
+    )
+    return { data: res.data, meta: res.meta }
   },
 
   async getProfile(): Promise<DietitianProfile> {

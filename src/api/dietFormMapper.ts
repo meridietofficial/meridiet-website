@@ -65,14 +65,14 @@ const CUISINE: Record<string, string> = {
   'Gujarati':      'gujarati',
   'Punjabi':       'punjabi',
   'Maharashtrian': 'maharashtrian',
+  'Rajasthani':    'rajasthani',
+  'Kerala':        'kerala',
+  'Hyderabadi':    'hyderabadi',
+  'Odia':          'odia',
+  'Bihari':        'bihari',
+  'Kashmiri':      'kashmiri',
+  'Continental':   'continental',
   'No Preference': 'no_preference',
-}
-
-const PREFERRED_MEALS: Record<string, string> = {
-  'Home Cooked':    'home_cooked',
-  'Restaurant Food':'restaurant',
-  'Meal Prep':      'meal_prep',
-  'No Preference':  'no_preference',
 }
 
 const ALLERGIES: Record<string, string> = {
@@ -98,15 +98,23 @@ const DIGESTIVE: Record<string, string> = {
 }
 
 const SMOKE_ALCOHOL: Record<string, string> = {
-  'Neither':        'neither',
-  'Smoke':          'smoke',
-  'Consume Alcohol':'alcohol',
-  'Both':           'both',
+  'Neither':             'neither',
+  'Smoke':               'smoke',
+  'Occasionally Smoke':  'occasionally_smoke',
+  'Consume Alcohol':     'alcohol',
+  'Occasionally Drink':  'occasionally_drink',
+  'Both':                'both',
 }
 
 const DELIVERY_METHOD: Record<string, string> = {
   'whatsapp': 'whatsapp',
   'email':    'email',
+}
+
+const PLAN_TYPE: Record<string, number> = {
+  '1 Week':   1,
+  '1 Month':  2,
+  '3 Months': 3,
 }
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -117,17 +125,6 @@ function lookup(map: Record<string, string>, val: string) {
 
 function lookupArr(map: Record<string, string>, arr: string[]) {
   return arr.map(v => map[v] ?? v).filter(Boolean)
-}
-
-// "8:00 AM" → "08:00",  "1:30 PM" → "13:30"
-function toHHMM(t: string): string {
-  if (!t) return ''
-  const [time, period] = t.split(' ')
-  const [hStr, m] = time.split(':')
-  let h = parseInt(hStr, 10)
-  if (period === 'PM' && h !== 12) h += 12
-  if (period === 'AM' && h === 12) h = 0
-  return `${String(h).padStart(2, '0')}:${m}`
 }
 
 function omitEmpty(val: unknown) {
@@ -145,6 +142,9 @@ export function mapFormToPayload(d: FormData) {
     const v = omitEmpty(val)
     if (v !== undefined) payload[key] = v
   }
+
+  // ── Plan ──
+  set('plan_type', d.planType ? PLAN_TYPE[String(d.planType)] : undefined)
 
   // ── Step 1: Basic Details & Goals ──
   set('full_name',   d.fullName)
@@ -167,17 +167,11 @@ export function mapFormToPayload(d: FormData) {
   set('cuisine_preference', (d.cuisinePreference as string[] | undefined)?.length
     ? (d.cuisinePreference as string[]).map((v: string) => lookup(CUISINE, v))
     : undefined)
-  set('preferred_meals', (d.preferredMeals as string[] ?? []).map(v => PREFERRED_MEALS[v] ?? v))
   set('food_allergies',  d.foodAllergies
     ? [lookup(ALLERGIES, String(d.foodAllergies))]
     : undefined)
   set('foods_dislike',   d.foodsDislike)
   set('favorite_foods',  d.favoriteFoods)
-  set('breakfast_time',     toHHMM(String(d.breakfastTime    ?? '')))
-  set('mid_morning_time',   toHHMM(String(d.midMorningTime   ?? '')))
-  set('lunch_time',         toHHMM(String(d.lunchTime        ?? '')))
-  set('evening_snack_time', toHHMM(String(d.eveningSnackTime ?? '')))
-  set('dinner_time',        toHHMM(String(d.dinnerTime       ?? '')))
 
   // ── Step 4: Health & Medical ──
   set('medical_conditions', (d.medicalConditions as string[] ?? [])

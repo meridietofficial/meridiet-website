@@ -7,7 +7,7 @@ import { ApiError } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 
-type Tab = 'login' | 'signup'
+type Tab = 'login' | 'signup' | 'forgot'
 export type UserType = 'user' | 'dietitian'
 
 type Props = {
@@ -42,6 +42,10 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
   // Login
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
+
+  // Forgot password
+  const [forgotEmail, setForgotEmail] = useState('')
+  const [forgotSent, setForgotSent] = useState(false)
 
   // Signup
   const [signupName, setSignupName] = useState('')
@@ -80,6 +84,31 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const res = await authApi.forgotPassword({ email: forgotEmail })
+      setForgotSent(true)
+      showToast(res.message || 'If an account exists, a reset link has been sent.', 'success')
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Could not send reset link. Please try again.', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const goToForgot = () => {
+    setForgotEmail(loginEmail)   // carry over whatever they already typed
+    setForgotSent(false)
+    setTab('forgot')
+  }
+
+  const backToLogin = () => {
+    setForgotSent(false)
+    setTab('login')
   }
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -168,22 +197,24 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
         </div>
 
         {/* ── User / Dietitian slider ── */}
-        <div className="auth-type-toggle">
-          <button
-            className={`auth-type-btn${userType === 'user' ? ' auth-type-btn--active' : ''}`}
-            onClick={() => { setUserType('user'); setTab('login') }}
-          >
-            <User size={14} />
-            User
-          </button>
-          <button
-            className={`auth-type-btn${userType === 'dietitian' ? ' auth-type-btn--active' : ''}`}
-            onClick={() => { setUserType('dietitian'); setTab('login') }}
-          >
-            <Stethoscope size={14} />
-            Dietitian
-          </button>
-        </div>
+        {tab !== 'forgot' && (
+          <div className="auth-type-toggle">
+            <button
+              className={`auth-type-btn${userType === 'user' ? ' auth-type-btn--active' : ''}`}
+              onClick={() => { setUserType('user'); setTab('login') }}
+            >
+              <User size={14} />
+              User
+            </button>
+            <button
+              className={`auth-type-btn${userType === 'dietitian' ? ' auth-type-btn--active' : ''}`}
+              onClick={() => { setUserType('dietitian'); setTab('login') }}
+            >
+              <Stethoscope size={14} />
+              Dietitian
+            </button>
+          </div>
+        )}
 
         {/* ── LOGIN (same for both user types) ── */}
         {tab === 'login' && (
@@ -216,7 +247,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
             </div>
 
             <div className="auth-forgot">
-              <a href="#">Forgot password?</a>
+              <button type="button" onClick={goToForgot}>Forgot password?</button>
             </div>
 
             <button type="submit" className="btn-primary auth-submit" disabled={loading}>
@@ -244,6 +275,52 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
               )}
             </p>
           </form>
+        )}
+
+        {/* ── FORGOT PASSWORD ── */}
+        {tab === 'forgot' && (
+          forgotSent ? (
+            <div className="auth-form auth-forgot-done">
+              <div className="auth-forgot-icon"><Mail size={26} /></div>
+              <h3 className="auth-forgot-title">Check your email</h3>
+              <p className="auth-forgot-text">
+                If an account exists for <strong>{forgotEmail}</strong>, we’ve sent a link to
+                reset your password. The link expires in 1 hour.
+              </p>
+              <p className="auth-forgot-hint">Didn’t get it? Check spam, or try again in a minute.</p>
+              <button type="button" className="btn-primary auth-submit" onClick={backToLogin}>
+                Back to Login
+              </button>
+            </div>
+          ) : (
+            <form className="auth-form" onSubmit={handleForgot}>
+              <h3 className="auth-forgot-title">Forgot your password?</h3>
+              <p className="auth-forgot-text">
+                Enter the email linked to your account and we’ll send you a link to reset it.
+              </p>
+
+              <div className="auth-field">
+                <Mail size={16} className="auth-field-icon" />
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  required
+                  autoComplete="email"
+                  value={forgotEmail}
+                  onChange={e => setForgotEmail(e.target.value)}
+                />
+              </div>
+
+              <button type="submit" className="btn-primary auth-submit" disabled={loading}>
+                {loading ? 'Sending…' : 'Send Reset Link'}
+              </button>
+
+              <p className="auth-switch">
+                Remember it?{' '}
+                <button type="button" onClick={backToLogin}>Back to Login</button>
+              </p>
+            </form>
+          )
         )}
 
         {/* ── SIGN UP (user only) ── */}

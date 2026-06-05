@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import AuthModal from './AuthModal'
 import { useAuth } from '../context/AuthContext'
 
@@ -14,7 +14,8 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
   const [authOpen, setAuthOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const { pathname, hash } = useLocation()
+  const { pathname, hash, search } = useLocation()
+  const navigate = useNavigate()
 
   const formMode = pathname === '/form' || pathname === '/join-as-dietitian'
   const s = (hash: string) => pathname === '/' ? hash : `/${hash}`
@@ -34,6 +35,15 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  // Open the login modal when redirected with ?login=1 (e.g. after a password
+  // reset), then strip the param so it doesn't reopen on refresh/back.
+  useEffect(() => {
+    if (new URLSearchParams(search).get('login') === '1' && !user) {
+      setAuthOpen(true)
+      navigate(pathname, { replace: true })
+    }
+  }, [search, user, pathname, navigate])
 
   const isHeroTop = pathname === '/' && !scrolled
 
@@ -104,12 +114,12 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
           </Link>
 
           <ul className={`navbar-links ${menuOpen ? 'open' : ''}`}>
-            <li><NavLink to="/" end onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive && pathname !== '/' || hash === '#how-it-works' ? '' : isActive ? 'active' : ''}>Home</NavLink></li>
-            <li><NavLink to="/about" onClick={() => setMenuOpen(false)}>About Us</NavLink></li>
             <li><Link to={s('#how-it-works')} className={hash === '#how-it-works' ? 'active' : ''} onClick={() => setMenuOpen(false)}>How It Works</Link></li>
             <li><NavLink to="/consult-dietitian" onClick={() => setMenuOpen(false)}>Consult Dietitian</NavLink></li>
             <li><NavLink to="/for-dietitians" onClick={() => setMenuOpen(false)}>For Dietitians</NavLink></li>
-            <li><NavLink to="/blog" onClick={() => setMenuOpen(false)}>Blog</NavLink></li>
+            <li><NavLink to="/about" onClick={() => setMenuOpen(false)}>About Us</NavLink></li>
+            <li><NavLink to="/faq" onClick={() => setMenuOpen(false)}>FAQ</NavLink></li>
+            <li><NavLink to="/contact" onClick={() => setMenuOpen(false)}>Contact Us</NavLink></li>
             <li className="navbar-mobile-actions">
               <button className="btn-primary navbar-cta" onClick={() => { setMenuOpen(false); onOpenForm() }}>
                 Get My Diet Plan

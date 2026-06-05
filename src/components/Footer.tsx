@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
 
 const socialLinks = [
-  { icon: 'fa-brands fa-instagram',  label: 'Instagram', cls: 'social-icon--insta' },
-  { icon: 'fa-brands fa-facebook-f', label: 'Facebook',  cls: 'social-icon--fb'    },
-  { icon: 'fa-brands fa-x-twitter',  label: 'X',         cls: 'social-icon--tw'    },
-  { icon: 'fa-brands fa-youtube',    label: 'YouTube',   cls: 'social-icon--yt'    },
-  { icon: 'fa-brands fa-linkedin-in',label: 'LinkedIn',  cls: 'social-icon--li'    },
+  { icon: 'fa-brands fa-instagram',  label: 'Instagram', cls: 'social-icon--insta', url: 'https://www.instagram.com/meridietofficial/' },
+  { icon: 'fa-brands fa-facebook-f', label: 'Facebook',  cls: 'social-icon--fb',    url: 'https://www.facebook.com/people/MeriDiet/61564942492475/' },
+  { icon: 'fa-brands fa-x-twitter',  label: 'X',         cls: 'social-icon--tw',    url: 'https://x.com/Meridietoffical' },
+  { icon: 'fa-brands fa-youtube',    label: 'YouTube',   cls: 'social-icon--yt',    url: 'https://www.youtube.com/@MeriDiet' },
+  { icon: 'fa-brands fa-linkedin-in',label: 'LinkedIn',  cls: 'social-icon--li',    url: 'https://www.linkedin.com/company/meridiet/' },
 ]
 
 const Footer = () => {
@@ -22,7 +22,14 @@ const Footer = () => {
             </p>
             <div className="footer-social">
               {socialLinks.map((s, i) => (
-                <a key={i} href="#" aria-label={s.label} className={`social-icon ${s.cls}`}>
+                <a
+                  key={i}
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={s.label}
+                  className={`social-icon ${s.cls}`}
+                >
                   <i className={s.icon} />
                 </a>
               ))}
@@ -33,16 +40,14 @@ const Footer = () => {
             <h4>Company</h4>
             <Link to="/about">About Us</Link>
             <Link to="/faq">FAQ</Link>
-            <a href="#">Careers</a>
-            <a href="#">Press</a>
           </div>
 
           <div className="footer-col">
             <h4>Product</h4>
-            <a href="/#how-it-works">How It Works</a>
-            <a href="/#plans">Plans</a>
-            <a href="/#sample-diet">Sample Diet</a>
-            <a href="/#pricing">Pricing</a>
+            <Link to="/#how-it-works">How It Works</Link>
+            <Link to="/#plans">Plans</Link>
+            <Link to="/#sample-diet">Sample Diet</Link>
+            <Link to="/#pricing">Pricing</Link>
           </div>
 
           <div className="footer-col">
@@ -56,7 +61,7 @@ const Footer = () => {
 
           <div className="footer-col">
             <h4>Contact</h4>
-            <p className="footer-contact-item">📧 hello@meridiet.in</p>
+            <p className="footer-contact-item">📧 support@meridiet.in</p>
             <p className="footer-contact-item">📱 +91 960 960 6009</p>
             <p className="footer-contact-item">🏢 Uttar Pradesh, India</p>
           </div>

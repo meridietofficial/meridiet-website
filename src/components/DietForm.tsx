@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { IN_STATES, getCitiesOfState } from '../data/indiaCities'
+import { IN_STATES } from '../data/indiaCities'
 import DatePicker from './DatePicker'
 import SearchableSelect from './SearchableSelect'
 import dietFormApi from '../api/dietForm'
@@ -319,38 +319,7 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
   )
 }
 
-/* ─── Step 2 (kept for reference, not rendered) ─────────── */
-const Step2 = ({ d, tog, err }: { d: FormData; tog: ToglFn; err: Errors }) => (
-  <div className="df-step-content">
-    <div className="df-step-hd">
-      <div className="df-hd-icon">🎯</div>
-      <div className="df-hd-text">
-        <h2>What are your health &amp; fitness goals?</h2>
-        <p>Select all that apply. This helps us create the perfect plan for you.</p>
-      </div>
-    </div>
-    <div className={`df-goals-grid${err.goals ? ' df-group--err' : ''}`}>
-      {GOALS.map((g) => (
-        <button
-          key={g.k}
-          className={`df-goal-card ${d.goals.includes(g.k) ? 'sel' : ''}`}
-          onClick={() => tog('goals', g.k)}
-        >
-          {d.goals.includes(g.k) && <span className="df-goal-chk">✓</span>}
-          <span className="df-goal-icon">{g.e}</span>
-          <strong>{g.k}</strong>
-          <span className="df-goal-desc">{g.d}</span>
-        </button>
-      ))}
-    </div>
-    <FieldErr msg={err.goals} />
-    <div className="df-tip-box">
-      💡 <strong>Not sure?</strong> You can select multiple goals. Our experts will customize your plan accordingly.
-    </div>
-  </div>
-)
-
-/* ─── Step 3 ─────────────────────────────────────────────── */
+/* ─── Step 2 ─────────────────────────────────────────────── */
 const ACTIVITY = [
   { v: 'Sedentary (little or no exercise)', icon: '🛋️', short: 'Sedentary',    sub: 'Little / no exercise' },
   { v: 'Lightly Active (1–3 days/week)',    icon: '🚶', short: 'Lightly Active', sub: '1–3 days/week' },
@@ -378,7 +347,7 @@ const WORK_TYPE = [
   { v: 'Physical Job',  icon: '⚒️' },
 ]
 
-const Step3 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => (
+const Step2 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => (
   <div className="df-step-content">
     <div className="df-step-hd">
       <div className="df-hd-icon">🏃</div>
@@ -452,7 +421,7 @@ const Step3 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => (
   </div>
 )
 
-/* ─── Step 4 ─────────────────────────────────────────────── */
+/* ─── Step 3 ─────────────────────────────────────────────── */
 const DIET_TYPES = [
   { v: 'Vegetarian',     icon: '🌿', desc: 'Pure plant-based diet' },
   { v: 'Non-Vegetarian', icon: '🍗', desc: 'Includes meat & fish' },
@@ -466,17 +435,12 @@ const CUISINES = [
   { v: 'Punjabi',         icon: '🧈' },
   { v: 'Maharashtrian',   icon: '🥘' },
   { v: 'Rajasthani',      icon: '🏜️' },
-  { v: 'Goan',            icon: '🌴' },
   { v: 'Kerala',          icon: '🥥' },
-  { v: 'Mughlai',         icon: '🍖' },
   { v: 'Hyderabadi',      icon: '🍛' },
   { v: 'Odia',            icon: '🍚' },
   { v: 'Bihari',          icon: '🌾' },
   { v: 'Kashmiri',        icon: '🏔️' },
-  { v: 'Chettinad',       icon: '🌿' },
   { v: 'Continental',     icon: '🥗' },
-  { v: 'Mediterranean',   icon: '🫒' },
-  { v: 'Chinese',         icon: '🥡' },
   { v: 'No Preference',   icon: '✌️' },
 ]
 const ALLERGIES = [
@@ -495,7 +459,7 @@ const MEAL_TIMES = [
   { lbl: 'Dinner',        icon: '🌙',  key: 'dinnerTime',      opt: false },
 ]
 
-const Step4 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err: Errors }) => (
+const Step3 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err: Errors }) => (
   <div className="df-step-content">
     <div className="df-step-hd">
       <div className="df-hd-icon">🥗</div>
@@ -613,7 +577,7 @@ const Step4 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
   </div>
 )
 
-/* ─── Step 5 ─────────────────────────────────────────────── */
+/* ─── Step 4 ─────────────────────────────────────────────── */
 const MEDICAL_CONDITIONS = [
   { v: 'Diabetes',         icon: '💉' },
   { v: 'Thyroid',          icon: '🦋' },
@@ -645,13 +609,15 @@ const DIGESTION_OPTS = [
   { v: 'Poor',      icon: '😟', color: '#ef4444' },
 ]
 const SMOKE_OPTS = [
-  { v: 'Neither',         icon: '🌿' },
-  { v: 'Smoke',           icon: '🚬' },
-  { v: 'Consume Alcohol', icon: '🍺' },
-  { v: 'Both',            icon: '⚠️' },
+  { v: 'Neither',              icon: '🌿' },
+  { v: 'Smoke',                icon: '🚬' },
+  { v: 'Occasionally Smoke',   icon: '💨' },
+  { v: 'Consume Alcohol',      icon: '🍺' },
+  { v: 'Occasionally Drink',   icon: '🥂' },
+  { v: 'Both',                 icon: '⚠️' },
 ]
 
-const Step5 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err: Errors }) => (
+const Step4 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err: Errors }) => (
   <div className="df-step-content">
     <div className="df-step-hd">
       <div className="df-hd-icon">🏥</div>
@@ -783,167 +749,7 @@ const Step5 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
   </div>
 )
 
-/* ─── Step 6 ─────────────────────────────────────────────── */
-const BUDGET_OPTS = [
-  { v: 'Under ₹500 / month',       icon: '💵', short: '< ₹500',    pop: false },
-  { v: '₹500 – ₹1,000 / month',    icon: '💴', short: '₹500–1k',   pop: false },
-  { v: '₹1,000 – ₹2,000 / month',  icon: '💳', short: '₹1k–2k',    pop: true  },
-  { v: '₹2,000 – ₹3,000 / month',  icon: '💰', short: '₹2k–3k',    pop: false },
-  { v: 'Above ₹3,000 / month',      icon: '🏆', short: '> ₹3k',     pop: false },
-]
-const MEAL_PREF_OPTS = [
-  { v: 'Home Cooked (Fresh Meals)',       icon: '🍳', desc: 'Fresh meals daily' },
-  { v: 'Meal Prep / Batch Cooking',       icon: '🥡', desc: 'Cook once, eat all week' },
-  { v: 'Ready to Eat (Healthy Options)',  icon: '🥙', desc: 'Quick healthy options' },
-  { v: 'Food Delivery Apps',             icon: '🛵', desc: 'Order from Zomato / Swiggy' },
-]
-const PREP_TIME_OPTS = [
-  { v: 'Less than 30 minutes', icon: '⚡', short: '< 30 min' },
-  { v: '30 – 60 minutes',      icon: '⏱️', short: '30–60 min' },
-  { v: '1 – 2 hours',          icon: '⏰', short: '1–2 hrs' },
-  { v: 'More than 2 hours',    icon: '🕰️', short: '> 2 hrs' },
-]
-const GROCERY_OPTS = [
-  { v: 'Online (Instamart, BigBasket, etc.)', icon: '📱', short: 'Online' },
-  { v: 'Local market / sabzi mandi',          icon: '🛒', short: 'Local Market' },
-  { v: 'Both',                                icon: '🔄', short: 'Both' },
-]
-const COOKING_OPTS = [
-  { v: 'I cook myself',         icon: '👨‍🍳', desc: 'Solo in the kitchen' },
-  { v: 'Someone helps me',      icon: '👫',   desc: 'Family helps out' },
-  { v: 'Full-time house help',  icon: '🏠',   desc: 'Dedicated cook' },
-]
-
-const Step6 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err: Errors }) => (
-  <div className="df-step-content">
-    <div className="df-step-hd">
-      <div className="df-hd-icon">💰</div>
-      <div className="df-hd-text">
-        <h2>Let's plan what works for you</h2>
-        <p>This helps us create a plan that fits your budget and lifestyle.</p>
-      </div>
-    </div>
-
-    {/* Budget */}
-    <div className="df-card-field">
-      <label className="df-label">What is your budget for this plan? <span className="df-req">*</span></label>
-      <p className="df-field-sub">Choose the range that works best for you</p>
-      <div className="bc-budget-grid">
-        {BUDGET_OPTS.map((b) => (
-          <button
-            key={b.v}
-            className={`bc-budget-card${d.budget === b.v ? ' sel' : ''}`}
-            onClick={() => set('budget', b.v)}
-          >
-            {b.pop && <span className="bc-popular-tag">⭐ Popular</span>}
-            {d.budget === b.v && <span className="bc-budget-check">✓</span>}
-            <span className="bc-budget-icon">{b.icon}</span>
-            <span className="bc-budget-short">{b.short}</span>
-            <span className="bc-budget-sub">per month</span>
-          </button>
-        ))}
-      </div>
-      <FieldErr msg={err.budget} />
-    </div>
-
-    {/* Meal Preference + Prep Time */}
-    <div className="df-grid-2">
-      <div className="df-card-field">
-        <label className="df-label">How do you prefer your meals? <span className="df-req">*</span></label>
-        <p className="df-field-sub">Select all that apply</p>
-        <div className="bc-meal-grid">
-          {MEAL_PREF_OPTS.map((m) => (
-            <button
-              key={m.v}
-              className={`bc-meal-card${d.mealPreference.includes(m.v) ? ' sel' : ''}`}
-              onClick={() => tog('mealPreference', m.v)}
-            >
-              {d.mealPreference.includes(m.v) && <span className="bc-meal-check">✓</span>}
-              <span className="bc-meal-icon">{m.icon}</span>
-              <strong className="bc-meal-name">{m.v}</strong>
-              <span className="bc-meal-desc">{m.desc}</span>
-            </button>
-          ))}
-        </div>
-        <FieldErr msg={err.mealPreference} />
-      </div>
-
-      <div className="df-card-field">
-        <label className="df-label">Meal prep time? <span className="df-req">*</span></label>
-        <p className="df-field-sub">How much time can you spend cooking?</p>
-        <div className="bc-prep-grid">
-          {PREP_TIME_OPTS.map((p) => (
-            <button
-              key={p.v}
-              className={`bc-prep-card${d.prepTime === p.v ? ' sel' : ''}`}
-              onClick={() => set('prepTime', p.v)}
-            >
-              {d.prepTime === p.v && <span className="bc-prep-check">✓</span>}
-              <span className="bc-prep-icon">{p.icon}</span>
-              <span className="bc-prep-short">{p.short}</span>
-            </button>
-          ))}
-        </div>
-        <FieldErr msg={err.prepTime} />
-      </div>
-    </div>
-
-    {/* Grocery + Cooking Support */}
-    <div className="df-grid-2">
-      <div className="df-card-field">
-        <label className="df-label">Grocery shopping preference</label>
-        <p className="df-field-sub">How do you usually buy groceries?</p>
-        <div className="ls-icon-row">
-          {GROCERY_OPTS.map((g) => (
-            <button
-              key={g.v}
-              className={`ls-icon-pill${d.groceryShopping === g.v ? ' sel' : ''}`}
-              onClick={() => set('groceryShopping', g.v)}
-            >
-              <span>{g.icon}</span>
-              <span>{g.short}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="df-card-field">
-        <label className="df-label">Cooking support at home?</label>
-        <p className="df-field-sub">Who cooks in your household?</p>
-        <div className="bc-cook-grid">
-          {COOKING_OPTS.map((c) => (
-            <button
-              key={c.v}
-              className={`bc-cook-card${d.cookingSupport === c.v ? ' sel' : ''}`}
-              onClick={() => set('cookingSupport', c.v)}
-            >
-              {d.cookingSupport === c.v && <span className="bc-cook-check">✓</span>}
-              <span className="bc-cook-icon">{c.icon}</span>
-              <strong className="bc-cook-name">{c.v}</strong>
-              <span className="bc-cook-desc">{c.desc}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-
-    {/* Other preferences */}
-    <div className="df-card-field">
-      <label className="df-label">Any other preferences? <span className="df-opt">(Optional)</span></label>
-      <p className="df-field-sub">Religious fasting, travel habits, weekend eating, etc.</p>
-      <div className="df-ta-wrap">
-        <textarea className="df-textarea" rows={3} maxLength={250}
-          placeholder="e.g., I travel frequently, eat out on weekends, religious fasting…"
-          value={d.otherPreferences} onChange={(e) => set('otherPreferences', e.target.value)} />
-        <span className="df-char">{d.otherPreferences.length}/250</span>
-      </div>
-    </div>
-
-    <div className="df-tip-box">💡 Tip: Don't worry, you can always update your preferences later.</div>
-  </div>
-)
-
-/* ─── Step 7 ─────────────────────────────────────────────── */
+/* ─── Step 5 ─────────────────────────────────────────────── */
 const PLAN_OPTS = [
   { v: '1 Week',   price: '₹199', icon: '⚡', desc: '7-day personalized plan', badge: null },
   { v: '1 Month',  price: '₹499', icon: '👑', desc: '28-day plan + dietitian consult', badge: '🔥 Most Popular' },
@@ -955,9 +761,27 @@ const DELIVERY_OPTS = [
   { k: 'email',   icon: '📧', lbl: 'Email',     sub: 'Delivered to your inbox',      badge: null },
 ]
 
-const Step7 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
+const Step5 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
   const { user } = useAuth()
   const { showToast } = useToast()
+  const [cities, setCities] = useState<string[]>([])
+  const [citiesLoading, setCitiesLoading] = useState(false)
+
+  useEffect(() => {
+    if (!d.state) { setCities([]); return }
+    setCitiesLoading(true)
+    setCities([])
+    fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ country: 'India', state: d.state }),
+    })
+      .then(r => r.json())
+      .then(res => { if (!res.error) setCities(res.data ?? []) })
+      .catch(() => {})
+      .finally(() => setCitiesLoading(false))
+  }, [d.state])
+
   const phoneFromUser = !!(user?.phone_number)
   const methods = d.deliveryMethod as string[]
   const hasMethod = (k: string) => methods.includes(k)
@@ -1118,15 +942,12 @@ const Step7 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
           <div className="df-field">
             <label className="df-label">City <span className="df-req">*</span></label>
             <SearchableSelect
-              options={d.stateCode
-                ? getCitiesOfState(d.stateCode).map(c => ({ value: c.name, label: c.name }))
-                : []
-              }
+              options={cities.map(c => ({ value: c, label: c }))}
               value={d.city}
               onChange={(city) => set('city', city)}
-              placeholder={d.stateCode ? 'Select your city' : 'Select state first'}
+              placeholder={citiesLoading ? 'Loading cities…' : !d.state ? 'Select state first' : 'Select your city'}
               searchPlaceholder="Search city..."
-              disabled={!d.stateCode}
+              disabled={!d.state || citiesLoading}
               hasError={!!err.city}
             />
             <FieldErr msg={err.city} />
@@ -1377,6 +1198,16 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
   }
   const tog: ToglFn = (k, v) => {
     const arr = data[k] as string[]
+    if (k === 'cuisinePreference') {
+      if (v === 'No Preference') {
+        set(k, arr.includes(v) ? [] : ['No Preference'])
+        return
+      }
+      set(k, arr.includes(v)
+        ? arr.filter((x) => x !== v)
+        : [...arr.filter((x) => x !== 'No Preference'), v])
+      return
+    }
     set(k, arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v])
   }
 
@@ -1448,10 +1279,10 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
             <div className="df-content-area">
               <div key={step} className={`df-step-anim df-step-anim--${direction}`}>
                 {step === 1 && <Step1 d={data} set={set} tog={tog} err={errors} />}
-                {step === 2 && <Step3 d={data} set={set} err={errors} />}
-                {step === 3 && <Step4 d={data} set={set} tog={tog} err={errors} />}
-                {step === 4 && <Step5 d={data} set={set} tog={tog} err={errors} />}
-                {step === 5 && <Step7 d={data} set={set} err={errors} />}
+                {step === 2 && <Step2 d={data} set={set} err={errors} />}
+                {step === 3 && <Step3 d={data} set={set} tog={tog} err={errors} />}
+                {step === 4 && <Step4 d={data} set={set} tog={tog} err={errors} />}
+                {step === 5 && <Step5 d={data} set={set} err={errors} />}
               </div>
             </div>
 

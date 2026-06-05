@@ -1,11 +1,4 @@
-import { FlaskConical, Leaf, IndianRupee, HeartHandshake, Users, Award, Clock, Star } from 'lucide-react'
-
-const stats = [
-  { icon: Users,  value: '50,000+', label: 'Clients Served'       },
-  { icon: Award,  value: '50+',     label: 'Certified Dietitians' },
-  { icon: Clock,  value: '8+',      label: 'Years of Experience'  },
-  { icon: Star,   value: '4.9/5',   label: 'Average Rating'       },
-]
+import { FlaskConical, Leaf, IndianRupee, HeartHandshake } from 'lucide-react'
 
 const values = [
   {
@@ -30,12 +23,29 @@ const values = [
   },
 ]
 
-const team = [
-  { initials: 'PM', name: 'Dr. Priya Mehta',  role: 'Chief Nutritionist & Founder', color: '#e76f51', exp: '12 yrs exp' },
-  { initials: 'RS', name: 'Rahul Sharma',     role: 'Co-founder & CEO',             color: '#2a9d8f', exp: '10 yrs exp' },
-  { initials: 'AB', name: 'Dr. Anita Bose',   role: 'Senior Dietitian',             color: '#457b9d', exp: '9 yrs exp'  },
-  { initials: 'VP', name: 'Vikram Patel',     role: 'Head of Technology',           color: '#9b5de5', exp: '8 yrs exp'  },
+const socials = [
+  { icon: 'fa-brands fa-linkedin-in', label: 'LinkedIn',  url: 'https://www.linkedin.com/company/meridiet/' },
+  { icon: 'fa-brands fa-instagram',   label: 'Instagram', url: 'https://www.instagram.com/meridietofficial/' },
+  { icon: 'fa-brands fa-youtube',     label: 'YouTube',   url: 'https://www.youtube.com/@MeriDiet' },
+  { icon: 'fa-brands fa-x-twitter',   label: 'X',         url: 'https://x.com/Meridietoffical' },
+  { icon: 'fa-brands fa-facebook-f',  label: 'Facebook',  url: 'https://www.facebook.com/people/MeriDiet/61564942492475/' },
 ]
+
+const founder = {
+  initials: 'HB',
+  name: 'Harmeet Batra',
+  role: 'Founder & CEO',
+  company: 'MeriDiet Technologies Pvt. Ltd.',
+  color: 'linear-gradient(135deg, #2f7a4d, #4caf72)',
+  bio: [
+    'Harmeet Batra is an entrepreneur focused on building technology-driven businesses that solve real-world challenges through innovation, automation, and scalable digital platforms.',
+    'As Founder & CEO, he is leading the development of an AI-powered personalized nutrition ecosystem designed specifically for Indian lifestyles — making professional nutrition guidance more accessible by combining artificial intelligence, data-driven wellness tools, and expert dietitian support on a single platform.',
+    'Under his leadership, MeriDiet is evolving beyond traditional diet planning into a comprehensive wellness platform offering personalized diet plans, health calculators, supplement recommendations, dietitian consultations, and white-label solutions for nutrition professionals.',
+    'Harmeet strongly believes that nutrition should be personalized, practical, and backed by technology. Through MeriDiet, he aims to help individuals make better health decisions while empowering dietitians with modern tools to scale their practices and deliver professional client experiences.',
+    'His entrepreneurial interests span HealthTech, SaaS platforms, digital wellness, artificial intelligence, workforce mobility, and technology-enabled services.',
+  ],
+  quote: 'At MeriDiet, our mission is simple: make personalized nutrition accessible to everyone.',
+}
 
 const AboutUs = () => {
   return (
@@ -45,27 +55,45 @@ const AboutUs = () => {
         {/* ── Header ── */}
         <div className="about-header">
           <span className="section-tag">Our Story</span>
-          <h2 className="section-title">The Team Behind <span className="about-green">MeriDiet</span></h2>
+          <h2 className="section-title">The Mind Behind <span className="about-green">MeriDiet</span></h2>
           <p className="section-sub">
             Born out of a simple belief — every Indian deserves personalized nutrition advice, not
             generic diet charts from the internet.
           </p>
         </div>
 
-        {/* ── Stats ── */}
-        <div className="about-stats">
-          {stats.map((s, i) => {
-            const Icon = s.icon
-            return (
-              <div key={i} className="about-stat">
-                <div className="about-stat-icon">
-                  <Icon size={22} strokeWidth={1.8} />
-                </div>
-                <div className="about-stat-value">{s.value}</div>
-                <div className="about-stat-label">{s.label}</div>
+        {/* ── Founder (featured) ── */}
+        <div className="about-founder-feature">
+          <div className="ff-card">
+            <div className="ff-side">
+              <div className="ff-avatar" style={{ background: founder.color }}>{founder.initials}</div>
+              <div className="ff-name">{founder.name}</div>
+              <div className="ff-role">{founder.role}</div>
+              <div className="ff-company">{founder.company}</div>
+              <div className="ff-socials">
+                {socials.map(s => (
+                  <a
+                    key={s.label}
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ff-social"
+                    aria-label={s.label}
+                  >
+                    <i className={s.icon} />
+                  </a>
+                ))}
               </div>
-            )
-          })}
+            </div>
+
+            <div className="ff-main">
+              <span className="ff-tag">Meet the Founder</span>
+              {founder.bio.map((p, j) => (
+                <p key={j} className="ff-bio">{p}</p>
+              ))}
+              <blockquote className="ff-quote">"{founder.quote}"</blockquote>
+            </div>
+          </div>
         </div>
 
         {/* ── Story split ── */}
@@ -73,29 +101,23 @@ const AboutUs = () => {
           <div className="about-story-text">
             <h3 className="about-story-title">Why We Built MeriDiet</h3>
             <p className="about-story-p">
-              In 2016, our founder Dr. Priya Mehta noticed a gap — most online diet plans were
-              either Western, overly expensive, or completely generic. Indian bodies, lifestyles,
-              and food cultures are unique. A plan for someone in Mumbai should look nothing like
-              one for someone in Jaipur.
+              For too long, nutrition advice has been generic, confusing, and difficult to follow.
+              We believe every individual has unique health goals, lifestyles, and nutritional needs.
             </p>
             <p className="about-story-p">
-              We built MeriDiet to change that. Today, our team of 50+ certified dietitians crafts
-              plans that consider your age, health conditions, regional preferences, budget, and
-              daily routine — all in under 3 minutes of your time.
+              By combining technology, artificial intelligence, and expert dietitian guidance, we are
+              creating a smarter way for people to understand their health and make informed decisions.
+              Our goal is not just to provide diet plans, but to build a complete wellness ecosystem
+              that supports healthier lives through personalization, education, and innovation.
             </p>
             <div className="about-story-quote">
-              "Food is medicine. The right food for the right person at the right time."
-              <span>— Dr. Priya Mehta, Founder</span>
+              "At MeriDiet, our mission is simple: make personalized nutrition accessible to everyone."
+              <span>— Harmeet Batra, Founder &amp; CEO</span>
             </div>
           </div>
 
           <div className="about-story-visual">
-            <img src="/indian-thali.png"         alt="Healthy Indian meal" className="about-img about-img--main" />
-            <img src="/grilled-chicken-salad.png" alt="Balanced plate"      className="about-img about-img--accent" />
-            <div className="about-img-badge">
-              <Award size={18} strokeWidth={2} />
-              <span>FSSAI Certified Dietitians</span>
-            </div>
+            <img src="/logo-header.png" alt="MeriDiet" className="about-story-logo-img" />
           </div>
         </div>
 
@@ -115,23 +137,6 @@ const AboutUs = () => {
                 </div>
               )
             })}
-          </div>
-        </div>
-
-        {/* ── Team ── */}
-        <div className="about-team">
-          <h3 className="about-section-sub-title">Meet the Team</h3>
-          <div className="about-team-grid">
-            {team.map((m, i) => (
-              <div key={i} className="about-team-card">
-                <div className="about-team-avatar" style={{ background: m.color }}>
-                  {m.initials}
-                </div>
-                <div className="about-team-name">{m.name}</div>
-                <div className="about-team-role">{m.role}</div>
-                <div className="about-team-exp">{m.exp}</div>
-              </div>
-            ))}
           </div>
         </div>
 

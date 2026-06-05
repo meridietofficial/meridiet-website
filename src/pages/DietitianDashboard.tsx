@@ -1,22 +1,22 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useState, useEffect } from 'react'
+import { useNavigate, useOutletContext } from 'react-router-dom'
+import dietitianApi, { type DietitianProfile } from '../api/dietitian'
+import ProfileSetupModal, { type SetupItem } from '../components/ProfileSetupModal'
+import { type DietitianOutletContext } from '../components/DietitianLayout'
 
-const NAV_ITEMS = [
-  { icon: '▪', label: 'Dashboard',              badge: 0,  active: true  },
-  { icon: '📋', label: 'Consultation Requests', badge: 2,  active: false },
-  { icon: '👥', label: 'My Clients',            badge: 0,  active: false },
-  { icon: '📅', label: 'Appointments',          badge: 0,  active: false },
-  { icon: '🥗', label: 'Diet Plans',            badge: 0,  active: false },
-  { icon: '💬', label: 'Chat',                  badge: 0,  active: false },
-  { icon: '🔔', label: 'Follow Ups',            badge: 0,  active: false },
-  { icon: '📊', label: 'Reports',               badge: 0,  active: false },
-  { icon: '💰', label: 'Earnings',              badge: 0,  active: false },
-  { icon: '👛', label: 'Wallet',                badge: 0,  active: false },
-  { icon: '⭐', label: 'Reviews',               badge: 0,  active: false },
-  { icon: '👤', label: 'Profile',               badge: 0,  active: false },
-  { icon: '⚙️', label: 'Settings',              badge: 0,  active: false },
-]
+const SETUP_SKIPPED_KEY = 'meri_diet_dietitian_setup_skipped'
+
+/* Build the onboarding checklist from the real profile. Availability is the
+ * headline item — it's what makes a dietitian show up as available to clients. */
+function buildSetupItems(p: DietitianProfile): SetupItem[] {
+  const filled = (v: unknown) => typeof v === 'string' ? v.trim().length > 0 : !!v
+  return [
+    { label: 'Weekly Availability', icon: 'fa-solid fa-calendar-days',  done: !!p.availability && Object.keys(p.availability).length > 0 },
+    { label: 'Profile Photo',       icon: 'fa-solid fa-image',          done: filled(p.documents?.profile_photo) || filled(p.avatar_url) },
+    { label: 'About / Bio',         icon: 'fa-solid fa-pen',            done: filled(p.bio) },
+    { label: 'Languages',           icon: 'fa-solid fa-language',       done: (p.languages?.length ?? 0) > 0 },
+  ]
+}
 
 const NOTIFICATIONS = [
   { icon: '👤', text: 'New consultation request from Priya Verma', time: '2 mins ago', dot: 'green' },
@@ -74,99 +74,46 @@ const PROFILE_STRENGTH = [
 ]
 
 export default function DietitianDashboard() {
-  const { user, clearAuth } = useAuth()
   const navigate = useNavigate()
-  const [online, setOnline] = useState(true)
-  const [activeNav, setActiveNav] = useState('Dashboard')
+  const { online, setOnline } = useOutletContext<DietitianOutletContext>()
 
-  const firstName = user?.full_name?.split(' ')[0] ?? 'Doctor'
-  const initials = user?.full_name
-    ? user.full_name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
-    : 'D'
+  // ── Profile-completion onboarding prompt ──
+  const [setupItems, setSetupItems] = useState<SetupItem[] | null>(null)
 
-  const handleLogout = () => {
-    clearAuth()
-    navigate('/')
+  useEffect(() => {
+    // Already dismissed this session → never bother fetching/showing again.
+    if (sessionStorage.getItem(SETUP_SKIPPED_KEY)) return
+    let active = true
+    dietitianApi.getProfile()
+      .then(p => {
+        if (!active) return
+        const items = buildSetupItems(p)
+        // Only prompt when availability (the key detail) is still missing.
+        const availabilityDone = items[0].done
+        if (!availabilityDone) setSetupItems(items)
+      })
+      .catch(() => { /* silent — onboarding prompt is best-effort */ })
+    return () => { active = false }
+  }, [])
+
+  const handleSetupComplete = () => {
+    setSetupItems(null)
+    navigate('/dietitian-profile', { state: { tab: 'Preferences' } })
   }
-
-  const handleNavClick = (label: string) => {
-    setActiveNav(label)
-    if (label === 'Profile') navigate('/dietitian-profile')
+  const handleSetupSkip = () => {
+    sessionStorage.setItem(SETUP_SKIPPED_KEY, '1')
+    setSetupItems(null)
   }
 
   return (
-    <div className="dd-root">
-
-      {/* ── Sidebar ── */}
-      <aside className="dd-sidebar">
-        <div className="dd-sidebar-logo">
-          <Link to="/dietitian-dashboard">
-            <img src="/logo-header.png" alt="MeriDiet" className="dd-logo-img" />
-          </Link>
-          <p className="dd-logo-sub">Dietitian Dashboard</p>
-        </div>
-
-        <div className="dd-sidebar-scroll">
-        <nav className="dd-nav">
-          {NAV_ITEMS.map(item => (
-            <button
-              key={item.label}
-              className={`dd-nav-item${activeNav === item.label ? ' dd-nav-item--active' : ''}`}
-              onClick={() => handleNavClick(item.label)}
-            >
-              <span className="dd-nav-icon">{item.icon}</span>
-              <span className="dd-nav-label">{item.label}</span>
-              {item.badge > 0 && <span className="dd-nav-badge">{item.badge}</span>}
-            </button>
-          ))}
-        </nav>
-
-        <div className="dd-refer-card">
-          <p className="dd-refer-title">Refer &amp; Earn</p>
-          <p className="dd-refer-desc">Invite fellow dietitians and earn exciting rewards.</p>
-          <button className="dd-refer-btn">Refer Now →</button>
-        </div>
-
-        <button className="dd-help-link">❓ Need Help?</button>
-        </div>
-      </aside>
-
-      {/* ── Main ── */}
-      <div className="dd-main">
-
-        {/* Top bar */}
-        <header className="dd-topbar">
-          <div className="dd-topbar-left">
-            <p className="dd-welcome">Welcome back,</p>
-            <h1 className="dd-welcome-name">Dr. {firstName} 👋</h1>
-          </div>
-          <div className="dd-topbar-right">
-            <div className="dd-online-toggle">
-              <span className={`dd-online-dot${online ? ' dd-online-dot--on' : ''}`} />
-              <span className="dd-online-label">{online ? 'You are Online' : 'You are Offline'}</span>
-              <button
-                className={`dd-toggle${online ? ' dd-toggle--on' : ''}`}
-                onClick={() => setOnline(p => !p)}
-                aria-label="Toggle online status"
-              >
-                <span className="dd-toggle-knob" />
-              </button>
-            </div>
-            <button className="dd-notif-btn">
-              🔔
-              <span className="dd-notif-badge">2</span>
-            </button>
-            <div className="dd-user-chip">
-              <div className="dd-user-avatar">{initials}</div>
-              <span className="dd-user-name">{user?.full_name ?? 'Dietitian'}</span>
-              <span className="dd-user-chevron">▾</span>
-              <div className="dd-user-dropdown">
-                <Link to="/profile" className="dd-dropdown-item">My Profile</Link>
-                <button className="dd-dropdown-item" onClick={handleLogout}>Logout</button>
-              </div>
-            </div>
-          </div>
-        </header>
+    <>
+      {setupItems && (
+        <ProfileSetupModal
+          items={setupItems}
+          onComplete={handleSetupComplete}
+          onSkip={handleSetupSkip}
+        />
+      )}
 
         {/* ── Stats row ── */}
         <div className="dd-stats">
@@ -374,7 +321,6 @@ export default function DietitianDashboard() {
           </div>
         </div>
 
-      </div>
-    </div>
+    </>
   )
 }

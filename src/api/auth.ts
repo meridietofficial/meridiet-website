@@ -20,6 +20,11 @@ export type AuthResponse = {
   }
 }
 
+export type MessageResponse = {
+  success: boolean
+  message: string
+}
+
 const authApi = {
   register: (body: Record<string, unknown>) =>
     apiClient.apiPost<AuthResponse>(ENDPOINTS.auth.register, body),
@@ -34,6 +39,14 @@ const authApi = {
     avatar_url: string
     user_type: 'user' | 'dietitian'
   }) => apiClient.apiPost<AuthResponse>(ENDPOINTS.auth.google, body),
+
+  // Sends a password-reset link to the email if an account exists.
+  forgotPassword: (body: { email: string }) =>
+    apiClient.apiPost<MessageResponse>(ENDPOINTS.auth.forgotPassword, body),
+
+  // Sets a new password using the single-use token from the reset email link.
+  resetPassword: (body: { token: string; password: string; confirm_password: string }) =>
+    apiClient.apiPost<MessageResponse>(ENDPOINTS.auth.resetPassword, body),
 }
 
 export default authApi

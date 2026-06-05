@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import dietitianApi, { uploadSingleDocument, deleteDocument, type DietitianProfile } from '../api/dietitian'
@@ -9,8 +9,30 @@ import SpecializationInput from '../components/SpecializationInput'
 import { IN_STATES } from '../data/indiaCities'
 
 /* ─── Helpers ────────────────────────────────────────────── */
-const fmtDate = (iso: string | null | undefined) =>
-  iso ? new Date(iso).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+/* Normalize any backend date/datetime to a calendar date 'YYYY-MM-DD'.
+ * A DOB is a pure calendar date, but the backend round-trips it as a
+ * timezone-shifted timestamp (e.g. "1993-06-12T18:30:00.000Z" for an IST
+ * 13 Jun). Slicing the UTC portion would lose a day, so we read the LOCAL
+ * date parts — the same way it was entered — which keeps the day stable. */
+const toDateInput = (value: string | null | undefined): string => {
+  if (!value) return ''
+  // Already a plain date — use verbatim, never touch Date()/timezones.
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return ''
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
+
+const fmtDate = (value: string | null | undefined) => {
+  const iso = toDateInput(value)
+  if (!iso) return '—'
+  // Build from parts at LOCAL midnight so formatting never shifts the day.
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+}
 
 const orDash = (v: string | null | undefined) => (v && v.trim() ? v : '—')
 
@@ -84,23 +106,7 @@ const to12hLabel = (hhmm: string): string => {
   return `${String(h % 12 || 12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ap}`
 }
 
-const NAV_ITEMS = [
-  { icon: '▪',  label: 'Dashboard'             },
-  { icon: '📋', label: 'Consultation Requests' },
-  { icon: '👥', label: 'My Clients'            },
-  { icon: '📅', label: 'Appointments'          },
-  { icon: '🥗', label: 'Diet Plans'            },
-  { icon: '💬', label: 'Chat'                  },
-  { icon: '🔔', label: 'Follow Ups'            },
-  { icon: '📊', label: 'Reports'               },
-  { icon: '💰', label: 'Earnings'              },
-  { icon: '👛', label: 'Wallet'                },
-  { icon: '⭐', label: 'Reviews'               },
-  { icon: '👤', label: 'Profile'               },
-  { icon: '⚙️', label: 'Settings'              },
-]
-
-const TABS = ['Personal Information', 'Professional Information', 'Documents', 'Preferences', 'Security']
+const TABS =['Personal Information', 'Professional Information', 'Documents', 'Preferences', 'Security']
 
 function CircularProgress({ pct }: { pct: number }) {
   const r = 36, circ = 2 * Math.PI * r, dash = (pct / 100) * circ
@@ -180,7 +186,7 @@ function TabPersonal({ profile, photoSrc, fileRef, onPhotoChange, onSaved, photo
       email:         profile.email ?? '',
       phone_code:    profile.phone_code ?? '',
       phone_number:  profile.phone_number ?? '',
-      date_of_birth: profile.date_of_birth ? profile.date_of_birth.slice(0, 10) : '',
+      date_of_birth: toDateInput(profile.date_of_birth),
       gender:        profile.gender ?? '',
       state:         profile.state ?? '',
       city:          profile.city ?? '',
@@ -937,11 +943,15 @@ interface BannerProfile {
 /* ─── Main component ─────────────────────────────────────── */
 
 export default function DietitianMyProfile() {
-  const { user, clearAuth } = useAuth()
+  const { user } = useAuth()
   const { showToast } = useToast()
-  const navigate = useNavigate()
-  const [activeTab, setActiveTab] = useState('Personal Information')
-  const [activeNav, setActiveNav] = useState('Profile')
+  const location = useLocation()
+  // Allow other pages to deep-link to a specific tab (e.g. the onboarding
+  // prompt sends the dietitian straight to "Preferences" for availability).
+  const requestedTab = (location.state as { tab?: string } | null)?.tab
+  const [activeTab, setActiveTab] = useState(
+    requestedTab && TABS.includes(requestedTab) ? requestedTab : 'Personal Information'
+  )
   const [photoSrc, setPhotoSrc] = useState<string | null>(null)
   const [profile, setProfile] = useState<DietitianProfile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -984,7 +994,6 @@ export default function DietitianMyProfile() {
 
   const completion = getCompletion(profile)
 
-  const handleLogout = () => { clearAuth(); navigate('/') }
   const [photoUploading, setPhotoUploading] = useState(false)
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -1015,68 +1024,8 @@ export default function DietitianMyProfile() {
       setPhotoUploading(false)
     }
   }
-  const handleNavClick = (label: string) => {
-    setActiveNav(label)
-    if (label === 'Dashboard') navigate('/dietitian-dashboard')
-  }
-
   return (
-    <div className="dd-root">
-
-      {/* ── Sidebar ── */}
-      <aside className="dd-sidebar">
-        <div className="dd-sidebar-logo">
-          <Link to="/dietitian-dashboard">
-            <img src="/logo-header.png" alt="MeriDiet" className="dd-logo-img" />
-          </Link>
-          <p className="dd-logo-sub">Dietitian Dashboard</p>
-        </div>
-        <div className="dd-sidebar-scroll">
-          <nav className="dd-nav">
-            {NAV_ITEMS.map(item => (
-              <button
-                key={item.label}
-                className={`dd-nav-item${activeNav === item.label ? ' dd-nav-item--active' : ''}`}
-                onClick={() => handleNavClick(item.label)}
-              >
-                <span className="dd-nav-icon">{item.icon}</span>
-                <span className="dd-nav-label">{item.label}</span>
-              </button>
-            ))}
-          </nav>
-          <div className="dd-refer-card">
-            <p className="dd-refer-title">Refer &amp; Earn</p>
-            <p className="dd-refer-desc">Invite fellow dietitians and earn exciting rewards.</p>
-            <button className="dd-refer-btn">Refer Now →</button>
-          </div>
-          <button className="dd-help-link">❓ Need Help?</button>
-        </div>
-      </aside>
-
-      {/* ── Main ── */}
-      <div className="dd-main dmp-main">
-
-        {/* Top bar */}
-        <header className="dd-topbar">
-          <div className="dd-topbar-left">
-            <p className="dd-welcome">My</p>
-            <h1 className="dd-welcome-name">Profile</h1>
-          </div>
-          <div className="dd-topbar-right">
-            <button className="dd-notif-btn">🔔<span className="dd-notif-badge">2</span></button>
-            <div className="dd-user-chip">
-              <div className="dd-user-avatar">{initials}</div>
-              <span className="dd-user-name">{user?.full_name ?? 'Dietitian'}</span>
-              <span className="dd-user-chevron">▾</span>
-              <div className="dd-user-dropdown">
-                <button className="dd-dropdown-item" onClick={handleLogout}>
-                  <i className="fa-solid fa-arrow-right-from-bracket" /> Logout
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
-
+    <>
         {/* ── Profile banner ── */}
         <div className="dmp-banner">
           <div className="dmp-banner-left">
@@ -1210,7 +1159,6 @@ export default function DietitianMyProfile() {
           )}
         </div>
         )}
-      </div>
-    </div>
+    </>
   )
 }
