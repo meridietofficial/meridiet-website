@@ -14,6 +14,11 @@ type Props = {
   onClose: () => void
   initialTab?: Tab
   initialUserType?: UserType
+  prefillName?: string
+  prefillEmail?: string
+  prefillPhone?: string
+  onAuthSuccess?: () => void
+  formGateMode?: boolean
 }
 
 const PHONE_CODES = [
@@ -29,7 +34,7 @@ const PHONE_CODES = [
   { code: '+94',  iso: 'lk', name: 'Sri Lanka' },
 ]
 
-const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: Props) => {
+const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', prefillName = '', prefillEmail = '', prefillPhone = '', onAuthSuccess, formGateMode = false }: Props) => {
   const { saveAuth } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
@@ -48,10 +53,10 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
   const [forgotSent, setForgotSent] = useState(false)
 
   // Signup
-  const [signupName, setSignupName] = useState('')
-  const [signupEmail, setSignupEmail] = useState('')
+  const [signupName, setSignupName] = useState(prefillName)
+  const [signupEmail, setSignupEmail] = useState(prefillEmail)
   const [signupPhoneCode, setSignupPhoneCode] = useState('+91')
-  const [signupPhone, setSignupPhone] = useState('')
+  const [signupPhone, setSignupPhone] = useState(prefillPhone)
   const [signupPassword, setSignupPassword] = useState('')
 
   useEffect(() => {
@@ -75,6 +80,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
       const res = await authApi.login({ email_phone: loginEmail, password: loginPassword, role: userType })
       saveAuth(res.data.user, res.data.token)
       showToast('Welcome back! You are now logged in.', 'success')
+      onAuthSuccess?.()
       onClose()
       if (res.data.user.role === 'dietitian') {
         navigate('/dietitian-dashboard')
@@ -128,6 +134,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
       })
       saveAuth(res.data.user, res.data.token)
       showToast('Account created successfully! Welcome to MeriDiet.', 'success')
+      onAuthSuccess?.()
       onClose()
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : 'Registration failed. Please try again.', 'error')
@@ -158,6 +165,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
         })
         saveAuth(res.data.user, res.data.token)
         showToast('Logged in with Google!', 'success')
+        onAuthSuccess?.()
         onClose()
         if (res.data.user.role === 'dietitian') navigate('/dietitian-dashboard')
       } catch (err) {
@@ -192,12 +200,30 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user' }: 
           <X size={20} strokeWidth={2} />
         </button>
 
-        <div className="auth-logo">
-          <img src="/logo.png" alt="MeriDiet" />
-        </div>
+        {formGateMode ? (
+          <div className="auth-gate-banner">
+            <div className="auth-gate-top">
+              <span className="auth-gate-icon">🔐</span>
+              <div>
+                <h3 className="auth-gate-title">One last step — create your free account</h3>
+                <p className="auth-gate-sub">Registration is required to generate your personalized diet chart</p>
+              </div>
+            </div>
+            <ul className="auth-gate-perks">
+              <li><span>✓</span> Your data saved — edit anytime, no refilling</li>
+              <li><span>✓</span> Track your nutrition journey over time</li>
+              <li><span>✓</span> Get your plan delivered right to your account</li>
+              <li><span>✓</span> Future orders filled instantly from your profile</li>
+            </ul>
+          </div>
+        ) : (
+          <div className="auth-logo">
+            <img src="/logo.png" alt="MeriDiet" />
+          </div>
+        )}
 
         {/* ── User / Dietitian slider ── */}
-        {tab !== 'forgot' && (
+        {tab !== 'forgot' && !formGateMode && (
           <div className="auth-type-toggle">
             <button
               className={`auth-type-btn${userType === 'user' ? ' auth-type-btn--active' : ''}`}

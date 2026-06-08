@@ -64,6 +64,14 @@ const apiClient = {
     })
   },
 
+  apiPatch<T>(endpoint: string, body?: unknown, headers?: HeadersInit) {
+    return request<T>(endpoint, {
+      method: 'PATCH',
+      headers: getHeaders(headers),
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    })
+  },
+
   apiDelete<T>(endpoint: string, headers?: HeadersInit) {
     return request<T>(endpoint, { method: 'DELETE', headers: getHeaders(headers) })
   },

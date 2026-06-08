@@ -135,6 +135,7 @@ const JoinDietitian = () => {
   const [errors, setErrors]   = useState<Partial<Record<keyof Form, string>>>({})
   const [submitted, setSubmitted] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [docError, setDocError]   = useState('')
   const [cities, setCities]       = useState<string[]>([])
   const [citiesLoading, setCitiesLoading] = useState(false)
 
@@ -203,6 +204,8 @@ const JoinDietitian = () => {
 
     // Upload docs + submit when moving from step 2 → step 3
     if (step === 2 && n === 3) {
+      if (!docs.profilePhoto) { setDocError('Profile Photo is required'); return }
+      setDocError('')
       setUploading(true)
       try {
         const docUrls = await uploadDocuments(docs as Record<'profilePhoto' | 'degreeCert' | 'regCert' | 'idProof', File | null>)
@@ -216,7 +219,7 @@ const JoinDietitian = () => {
           password:           data.password,
           registrationNumber: data.license,
           experience:         data.experience,
-          specialization:     data.specializations,
+          specialization:     data.specializations.length ? data.specializations : [],
           degrees: [{ degree: data.qualification, institute: '', year: '' }],
           documents: {
             profilePhoto:            docUrls.profilePhoto,
@@ -411,7 +414,7 @@ const JoinDietitian = () => {
                 </div>
                 <div className="jd2-field">
                   <label className="jd2-label">
-                    Registration Number <span className="jd2-req">*</span>
+                    Registration Number <span className="jd2-req">*</span> <span className="jd2-label-hint">(if not then fill N/A)</span>
                     <span className="jd2-tooltip-wrap">
                       <span className="jd2-tooltip-icon">ℹ</span>
                       <span className="jd2-tooltip-box">
@@ -458,21 +461,29 @@ const JoinDietitian = () => {
                 <label className="jd2-label">Upload Documents <span className="jd2-req">*</span></label>
                 <div className="jd2-upload-grid">
                   {([
-                    { key: 'profilePhoto', label: 'Profile Photo',          icon: 'fa-regular fa-image',     hint: 'JPG, PNG up\nto 2MB' },
-                    { key: 'degreeCert',   label: 'Degree Certificate',     icon: 'fa-regular fa-file-lines', hint: 'JPG, PNG, PDF\nup to 5MB' },
-                    { key: 'regCert',      label: 'Registration\nCertificate', icon: 'fa-regular fa-file-lines', hint: 'JPG, PNG, PDF\nup to 5MB' },
-                    { key: 'idProof',      label: 'ID Proof',               icon: 'fa-regular fa-id-card',   hint: 'JPG, PNG, PDF\nup to 5MB' },
+                    { key: 'profilePhoto', label: 'Profile Photo',             icon: 'fa-regular fa-image',      hint: 'JPG, PNG up\nto 2MB',      required: true  },
+                    { key: 'degreeCert',   label: 'Degree Certificate',        icon: 'fa-regular fa-file-lines', hint: 'JPG, PNG, PDF\nup to 5MB', required: false },
+                    { key: 'regCert',      label: 'Registration\nCertificate', icon: 'fa-regular fa-file-lines', hint: 'JPG, PNG, PDF\nup to 5MB', required: false },
+                    { key: 'idProof',      label: 'ID Proof',                  icon: 'fa-regular fa-id-card',    hint: 'JPG, PNG, PDF\nup to 5MB', required: false },
                   ] as const).map(d => (
                     <div key={d.key} className={`jd2-upload-box${docs[d.key] ? ' uploaded' : ''}`}
-                      onClick={() => fileRefs[d.key].current?.click()}>
+                      onClick={() => { if (!docs[d.key]) fileRefs[d.key].current?.click() }}>
                       <input ref={fileRefs[d.key]} type="file" accept="image/*,.pdf" style={{ display: 'none' }}
-                        onChange={e => setDocs(p => ({ ...p, [d.key]: e.target.files?.[0] ?? null }))} />
+                        onChange={e => { setDocs(p => ({ ...p, [d.key]: e.target.files?.[0] ?? null })); if (d.key === 'profilePhoto') setDocError('') }} />
                       <i className={`jd2-upload-icon ${d.icon}`} />
-                      <span className="jd2-upload-lbl">{d.label}</span>
-                      <span className="jd2-upload-hint">{docs[d.key] ? '✓ ' + docs[d.key]!.name.slice(0, 14) : d.hint}</span>
+                      <span className="jd2-upload-lbl">
+                        {d.label}{d.required && <span className="jd2-req" style={{ marginLeft: 2 }}>*</span>}
+                      </span>
+                      {docs[d.key] && (
+                        <button type="button" className="jd2-upload-remove" onClick={e => { e.stopPropagation(); setDocs(p => ({ ...p, [d.key]: null })); if (fileRefs[d.key].current) fileRefs[d.key].current!.value = '' }}>✕</button>
+                      )}
+                      <span className="jd2-upload-hint">
+                        {docs[d.key] ? '✓ ' + docs[d.key]!.name.slice(0, 14) : d.hint}
+                      </span>
                     </div>
                   ))}
                 </div>
+                <Err msg={docError} />
               </div>
             </div>
           )}

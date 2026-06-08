@@ -11,18 +11,18 @@ export type DietitianOutletContext = {
 
 const NAV_ITEMS: { icon: string; label: string; route?: string; badge?: number }[] = [
   { icon: 'fa-solid fa-table-columns',   label: 'Dashboard',             route: '/dietitian-dashboard' },
-  { icon: 'fa-solid fa-clipboard-list',  label: 'Consultation Requests', badge: 2 },
-  { icon: 'fa-solid fa-users',           label: 'My Clients'            },
-  { icon: 'fa-solid fa-calendar-check',  label: 'Appointments'          },
-  { icon: 'fa-solid fa-bowl-food',       label: 'Diet Plans'            },
-  { icon: 'fa-solid fa-comments',        label: 'Chat'                  },
-  { icon: 'fa-solid fa-bell',            label: 'Follow Ups'            },
-  { icon: 'fa-solid fa-chart-line',      label: 'Reports'               },
-  { icon: 'fa-solid fa-sack-dollar',     label: 'Earnings'              },
-  { icon: 'fa-solid fa-wallet',          label: 'Wallet'                },
-  { icon: 'fa-solid fa-star',            label: 'Reviews'               },
+  { icon: 'fa-solid fa-clipboard-list',  label: 'Consultation Requests', route: '/dietitian-consultation-requests', badge: 2 },
+  { icon: 'fa-solid fa-users',           label: 'My Clients',            route: '/dietitian-my-clients' },
+  { icon: 'fa-solid fa-calendar-check',  label: 'Appointments',          route: '/dietitian-appointments' },
+  { icon: 'fa-solid fa-bowl-food',       label: 'Diet Plans',            route: '/dietitian-diet-plans' },
+  { icon: 'fa-solid fa-comments',        label: 'Chat',                  route: '/dietitian-chat' },
+  { icon: 'fa-solid fa-bell',            label: 'Follow Ups',            route: '/dietitian-follow-ups' },
+  { icon: 'fa-solid fa-chart-line',      label: 'Reports',               route: '/dietitian-reports' },
+  { icon: 'fa-solid fa-sack-dollar',     label: 'Earnings',              route: '/dietitian-earnings' },
+  { icon: 'fa-solid fa-wallet',          label: 'Wallet',                route: '/dietitian-wallet' },
+  { icon: 'fa-solid fa-star',            label: 'Reviews',               route: '/dietitian-reviews' },
   { icon: 'fa-solid fa-user',            label: 'Profile',               route: '/dietitian-profile' },
-  { icon: 'fa-solid fa-gear',            label: 'Settings'              },
+  { icon: 'fa-solid fa-gear',            label: 'Settings',              route: '/dietitian-settings' },
 ]
 
 /**

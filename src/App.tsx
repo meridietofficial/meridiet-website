@@ -4,6 +4,8 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
 import DietitianLayout from './components/DietitianLayout'
+import { VideoCallProvider, useVideoCall } from './context/VideoCallContext'
+const VideoCallModal = lazy(() => import('./components/VideoCallModal'))
 
 const HomePage      = lazy(() => import('./pages/HomePage'))
 const AboutUs       = lazy(() => import('./components/AboutUs'))
@@ -20,7 +22,18 @@ const ConsultDietitian    = lazy(() => import('./pages/ConsultDietitian'))
 const DietitianProfile    = lazy(() => import('./pages/DietitianProfile'))
 const DietitianDashboard  = lazy(() => import('./pages/DietitianDashboard'))
 const DietitianMyProfile  = lazy(() => import('./pages/DietitianMyProfile'))
-const ResetPassword       = lazy(() => import('./pages/ResetPassword'))
+const DietitianConsultationRequests = lazy(() => import('./pages/DietitianConsultationRequests'))
+const DietitianMyClients      = lazy(() => import('./pages/DietitianMyClients'))
+const DietitianAppointments   = lazy(() => import('./pages/DietitianAppointments'))
+const DietitianDietPlans      = lazy(() => import('./pages/DietitianDietPlans'))
+const DietitianChat           = lazy(() => import('./pages/DietitianChat'))
+const DietitianFollowUps      = lazy(() => import('./pages/DietitianFollowUps'))
+const DietitianReports        = lazy(() => import('./pages/DietitianReports'))
+const DietitianEarnings       = lazy(() => import('./pages/DietitianEarnings'))
+const DietitianWallet         = lazy(() => import('./pages/DietitianWallet'))
+const DietitianReviews        = lazy(() => import('./pages/DietitianReviews'))
+const DietitianSettings       = lazy(() => import('./pages/DietitianSettings'))
+const ResetPassword           = lazy(() => import('./pages/ResetPassword'))
 
 function PageLoader() {
   return (
@@ -35,10 +48,16 @@ function FormPage() {
   return <DietForm onClose={() => navigate('/')} />
 }
 
-const NO_NAVBAR_ROUTES = ['/dietitian-dashboard', '/dietitian-profile', '/reset-password']
-const NO_FOOTER_ROUTES = ['/form', '/join-as-dietitian', '/dietitian-dashboard', '/dietitian-profile', '/reset-password']
+const NO_NAVBAR_ROUTES = ['/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
+const NO_FOOTER_ROUTES = ['/form', '/join-as-dietitian', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
 
-function App() {
+function ActiveVideoCall() {
+  const { activeCall, clearCall } = useVideoCall()
+  if (!activeCall) return null
+  return <VideoCallModal appointmentId={activeCall.id} clientName={activeCall.clientName} onClose={clearCall} />
+}
+
+function AppInner() {
   const navigate  = useNavigate()
   const { pathname } = useLocation()
   const openForm  = () => navigate('/form')
@@ -67,13 +86,35 @@ function App() {
           <Route path="/join-as-dietitian"    element={<JoinDietitian />} />
           <Route path="/reset-password"       element={<ResetPassword />} />
           <Route element={<DietitianLayout />}>
-            <Route path="/dietitian-dashboard" element={<DietitianDashboard />} />
-            <Route path="/dietitian-profile"   element={<DietitianMyProfile />} />
+            <Route path="/dietitian-dashboard"               element={<DietitianDashboard />} />
+            <Route path="/dietitian-profile"                 element={<DietitianMyProfile />} />
+            <Route path="/dietitian-consultation-requests"   element={<DietitianConsultationRequests />} />
+            <Route path="/dietitian-my-clients"              element={<DietitianMyClients />} />
+            <Route path="/dietitian-appointments"            element={<DietitianAppointments />} />
+            <Route path="/dietitian-diet-plans"              element={<DietitianDietPlans />} />
+            <Route path="/dietitian-chat"                   element={<DietitianChat />} />
+            <Route path="/dietitian-follow-ups"             element={<DietitianFollowUps />} />
+            <Route path="/dietitian-reports"               element={<DietitianReports />} />
+            <Route path="/dietitian-earnings"              element={<DietitianEarnings />} />
+            <Route path="/dietitian-wallet"               element={<DietitianWallet />} />
+            <Route path="/dietitian-reviews"              element={<DietitianReviews />} />
+            <Route path="/dietitian-settings"             element={<DietitianSettings />} />
           </Route>
         </Routes>
       </Suspense>
       {showFooter && <Footer />}
+      <Suspense fallback={null}>
+        <ActiveVideoCall />
+      </Suspense>
     </>
+  )
+}
+
+function App() {
+  return (
+    <VideoCallProvider>
+      <AppInner />
+    </VideoCallProvider>
   )
 }
 

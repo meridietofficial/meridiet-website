@@ -23,7 +23,7 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
               className="hero-btn-outline"
               onClick={() => document.getElementById('sample-diet')?.scrollIntoView({ behavior: 'smooth' })}
             >
-              <span>👁</span> Consult Dietitians
+              <i className="fa-solid fa-user-doctor" /> Consult Dietitians
             </button>
           </div>
 

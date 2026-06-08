@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { IN_STATES } from '../data/indiaCities'
 import DatePicker from './DatePicker'
 import SearchableSelect from './SearchableSelect'
-import dietFormApi from '../api/dietForm'
 import { ApiError } from '../api/client'
+import paymentApi from '../api/payment'
 import { useToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
+import AuthModal from './AuthModal'
 
 const STEPS = [
   { label: 'Basic Details', sub: 'Tell us about yourself' },
@@ -1167,6 +1168,7 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
   const [errors, setErrors] = useState<Errors>({})
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [showAuthGate, setShowAuthGate] = useState(false)
   const overlayRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -1181,13 +1183,14 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
     }
   }, [data.fullName])
 
-  // Pre-fill phone & email from logged-in user on mount
+  // Pre-fill name, phone & email from logged-in user on mount
   useEffect(() => {
     if (user) {
       setData(p => ({
         ...p,
-        ...(user.phone_number && !p.whatsapp ? { whatsapp: user.phone_number } : {}),
-        ...(user.email        && !p.email    ? { email: user.email }            : {}),
+        ...(user.full_name    && !p.fullName  ? { fullName: user.full_name, contactName: user.full_name } : {}),
+        ...(user.phone_number && !p.whatsapp  ? { whatsapp: user.phone_number } : {}),
+        ...(user.email        && !p.email     ? { email: user.email }           : {}),
       }))
     }
   }, [])
@@ -1209,6 +1212,57 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
       return
     }
     set(k, arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v])
+  }
+
+  const handlePayAndSubmit = async () => {
+    setSubmitting(true)
+    try {
+      const orderRes = await paymentApi.createOrder(data.planType)
+      const { order_id, key_id, amount, currency } = orderRes.data
+
+      const rzp = new window.Razorpay({
+        key:         key_id,
+        amount:      amount * 100,
+        currency:    currency ?? 'INR',
+        order_id,
+        name:        'MeriDiet',
+        description: `${data.planType} Diet Plan`,
+        image:       '/logo.png',
+        prefill: {
+          name:    data.contactName || data.fullName,
+          email:   data.email,
+          contact: data.whatsapp ? `+91${data.whatsapp}` : '',
+        },
+        theme: { color: '#006B28' },
+        handler: async (rzpResponse) => {
+          try {
+            await paymentApi.verify(rzpResponse, data as unknown as Record<string, unknown>)
+            setSubmitted(true)
+          } catch (err) {
+            showToast(
+              err instanceof ApiError ? err.message : 'Payment verification failed. Please contact support.',
+              'error',
+            )
+          } finally {
+            setSubmitting(false)
+          }
+        },
+        modal: {
+          ondismiss: async () => {
+            try { await paymentApi.failed(order_id) } catch { /* ignore */ }
+            showToast('Payment cancelled. Your form details are saved — try again anytime.', 'error')
+            setSubmitting(false)
+          },
+        },
+      })
+      rzp.open()
+    } catch (err) {
+      showToast(
+        err instanceof ApiError ? err.message : 'Could not initiate payment. Please try again.',
+        'error',
+      )
+      setSubmitting(false)
+    }
   }
 
   const go = (n: number) => {
@@ -1298,24 +1352,14 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
                 <button
                   className="btn-primary df-next-btn"
                   disabled={submitting}
-                  onClick={async () => {
+                  onClick={() => {
                     const e = validateStep(5, data)
                     if (Object.keys(e).length > 0) { setErrors(e); return }
-                    setSubmitting(true)
-                    try {
-                      await dietFormApi.submit(data as unknown as Record<string, unknown>)
-                      setSubmitted(true)
-                    } catch (err) {
-                      showToast(
-                        err instanceof ApiError ? err.message : 'Submission failed. Please try again.',
-                        'error',
-                      )
-                    } finally {
-                      setSubmitting(false)
-                    }
+                    if (!user) { setShowAuthGate(true); return }
+                    handlePayAndSubmit()
                   }}
                 >
-                  {submitting ? 'Submitting…' : 'Submit & Get My Plan →'}
+                  {submitting ? 'Processing…' : 'Proceed to Payment →'}
                 </button>
               )}
             </div>
@@ -1324,6 +1368,19 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
         </div>
 
       </div>
+
+      {showAuthGate && (
+        <AuthModal
+          onClose={() => setShowAuthGate(false)}
+          initialTab="signup"
+          initialUserType="user"
+          formGateMode
+          prefillName={data.contactName || data.fullName}
+          prefillEmail={data.email}
+          prefillPhone={data.whatsapp}
+          onAuthSuccess={handlePayAndSubmit}
+        />
+      )}
 
       <div className="df-feature-wrap">
         <div className="df-feature-strip">

@@ -239,6 +239,7 @@ export type AvailableDate = {
   date: string          // ISO date, e.g. "2026-06-05"
   day: string           // e.g. "Friday"
   slots: string[]       // working-hour ranges, e.g. ["09:00-18:00"]
+  booked_slots?: string[] // slot start times already booked, e.g. ["09:00"]
 }
 
 export type NextAvailable = {
@@ -252,16 +253,25 @@ export type DietitianCard = {
   full_name: string
   title: string
   avatar_url: string | null
-  rating: number          // placeholder (0) until reviews exist
-  reviews: number         // placeholder (0) until reviews exist
+  rating: number
+  reviews: number
   experience: string
   location: string
+  city?: string
+  state?: string
+  gender?: string
+  about?: string | null
   specialization: string[]
   languages: string[]
+  services?: string[]
+  education?: { year: string | null; degree: string; institute: string }[]
+  awards?: { title?: string; organization?: string; year?: string }[]
+  consultations?: number
+  fee?: number | null
   next_available: NextAvailable | null
   available_dates: AvailableDate[]
-  availability: string            // e.g. "online" | "offline"
-  is_verified: number | boolean   // backend sends 1/0
+  availability: string
+  is_verified: number | boolean
 }
 
 export type DietitianListParams = {
@@ -310,6 +320,13 @@ const dietitianApi = {
     const d = res.data
     // Tolerate a few likely field names until the exact shape is confirmed
     return Number(d.amount ?? d.fee ?? d.consultation_fee ?? 0)
+  },
+
+  async getDietitianById(id: number): Promise<DietitianCard> {
+    const res = await apiClient.apiGet<{ success: boolean; message: string; data: DietitianCard }>(
+      `${ENDPOINTS.dietitian.list}/${id}`
+    )
+    return res.data
   },
 
   async listDietitians(params: DietitianListParams = {}): Promise<{ data: DietitianCard[]; meta: PaginationMeta }> {

@@ -25,6 +25,24 @@ const ENDPOINTS = {
   consultation: {
     fee: '/consultation-fee',
   },
+  payment: {
+    createOrder: '/payment/create-order',
+    verify:      '/payment/verify',
+    failed:      '/payment/failed',
+  },
+  appointment: {
+    slots:          '/appointments/slots',
+    createOrder:    '/appointments/create-order',
+    verify:         '/appointments/verify',
+    failed:         '/appointments/failed',
+    my:             '/appointments/my',
+    dietitianList:  '/appointments/dietitian',
+    updateStatus:   '/appointments',           // used as /appointments/:id/status
+    clientsList:    '/appointments/clients',
+    dietitianSessions: '/appointments/dietitian/sessions',
+    joinCall:          '/appointments',   // used as /appointments/:id/join-call
+    recording:         '/appointments',   // used as /appointments/:id/recording
+  },
   contact: {
     submit: '/contact',
   },

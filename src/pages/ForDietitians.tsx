@@ -12,10 +12,13 @@ const WHY_CARDS = [
   { icon: '/why-icon-2.png', title: 'Dedicated Support',   desc: 'We are here to help you at every step' },
 ]
 
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AuthModal from '../components/AuthModal'
 
 const ForDietitians = () => {
   const navigate = useNavigate()
+  const [loginOpen, setLoginOpen] = useState(false)
   return (
   <main className="fd-page">
 
@@ -41,7 +44,10 @@ const ForDietitians = () => {
             ))}
           </ul>
 
-          <button className="btn-primary fd-cta-btn" onClick={() => navigate('/join-as-dietitian')}>Join as Dietitian</button>
+          <div className="fd-cta-row">
+            <button className="btn-primary fd-cta-btn" onClick={() => navigate('/join-as-dietitian')}>Join as Dietitian</button>
+            <button className="btn-outline fd-cta-btn" onClick={() => setLoginOpen(true)}>Login</button>
+          </div>
           <p className="fd-free-note">
             <img src="/free-icon.png" alt="" className="fd-free-check" /> It's free to register
           </p>
@@ -73,6 +79,13 @@ const ForDietitians = () => {
       </div>
     </section>
 
+    {loginOpen && (
+      <AuthModal
+        onClose={() => setLoginOpen(false)}
+        initialUserType="dietitian"
+        initialTab="login"
+      />
+    )}
   </main>
   )
 }
