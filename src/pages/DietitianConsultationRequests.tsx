@@ -260,7 +260,7 @@ export default function DietitianConsultationRequests() {
               </div>
             </div>
 
-            <div className="cr-detail-section">
+            {/* <div className="cr-detail-section">
               <p className="cr-detail-section-title">Contact Info</p>
               <div className="cr-detail-grid">
                 <div className="cr-detail-field">
@@ -272,7 +272,7 @@ export default function DietitianConsultationRequests() {
                   <span className="cr-detail-val">{selected.email ?? '—'}</span>
                 </div>
               </div>
-            </div>
+            </div> */}
 
             <div className="cr-detail-section">
               <p className="cr-detail-section-title">Appointment Details</p>
@@ -335,9 +335,9 @@ export default function DietitianConsultationRequests() {
                 <button className="cr-btn-accept cr-btn-accept--full">
                   <i className="fa-solid fa-video" /> Start Video Call
                 </button>
-                <button className="cr-btn-detail cr-btn-detail--full">
+                {/* <button className="cr-btn-detail cr-btn-detail--full">
                   <i className="fa-solid fa-paper-plane" /> Send Message
-                </button>
+                </button> */}
               </div>
             )}
           </div>

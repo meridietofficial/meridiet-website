@@ -1,12 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom'
 import DietitianTopbar from './DietitianTopbar'
+import dietitianApi from '../api/dietitian'
 
-/** Shared state the layout hands down to pages (e.g. the online toggle, which
- *  the dashboard also surfaces in its availability card). */
 export type DietitianOutletContext = {
   online: boolean
-  setOnline: React.Dispatch<React.SetStateAction<boolean>>
+  toggleOnline: () => void
 }
 
 const NAV_ITEMS: { icon: string; label: string; route?: string; badge?: number }[] = [
@@ -14,28 +13,47 @@ const NAV_ITEMS: { icon: string; label: string; route?: string; badge?: number }
   { icon: 'fa-solid fa-clipboard-list',  label: 'Consultation Requests', route: '/dietitian-consultation-requests', badge: 2 },
   { icon: 'fa-solid fa-users',           label: 'My Clients',            route: '/dietitian-my-clients' },
   { icon: 'fa-solid fa-calendar-check',  label: 'Appointments',          route: '/dietitian-appointments' },
-  { icon: 'fa-solid fa-bowl-food',       label: 'Diet Plans',            route: '/dietitian-diet-plans' },
-  { icon: 'fa-solid fa-comments',        label: 'Chat',                  route: '/dietitian-chat' },
-  { icon: 'fa-solid fa-bell',            label: 'Follow Ups',            route: '/dietitian-follow-ups' },
-  { icon: 'fa-solid fa-chart-line',      label: 'Reports',               route: '/dietitian-reports' },
-  { icon: 'fa-solid fa-sack-dollar',     label: 'Earnings',              route: '/dietitian-earnings' },
-  { icon: 'fa-solid fa-wallet',          label: 'Wallet',                route: '/dietitian-wallet' },
-  { icon: 'fa-solid fa-star',            label: 'Reviews',               route: '/dietitian-reviews' },
+  // { icon: 'fa-solid fa-bowl-food',       label: 'Diet Plans',            route: '/dietitian-diet-plans' },
+  // { icon: 'fa-solid fa-comments',        label: 'Chat',                  route: '/dietitian-chat' },
+  // { icon: 'fa-solid fa-bell',            label: 'Follow Ups',            route: '/dietitian-follow-ups' },
+  // { icon: 'fa-solid fa-chart-line',      label: 'Reports',               route: '/dietitian-reports' },
+  // { icon: 'fa-solid fa-sack-dollar',     label: 'Earnings',              route: '/dietitian-earnings' },
+  // { icon: 'fa-solid fa-wallet',          label: 'Wallet',                route: '/dietitian-wallet' },
+  // { icon: 'fa-solid fa-star',            label: 'Reviews',               route: '/dietitian-reviews' },
   { icon: 'fa-solid fa-user',            label: 'Profile',               route: '/dietitian-profile' },
-  { icon: 'fa-solid fa-gear',            label: 'Settings',              route: '/dietitian-settings' },
+  // { icon: 'fa-solid fa-gear',            label: 'Settings',              route: '/dietitian-settings' },
 ]
 
-/**
- * Persistent shell for the dietitian module. The sidebar + top bar live here
- * and stay mounted while only the inner page swaps via <Outlet>, so navigating
- * between Dashboard and Profile no longer remounts (and flashes) the chrome.
- */
 export default function DietitianLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const [online, setOnline] = useState(true)
+  const [online, setOnline] = useState(false)
+  const toggling = useRef(false)
 
-  // Highlight the nav item that owns the current route.
+  // Load initial online status from the profile
+  useEffect(() => {
+    let active = true
+    dietitianApi.getProfile()
+      .then(p => { if (active) setOnline(p.is_online === 1) })
+      .catch(() => {})
+    return () => { active = false }
+  }, [])
+
+  async function toggleOnline() {
+    if (toggling.current) return
+    toggling.current = true
+    const next = !online
+    setOnline(next)
+    try {
+      const confirmed = await dietitianApi.setOnlineStatus(next)
+      setOnline(confirmed)
+    } catch {
+      setOnline(!next) // revert on failure
+    } finally {
+      toggling.current = false
+    }
+  }
+
   const routedActive = NAV_ITEMS.find(i => i.route === pathname)?.label ?? 'Dashboard'
   const [activeNav, setActiveNav] = useState(routedActive)
 
@@ -46,7 +64,7 @@ export default function DietitianLayout() {
 
   return (
     <div className="dd-root">
-      {/* ── Sidebar ── */}
+      {/* Sidebar */}
       <aside className="dd-sidebar">
         <div className="dd-sidebar-logo">
           <Link to="/dietitian-dashboard">
@@ -70,20 +88,20 @@ export default function DietitianLayout() {
             ))}
           </nav>
 
-          <div className="dd-refer-card">
+          {/* <div className="dd-refer-card">
             <p className="dd-refer-title">Refer &amp; Earn</p>
             <p className="dd-refer-desc">Invite fellow dietitians and earn exciting rewards.</p>
-            <button className="dd-refer-btn">Refer Now →</button>
-          </div>
+            <button className="dd-refer-btn">Refer Now &rarr;</button>
+          </div> */}
 
           <button className="dd-help-link"><i className="fa-regular fa-circle-question" /> Need Help?</button>
         </div>
       </aside>
 
-      {/* ── Main ── */}
+      {/* Main */}
       <div className="dd-main">
-        <DietitianTopbar online={online} onToggleOnline={() => setOnline(p => !p)} />
-        <Outlet context={{ online, setOnline } satisfies DietitianOutletContext} />
+        <DietitianTopbar online={online} onToggleOnline={toggleOnline} />
+        <Outlet context={{ online, toggleOnline } satisfies DietitianOutletContext} />
       </div>
     </div>
   )

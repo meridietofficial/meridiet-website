@@ -18,6 +18,7 @@ const ENDPOINTS = {
     register:        '/dietitian/register',
     profile:         '/dietitian/profile',
     changePassword:  '/dietitian/change-password',
+    onlineStatus:    '/dietitian/online-status',
     awsKeys:         '/aws-keys/',   // replace with your actual endpoint
     specializations: '/dietitians/specializations',
     list:            '/dietitians',
@@ -42,6 +43,7 @@ const ENDPOINTS = {
     dietitianSessions: '/appointments/dietitian/sessions',
     joinCall:          '/appointments',   // used as /appointments/:id/join-call
     recording:         '/appointments',   // used as /appointments/:id/recording
+    dashboardStats:    '/appointments/dietitian/dashboard',
   },
   contact: {
     submit: '/contact',

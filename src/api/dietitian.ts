@@ -355,6 +355,14 @@ const dietitianApi = {
   changePassword(body: { current_password: string; new_password: string }) {
     return apiClient.apiPut<{ success: boolean; message: string }>(ENDPOINTS.dietitian.changePassword, body)
   },
+
+  async setOnlineStatus(is_online: boolean): Promise<boolean> {
+    const res = await apiClient.apiPatch<{ success: boolean; data: { is_online: boolean } }>(
+      ENDPOINTS.dietitian.onlineStatus,
+      { is_online }
+    )
+    return res.data.is_online
+  },
 }
 
 export default dietitianApi

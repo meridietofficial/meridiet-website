@@ -139,6 +139,28 @@ export type JoinCallData = {
   max_duration_seconds: number
 }
 
+export type DashboardStats = {
+  today_consultations: {
+    count: number
+    change_percent: number
+    change_direction: 'up' | 'down' | 'flat'
+  }
+  pending_requests: {
+    count: number
+  }
+  upcoming_appointments: {
+    count: number
+    next_slot: string | null
+    next_date: string | null
+  }
+  monthly_earnings: {
+    amount: number
+    currency: string
+    change_percent: number
+    change_direction: 'up' | 'down' | 'flat'
+  }
+}
+
 export type RecordingData = {
   video_call_status: string
   recording_url: string | null
@@ -243,6 +265,13 @@ const appointmentApi = {
   async getRecording(id: number): Promise<RecordingData> {
     const res = await apiClient.apiGet<{ success: boolean; data: RecordingData }>(
       `${ENDPOINTS.appointment.recording}/${id}/recording`
+    )
+    return res.data
+  },
+
+  async getDashboardStats(): Promise<DashboardStats> {
+    const res = await apiClient.apiGet<{ success: boolean; data: DashboardStats }>(
+      ENDPOINTS.appointment.dashboardStats
     )
     return res.data
   },
