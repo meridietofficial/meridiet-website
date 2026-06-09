@@ -28,37 +28,38 @@ function defaultPipPos() {
 }
 
 export default function VideoCallModal({ appointmentId, clientName, onClose }: Props) {
-  const [phase, setPhase]         = useState<Phase>('connecting')
-  const [errorMsg, setErrorMsg]   = useState('')
-  const [micOn, setMicOn]         = useState(true)
-  const [camOn, setCamOn]         = useState(true)
-  const [elapsed, setElapsed]     = useState(0)
-  const [hasRemote, setHasRemote] = useState(false)
-  const [recording, setRecording] = useState<RecordingData | null>(null)
-  const [maximized, setMaximized] = useState(false)
-  const [pip, setPip]             = useState(false)
-  const [pipPos, setPipPos]       = useState(defaultPipPos)
+  const [phase, setPhase]               = useState<Phase>('connecting')
+  const [errorMsg, setErrorMsg]         = useState('')
+  const [micOn, setMicOn]               = useState(true)
+  const [camOn, setCamOn]               = useState(true)
+  const [elapsed, setElapsed]           = useState(0)
+  const [hasRemote, setHasRemote]       = useState(false)
+  const [recording, setRecording]       = useState<RecordingData | null>(null)
+  const [recordingPending, setRecordingPending] = useState(false)
+  const [maximized, setMaximized]       = useState(false)
+  const [pip, setPip]                   = useState(false)
+  const [pipPos, setPipPos]             = useState(defaultPipPos)
 
-  const localRef  = useRef<HTMLDivElement>(null)
-  const remoteRef = useRef<HTMLDivElement>(null)
-
-  const clientRef          = useRef<IAgoraRTCClient | null>(null)
-  const audioRef           = useRef<IMicrophoneAudioTrack | null>(null)
-  const videoRef           = useRef<ICameraVideoTrack | null>(null)
-  const remoteVideoRef     = useRef<IRemoteVideoTrack | null>(null)
-  const timerRef           = useRef<ReturnType<typeof setInterval> | null>(null)
-  const startedAt          = useRef(0)
-  const drag               = useRef({ active: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 })
+  const localRef       = useRef<HTMLDivElement>(null)
+  const remoteRef      = useRef<HTMLDivElement>(null)
+  const clientRef      = useRef<IAgoraRTCClient | null>(null)
+  const audioRef       = useRef<IMicrophoneAudioTrack | null>(null)
+  const videoRef       = useRef<ICameraVideoTrack | null>(null)
+  const remoteVideoRef = useRef<IRemoteVideoTrack | null>(null)
+  const timerRef       = useRef<ReturnType<typeof setInterval> | null>(null)
+  const startedAt      = useRef(0)
+  const mountedRef     = useRef(true)
+  const drag           = useRef({ active: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 })
 
   // ── Agora init ──────────────────────────────────────────────
   useEffect(() => {
-    let alive = true
+    mountedRef.current = true
 
     async function init() {
       try {
         const AgoraRTC = (await import('agora-rtc-sdk-ng')).default
         const creds = await appointmentApi.joinCall(appointmentId)
-        if (!alive) return
+        if (!mountedRef.current) return
 
         const agora = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' })
         clientRef.current = agora
@@ -81,30 +82,37 @@ export default function VideoCallModal({ appointmentId, clientName, onClose }: P
         await agora.join(creds.app_id, creds.channel_name, creds.token, creds.uid)
 
         const [audio, video] = await AgoraRTC.createMicrophoneAndCameraTracks()
-        if (!alive) { audio.close(); video.close(); return }
+        if (!mountedRef.current) { audio.close(); video.close(); return }
 
         audioRef.current = audio
         videoRef.current = video
-
         if (localRef.current) video.play(localRef.current)
         await agora.publish([audio, video])
 
-        startedAt.current = Date.now()
+        // Sync timer from server if call_started_at is provided
+        startedAt.current = creds.call_started_at
+          ? new Date(creds.call_started_at).getTime()
+          : Date.now()
+
         timerRef.current = setInterval(() => {
-          setElapsed(Math.floor((Date.now() - startedAt.current) / 1000))
+          if (mountedRef.current)
+            setElapsed(Math.floor((Date.now() - startedAt.current) / 1000))
         }, 1000)
 
-        if (alive) setPhase('in-call')
+        if (mountedRef.current) setPhase('in-call')
       } catch (e: any) {
-        if (alive) { setErrorMsg(e?.message ?? 'Could not start video call'); setPhase('error') }
+        if (mountedRef.current) {
+          setErrorMsg(e?.message ?? 'Could not start video call')
+          setPhase('error')
+        }
       }
     }
 
     init()
-    return () => { alive = false; doCleanup() }
+    return () => { mountedRef.current = false; doCleanup() }
   }, [appointmentId])
 
-  // Re-play video tracks whenever switching between pip / full
+  // Re-play video when switching between PiP / full modes
   useEffect(() => {
     const tick = setTimeout(() => {
       if (videoRef.current && localRef.current) {
@@ -115,7 +123,7 @@ export default function VideoCallModal({ appointmentId, clientName, onClose }: P
         remoteVideoRef.current.stop()
         remoteVideoRef.current.play(remoteRef.current)
       }
-    }, 60) // wait one frame for React to attach the new refs
+    }, 60)
     return () => clearTimeout(tick)
   }, [pip])
 
@@ -138,7 +146,7 @@ export default function VideoCallModal({ appointmentId, clientName, onClose }: P
     drag.current = { active: true, startX: e.clientX, startY: e.clientY, startLeft: pipPos.x, startTop: pipPos.y }
   }
 
-  // ── Helpers ─────────────────────────────────────────────────
+  // ── Cleanup ─────────────────────────────────────────────────
   function doCleanup() {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
     audioRef.current?.stop(); audioRef.current?.close(); audioRef.current = null
@@ -146,25 +154,67 @@ export default function VideoCallModal({ appointmentId, clientName, onClose }: P
     clientRef.current?.leave(); clientRef.current = null
   }
 
+  // ── End call ────────────────────────────────────────────────
   async function endCall() {
-    const secs = elapsed
     doCleanup()
     setPip(false)
     setPhase('ended')
+
+    // 1. Tell server the call ended — get authoritative duration
     try {
-      const rec = await appointmentApi.getRecording(appointmentId)
-      setRecording(rec)
+      const leave = await appointmentApi.leaveCall(appointmentId)
+      if (!mountedRef.current) return
+      setRecording({
+        video_call_status: 'ended',
+        recording_url: null,
+        call_started_at: null,
+        call_ended_at: leave.call_ended_at,
+        call_duration_seconds: leave.call_duration_seconds,
+      })
     } catch {
-      setRecording({ video_call_status: 'ended', recording_url: null,
-        call_started_at: null, call_ended_at: null, call_duration_seconds: secs })
+      // Fallback: use local elapsed time
+      if (!mountedRef.current) return
+      setRecording({
+        video_call_status: 'ended',
+        recording_url: null,
+        call_started_at: null,
+        call_ended_at: null,
+        call_duration_seconds: elapsed,
+      })
     }
+
+    // 2. Poll for recording URL (webhook fires ~30s after call ends)
+    setRecordingPending(true)
+    pollRecording()
+  }
+
+  function pollRecording() {
+    let attempts = 0
+    async function tryFetch() {
+      if (!mountedRef.current) return
+      attempts++
+      try {
+        const rec = await appointmentApi.getRecording(appointmentId)
+        if (!mountedRef.current) return
+        if (rec.recording_url) {
+          setRecording(rec)
+          setRecordingPending(false)
+          return
+        }
+      } catch { /* recording not ready yet */ }
+      if (attempts < 30 && mountedRef.current) {
+        setTimeout(tryFetch, 10_000)
+      } else {
+        setRecordingPending(false)
+      }
+    }
+    setTimeout(tryFetch, 10_000) // first poll after 10s
   }
 
   function toggleMic() { audioRef.current?.setEnabled(!micOn); setMicOn(v => !v) }
   function toggleCam() { videoRef.current?.setEnabled(!camOn); setCamOn(v => !v) }
-
-  function enterPip() { setPipPos(defaultPipPos()); setMaximized(false); setPip(true) }
-  function exitPip()  { setPip(false) }
+  function enterPip()  { setPipPos(defaultPipPos()); setMaximized(false); setPip(true) }
+  function exitPip()   { setPip(false) }
 
   // ════════════════════════════════════════════════════════════
   // PiP floating box
@@ -176,45 +226,25 @@ export default function VideoCallModal({ appointmentId, clientName, onClose }: P
         style={{ left: pipPos.x, top: pipPos.y }}
         onMouseDown={startDrag}
       >
-        {/* Video layers */}
         <div ref={remoteRef} className="vc-pip-remote">
-          {!hasRemote && (
-            <div className="vc-pip-avatar">{getInitials(clientName)}</div>
-          )}
+          {!hasRemote && <div className="vc-pip-avatar">{getInitials(clientName)}</div>}
         </div>
         <div ref={localRef} className="vc-pip-self" />
 
-        {/* Top bar */}
         <div className="vc-pip-topbar">
           <span className="vc-pip-dot" />
           <span className="vc-pip-name">{clientName}</span>
           <span className="vc-pip-timer">{fmt(elapsed)}</span>
         </div>
 
-        {/* Bottom buttons */}
         <div className="vc-pip-footer">
-          <button
-            className="vc-pip-btn"
-            title="Mute"
-            onMouseDown={e => e.stopPropagation()}
-            onClick={toggleMic}
-          >
+          <button className="vc-pip-btn" title="Mute" onMouseDown={e => e.stopPropagation()} onClick={toggleMic}>
             <i className={micOn ? 'fa-solid fa-microphone' : 'fa-solid fa-microphone-slash'} />
           </button>
-          <button
-            className="vc-pip-btn vc-pip-btn--end"
-            title="End call"
-            onMouseDown={e => e.stopPropagation()}
-            onClick={endCall}
-          >
+          <button className="vc-pip-btn vc-pip-btn--end" title="End call" onMouseDown={e => e.stopPropagation()} onClick={endCall}>
             <i className="fa-solid fa-phone-slash" />
           </button>
-          <button
-            className="vc-pip-btn"
-            title="Expand"
-            onMouseDown={e => e.stopPropagation()}
-            onClick={exitPip}
-          >
+          <button className="vc-pip-btn" title="Expand" onMouseDown={e => e.stopPropagation()} onClick={exitPip}>
             <i className="fa-solid fa-expand" />
           </button>
         </div>
@@ -232,7 +262,7 @@ export default function VideoCallModal({ appointmentId, clientName, onClose }: P
     >
       <div className="vc-modal">
 
-        {/* ── Video stage ── */}
+        {/* ── Stage ── */}
         <div className="vc-stage">
           <div ref={remoteRef} className="vc-remote">
             {!hasRemote && phase === 'in-call' && (
@@ -254,18 +284,10 @@ export default function VideoCallModal({ appointmentId, clientName, onClose }: P
             </div>
             <div className="vc-header-right">
               <span className="vc-timer">{fmt(elapsed)}</span>
-              <button
-                className="vc-header-btn"
-                title="Float to corner"
-                onClick={enterPip}
-              >
+              <button className="vc-header-btn" title="Float to corner" onClick={enterPip}>
                 <i className="fa-solid fa-down-left-and-up-right-to-center" />
               </button>
-              <button
-                className="vc-header-btn"
-                title={maximized ? 'Restore' : 'Maximize'}
-                onClick={() => setMaximized(v => !v)}
-              >
+              <button className="vc-header-btn" title={maximized ? 'Restore' : 'Maximize'} onClick={() => setMaximized(v => !v)}>
                 <i className={maximized ? 'fa-solid fa-compress' : 'fa-solid fa-expand'} />
               </button>
             </div>
@@ -314,17 +336,28 @@ export default function VideoCallModal({ appointmentId, clientName, onClose }: P
               <i className="fa-solid fa-phone-slash" />
             </div>
             <p className="vc-overlay-title">Call Ended</p>
+
             {recording && (
-              <p className="vc-overlay-text">Duration: <strong>{fmt(recording.call_duration_seconds)}</strong></p>
+              <p className="vc-overlay-text">
+                Duration: <strong>{fmt(recording.call_duration_seconds)}</strong>
+              </p>
             )}
-            {recording?.recording_url && (
+
+            {recording?.recording_url ? (
               <a className="vc-recording-link" href={recording.recording_url} target="_blank" rel="noreferrer">
                 <i className="fa-solid fa-circle-play" /> Watch Recording
               </a>
-            )}
+            ) : recordingPending ? (
+              <div className="vc-recording-processing">
+                <div className="vc-spinner vc-spinner--sm" />
+                <span>Processing recording…</span>
+              </div>
+            ) : null}
+
             <button className="vc-close-btn" onClick={onClose}>Close</button>
           </div>
         )}
+
       </div>
     </div>
   )

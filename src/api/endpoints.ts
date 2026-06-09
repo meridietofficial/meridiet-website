@@ -42,6 +42,7 @@ const ENDPOINTS = {
     clientsList:    '/appointments/clients',
     dietitianSessions: '/appointments/dietitian/sessions',
     joinCall:          '/appointments',   // used as /appointments/:id/join-call
+    leaveCall:         '/appointments',   // used as /appointments/:id/leave-call
     recording:         '/appointments',   // used as /appointments/:id/recording
     dashboardStats:    '/appointments/dietitian/dashboard',
   },

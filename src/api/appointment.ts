@@ -137,6 +137,13 @@ export type JoinCallData = {
   app_id: string
   expires_at: number
   max_duration_seconds: number
+  call_started_at?: string | null
+}
+
+export type LeaveCallData = {
+  call_ended_at: string
+  call_duration_seconds: number
+  status: string
 }
 
 export type DashboardStats = {
@@ -257,6 +264,14 @@ const appointmentApi = {
   async joinCall(id: number): Promise<JoinCallData> {
     const res = await apiClient.apiPost<{ success: boolean; data: JoinCallData }>(
       `${ENDPOINTS.appointment.joinCall}/${id}/join-call`,
+      {}
+    )
+    return res.data
+  },
+
+  async leaveCall(id: number): Promise<LeaveCallData> {
+    const res = await apiClient.apiPost<{ success: boolean; data: LeaveCallData }>(
+      `${ENDPOINTS.appointment.leaveCall}/${id}/leave-call`,
       {}
     )
     return res.data

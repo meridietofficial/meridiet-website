@@ -20911,3 +20911,20 @@
 
 .vc-pip-btn--end { background: rgba(220, 38, 38, 0.55); }
 .vc-pip-btn--end:hover { background: rgba(185, 28, 28, 0.8); }
+
+
+/* ── Small spinner variant ── */
+.vc-spinner--sm {
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+}
+
+/* ── Recording processing row ── */
+.vc-recording-processing {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.85rem;
+}
