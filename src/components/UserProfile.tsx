@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { User, Mail, Phone, Lock, Eye, EyeOff, Camera, ChevronDown, Check, Calendar, ShieldCheck } from 'lucide-react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { User, Mail, Phone, Lock, Eye, EyeOff, Camera, ChevronDown, Check, Calendar, ShieldCheck, FileText, Wallet, RefreshCw } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import userApi from '../api/user'
 import appointmentApi, { type MyAppointment } from '../api/appointment'
+import dietFormApi, { type MyDietChart } from '../api/dietForm'
+import walletApi, { type WalletTransaction } from '../api/wallet'
+import dietPlanApi, { type SubscriptionStatus } from '../api/dietPlan'
 import { ApiError } from '../api/client'
 import { useVideoCall } from '../context/VideoCallContext'
 
@@ -23,12 +26,15 @@ const PHONE_CODES = [
 
 const AVATAR_COLORS = ['#1E8E3E', '#166C31', '#f4842c', '#0077b6', '#7b2d8b', '#c0392b']
 
-type Tab = 'profile' | 'security' | 'appointments'
+type Tab = 'profile' | 'security' | 'appointments' | 'dietcharts' | 'wallet' | 'subscription'
 
 const NAV_ITEMS: { id: Tab; label: string; sub: string; icon: React.ReactNode }[] = [
-  { id: 'profile',      label: 'Personal Details',    sub: 'Name, email & phone',        icon: <User size={18} /> },
-  { id: 'security',     label: 'Security',             sub: 'Password & account safety',  icon: <ShieldCheck size={18} /> },
-  { id: 'appointments', label: 'My Appointments',      sub: 'Booking history',            icon: <Calendar size={18} /> },
+  { id: 'appointments', label: 'My Appointments',  sub: 'Booking history',           icon: <Calendar size={18} /> },
+  { id: 'dietcharts',   label: 'My Diet Charts',   sub: 'Your submitted diet plans', icon: <FileText size={18} /> },
+  { id: 'subscription', label: 'My Subscription',  sub: '3-month plan progress',     icon: <RefreshCw size={18} /> },
+  { id: 'wallet',       label: 'My Wallet',        sub: 'Balance & transactions',    icon: <Wallet size={18} /> },
+  { id: 'profile',      label: 'Personal Details', sub: 'Name, email & phone',       icon: <User size={18} /> },
+  { id: 'security',     label: 'Security',         sub: 'Password & account safety', icon: <ShieldCheck size={18} /> },
 ]
 
 function fmtSlotTime(t: string) {
@@ -40,8 +46,12 @@ const UserProfile = () => {
   const { user, updateUser } = useAuth()
   const { showToast } = useToast()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const [activeTab, setActiveTab] = useState<Tab>('profile')
+  const rawTab = searchParams.get('tab') as Tab | null
+  const activeTab: Tab = rawTab && ['profile', 'security', 'appointments', 'dietcharts', 'wallet', 'subscription'].includes(rawTab) ? rawTab : 'appointments'
+
+  const setActiveTab = (tab: Tab) => setSearchParams({ tab }, { replace: true })
 
   useEffect(() => {
     if (!user) navigate('/', { replace: true })
@@ -71,6 +81,27 @@ const UserProfile = () => {
   const [apptTotalPages, setApptTotalPages] = useState(1)
   const { startCall } = useVideoCall()
 
+  const [dietCharts, setDietCharts] = useState<MyDietChart[]>([])
+  const [dietChartsLoading, setDietChartsLoading] = useState(false)
+  const [dietChartsTotal, setDietChartsTotal] = useState(0)
+
+  // Wallet tab state
+  const [walletBalance, setWalletBalance] = useState<number | null>(null)
+  const [walletBalanceLoading, setWalletBalanceLoading] = useState(false)
+  const [walletTxs, setWalletTxs] = useState<WalletTransaction[]>([])
+  const [walletTxsLoading, setWalletTxsLoading] = useState(false)
+  const [walletTxTotal, setWalletTxTotal] = useState(0)
+  const [walletTxPage, setWalletTxPage] = useState(1)
+  const [walletTxFilter, setWalletTxFilter] = useState<'all' | 'credit' | 'debit'>('all')
+
+  // Subscription tab state
+  const [subStatus, setSubStatus] = useState<SubscriptionStatus | null>(null)
+  const [subLoading, setSubLoading] = useState(false)
+  const [redeemConfirm, setRedeemConfirm] = useState(false)
+  const [redeemLoading, setRedeemLoading] = useState(false)
+  const [redeemSuccess, setRedeemSuccess] = useState(false)
+  const [lastFormData, setLastFormData] = useState<Record<string, unknown> | null>(null)
+
   useEffect(() => {
     let active = true
     setApptLoading(true)
@@ -84,6 +115,110 @@ const UserProfile = () => {
       .finally(() => { if (active) setApptLoading(false) })
     return () => { active = false }
   }, [apptPage])
+
+  useEffect(() => {
+    let active = true
+    setDietChartsLoading(true)
+    dietFormApi.myAll()
+      .then(res => {
+        if (!active) return
+        setDietCharts(res.data.forms)
+        setDietChartsTotal(res.data.total)
+      })
+      .catch(() => {})
+      .finally(() => { if (active) setDietChartsLoading(false) })
+    return () => { active = false }
+  }, [])
+
+  // Fetch fresh wallet balance on mount and keep navbar chip in sync
+  useEffect(() => {
+    if (!user) return
+    let active = true
+    walletApi.balance()
+      .then(res => {
+        if (!active) return
+        setWalletBalance(res.data.wallet_balance)
+        updateUser({ ...user, wallet_balance: res.data.wallet_balance })
+      })
+      .catch(() => {})
+    return () => { active = false }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Fetch wallet balance + transactions when wallet tab is active
+  useEffect(() => {
+    if (activeTab !== 'wallet') return
+    let active = true
+    setWalletBalanceLoading(true)
+    walletApi.balance()
+      .then(res => {
+        if (!active) return
+        setWalletBalance(res.data.wallet_balance)
+        updateUser({ ...user!, wallet_balance: res.data.wallet_balance })
+      })
+      .catch(() => {})
+      .finally(() => { if (active) setWalletBalanceLoading(false) })
+    return () => { active = false }
+  }, [activeTab])
+
+  useEffect(() => {
+    if (activeTab !== 'wallet') return
+    let active = true
+    setWalletTxsLoading(true)
+    walletApi.transactions(walletTxPage)
+      .then(res => {
+        if (!active) return
+        setWalletTxs(res.data.transactions)
+        setWalletTxTotal(res.data.total)
+      })
+      .catch(() => {})
+      .finally(() => { if (active) setWalletTxsLoading(false) })
+    return () => { active = false }
+  }, [activeTab, walletTxPage])
+
+  // Fetch subscription status and wallet balance when subscription tab is active
+  useEffect(() => {
+    if (activeTab !== 'subscription') return
+    let active = true
+    setSubLoading(true)
+    Promise.all([
+      dietPlanApi.subscriptionStatus(),
+      walletApi.balance(),
+      dietFormApi.myAll(),
+    ])
+      .then(([subRes, balRes, formsRes]) => {
+        if (!active) return
+        setSubStatus(subRes.data)
+        setWalletBalance(balRes.data.wallet_balance)
+        updateUser({ ...user!, wallet_balance: balRes.data.wallet_balance })
+        if (formsRes.data.forms.length > 0) setLastFormData(formsRes.data.forms[0] as Record<string, unknown>)
+      })
+      .catch(() => {})
+      .finally(() => { if (active) setSubLoading(false) })
+    return () => { active = false }
+  }, [activeTab])
+
+  const handleRedeemMonth = async () => {
+    if (!lastFormData) return
+    setRedeemLoading(true)
+    try {
+      await dietPlanApi.redeemMonth(lastFormData)
+      setRedeemSuccess(true)
+      setRedeemConfirm(false)
+      // Refresh subscription status and balance
+      const [subRes, balRes] = await Promise.all([
+        dietPlanApi.subscriptionStatus(),
+        walletApi.balance(),
+      ])
+      setSubStatus(subRes.data)
+      setWalletBalance(balRes.data.wallet_balance)
+      updateUser({ ...user!, wallet_balance: balRes.data.wallet_balance })
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Failed to redeem month. Please try again.', 'error')
+    } finally {
+      setRedeemLoading(false)
+    }
+  }
 
   const [codeOpen, setCodeOpen] = useState(false)
   const codeRef = useRef<HTMLDivElement>(null)
@@ -313,6 +448,108 @@ const UserProfile = () => {
               </div>
             )}
 
+            {/* ── Tab: My Diet Charts ── */}
+            {activeTab === 'dietcharts' && (
+              <div className="up-panel">
+                <div className="up-panel-header">
+                  <div className="up-panel-icon up-panel-icon--appointments"><FileText size={20} /></div>
+                  <div>
+                    <h2 className="up-panel-title">My Diet Charts</h2>
+                    <p className="up-panel-sub">Your submitted personalized diet plan requests</p>
+                  </div>
+                </div>
+
+                {dietChartsLoading ? (
+                  <div className="appt-skeleton-list">
+                    {[1, 2, 3].map(n => (
+                      <div key={n} className="appt-skeleton-row">
+                        <div className="appt-sk appt-sk-avatar" />
+                        <div className="appt-sk-lines">
+                          <div className="appt-sk appt-sk-name" />
+                          <div className="appt-sk appt-sk-sub" />
+                        </div>
+                        <div className="appt-sk appt-sk-badge" />
+                      </div>
+                    ))}
+                  </div>
+                ) : dietCharts.length === 0 ? (
+                  <div className="appt-empty">
+                    <span className="appt-empty-icon">🥗</span>
+                    <p className="appt-empty-text">No diet plans yet. <Link to="/form">Get your first plan →</Link></p>
+                  </div>
+                ) : (
+                  <div className="appt-list">
+                    {dietCharts.map(chart => {
+                      const planLabel = chart.plan_type === 1 ? '1 Week' : chart.plan_type === 2 ? '1 Month' : chart.plan_type === 3 ? '3 Months' : `Plan ${chart.plan_type}`
+                      const dateStr = chart.created_at
+                        ? new Date(chart.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                        : '—'
+                      const goals = Array.isArray(chart.goals) ? chart.goals.map((g: string) => g.replace(/_/g, ' ')).join(', ') : '—'
+                      const isPaid = chart.plan_generated || chart.plan_status !== null
+                        || ['paid', 'completed', 'success', 'captured'].includes(String(chart.payment_status ?? ''))
+                      const { plan_generated, plan_status, plan_pdf_url } = chart
+                      return (
+                        <div key={chart.id} className="appt-card">
+                          <div className="appt-card-left">
+                            <div className="appt-avatar" style={{ background: '#1E8E3E' }}>
+                              <FileText size={20} color="#fff" />
+                            </div>
+                            <div className="appt-info">
+                              <p className="appt-name">{chart.full_name}</p>
+                              <p className="appt-location">{[chart.city, chart.state].filter(Boolean).join(', ')}</p>
+                              <div className="appt-meta-row">
+                                <span className="appt-meta-item">📅 {dateStr}</span>
+                                <span className="appt-meta-item">🗓 {planLabel}</span>
+                                {goals !== '—' && <span className="appt-meta-item">🎯 {goals}</span>}
+                              </div>
+
+                              {/* Plan status row */}
+                              {plan_generated && plan_pdf_url ? (
+                                <a
+                                  href={plan_pdf_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="dc-download-btn"
+                                >
+                                  <i className="fa-solid fa-download" /> Download PDF
+                                </a>
+                              ) : plan_status === 'generating' ? (
+                                <span className="dc-status dc-status--generating">
+                                  <span className="dc-spinner" /> Plan is being prepared…
+                                </span>
+                              ) : plan_status === 'failed' ? (
+                                <span className="dc-status dc-status--failed">
+                                  ⚠ Something went wrong. Please contact support.
+                                </span>
+                              ) : null}
+                            </div>
+                          </div>
+                          <div className="appt-card-right">
+                            <span className={`appt-badge ${isPaid ? 'appt-badge--confirmed' : 'appt-badge--pending'}`}>
+                              {isPaid ? 'Paid' : 'Pending'}
+                            </span>
+                            {plan_generated ? (
+                              <span className="appt-paid-label">✓ Plan Generated</span>
+                            ) : plan_status === 'generating' ? (
+                              <span className="appt-paid-label" style={{ color: '#92400e' }}>⏳ Generating…</span>
+                            ) : plan_status === 'failed' ? (
+                              <span className="appt-paid-label" style={{ color: '#dc2626' }}>✗ Plan Failed</span>
+                            ) : null}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+
+                {!dietChartsLoading && dietChartsTotal > 0 && (
+                  <p className="appt-page-info" style={{ marginTop: '1rem', textAlign: 'center' }}>
+                    Showing {dietCharts.length} of {dietChartsTotal} plan{dietChartsTotal !== 1 ? 's' : ''}
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* ── Tab: Security ── */}
             {activeTab === 'security' && (
               <div className="up-panel">
@@ -459,6 +696,248 @@ const UserProfile = () => {
                         <button className="appt-page-btn" disabled={apptPage <= 1} onClick={() => setApptPage(p => p - 1)}>← Prev</button>
                         <span className="appt-page-info">Page {apptPage} of {apptTotalPages}</span>
                         <button className="appt-page-btn" disabled={apptPage >= apptTotalPages} onClick={() => setApptPage(p => p + 1)}>Next →</button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* ── Tab: My Wallet ── */}
+            {activeTab === 'wallet' && (
+              <div className="up-panel">
+                <div className="up-panel-header">
+                  <div className="up-panel-icon" style={{ background: '#e8f5e9', color: '#1E8E3E' }}><Wallet size={20} /></div>
+                  <div>
+                    <h2 className="up-panel-title">My Wallet</h2>
+                    <p className="up-panel-sub">Your cashback rewards and transaction history</p>
+                  </div>
+                </div>
+
+                {/* Balance card */}
+                <div className="uw-balance-card">
+                  <div className="uw-balance-left">
+                    <p className="uw-balance-label">Available Balance</p>
+                    {walletBalanceLoading
+                      ? <div className="uw-balance-skeleton" />
+                      : <p className="uw-balance-amount">₹{(walletBalance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+                    }
+                  </div>
+                  <div className="uw-balance-icon"><Wallet size={28} /></div>
+                </div>
+
+                {/* Transactions */}
+                <div className="uw-section-title">Transactions</div>
+
+                {/* Filter tabs */}
+                <div className="uw-filter-tabs">
+                  {(['all', 'credit', 'debit'] as const).map(f => (
+                    <button
+                      key={f}
+                      className={`uw-filter-tab${walletTxFilter === f ? ' uw-filter-tab--active' : ''}`}
+                      onClick={() => { setWalletTxFilter(f); setWalletTxPage(1) }}
+                    >
+                      {f === 'all' ? 'All' : f === 'credit' ? 'Credits' : 'Debits'}
+                    </button>
+                  ))}
+                </div>
+
+                {walletTxsLoading ? (
+                  <div className="appt-skeleton-list">
+                    {[1, 2, 3].map(n => (
+                      <div key={n} className="appt-skeleton-row">
+                        <div className="appt-sk appt-sk-avatar" />
+                        <div className="appt-sk-lines">
+                          <div className="appt-sk appt-sk-name" />
+                          <div className="appt-sk appt-sk-sub" />
+                        </div>
+                        <div className="appt-sk appt-sk-badge" />
+                      </div>
+                    ))}
+                  </div>
+                ) : walletTxs.length === 0 ? (
+                  <div className="appt-empty">
+                    <span className="appt-empty-icon">💳</span>
+                    <p className="appt-empty-text">No transactions yet.</p>
+                  </div>
+                ) : (
+                  <div className="uw-tx-list">
+                    {walletTxs
+                      .filter(tx => walletTxFilter === 'all' || tx.type === walletTxFilter)
+                      .map(tx => {
+                        const isCredit = tx.type === 'credit'
+                        const dateStr = new Date(tx.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                        const sourceIcon = tx.source === 'reward' ? '🎁' : tx.source === 'subscription' ? '📦' : '🛒'
+                        return (
+                          <div key={tx.id} className="uw-tx-row">
+                            <div className={`uw-tx-icon ${isCredit ? 'uw-tx-icon--green' : 'uw-tx-icon--red'}`}>
+                              <span>{sourceIcon}</span>
+                            </div>
+                            <div className="uw-tx-info">
+                              <p className="uw-tx-desc">{tx.description}</p>
+                              <p className="uw-tx-meta">{dateStr} · Bal: ₹{tx.balance_after.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+                            </div>
+                            <div className={`uw-tx-amount ${isCredit ? 'uw-tx-amount--green' : 'uw-tx-amount--red'}`}>
+                              {isCredit ? '+' : '−'}₹{tx.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                            </div>
+                          </div>
+                        )
+                      })
+                    }
+                  </div>
+                )}
+
+                {walletTxTotal > 10 && (
+                  <div className="appt-pagination" style={{ marginTop: '16px' }}>
+                    <button className="appt-page-btn" disabled={walletTxPage <= 1} onClick={() => setWalletTxPage(p => p - 1)}>← Prev</button>
+                    <span className="appt-page-info">Page {walletTxPage} · {walletTxTotal} total</span>
+                    <button className="appt-page-btn" disabled={walletTxPage * 10 >= walletTxTotal} onClick={() => setWalletTxPage(p => p + 1)}>Next →</button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Tab: My Subscription ── */}
+            {activeTab === 'subscription' && (
+              <div className="up-panel">
+                <div className="up-panel-header">
+                  <div className="up-panel-icon" style={{ background: '#ede9fe', color: '#5b21b6' }}><RefreshCw size={20} /></div>
+                  <div>
+                    <h2 className="up-panel-title">My Subscription</h2>
+                    <p className="up-panel-sub">Manage your 3-month diet plan progress</p>
+                  </div>
+                </div>
+
+                {subLoading ? (
+                  <div className="appt-skeleton-list">
+                    {[1, 2].map(n => (
+                      <div key={n} className="appt-skeleton-row">
+                        <div className="appt-sk appt-sk-avatar" />
+                        <div className="appt-sk-lines">
+                          <div className="appt-sk appt-sk-name" />
+                          <div className="appt-sk appt-sk-sub" />
+                        </div>
+                        <div className="appt-sk appt-sk-badge" />
+                      </div>
+                    ))}
+                  </div>
+                ) : !subStatus?.has_subscription ? (
+                  <div className="appt-empty">
+                    <span className="appt-empty-icon">📋</span>
+                    <p className="appt-empty-text">
+                      No active 3-month subscription found.{' '}
+                      <Link to="/form">Get a 3-Month Plan →</Link>
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Plan progress */}
+                    <div className="usub-progress-card">
+                      <p className="usub-plan-label">3-Month Diet Plan</p>
+                      <div className="usub-months-row">
+                        {Array.from({ length: subStatus.months_total }, (_, i) => {
+                          const done = i < subStatus.months_generated
+                          return (
+                            <div key={i} className={`usub-month-bubble ${done ? 'usub-month-bubble--done' : 'usub-month-bubble--pending'}`}>
+                              <span className="usub-month-num">Month {i + 1}</span>
+                              <span className="usub-month-status">{done ? '✓ Done' : 'Available'}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <p className="usub-progress-note">
+                        {subStatus.months_generated} of {subStatus.months_total} month{subStatus.months_total !== 1 ? 's' : ''} generated
+                        · {subStatus.months_remaining} remaining
+                      </p>
+                    </div>
+
+                    {/* Wallet info */}
+                    <div className="usub-wallet-row">
+                      <div className="usub-wallet-item">
+                        <span className="usub-wallet-label">Wallet Balance</span>
+                        <span className="usub-wallet-val">₹{(walletBalance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                      </div>
+                      <div className="usub-wallet-sep" />
+                      <div className="usub-wallet-item">
+                        <span className="usub-wallet-label">Cost per Month</span>
+                        <span className="usub-wallet-val">₹{subStatus.per_month_amount.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+
+                    {subStatus.months_remaining > 0 && (
+                      <>
+                        {redeemSuccess ? (
+                          <div className="usub-success-banner">
+                            <span>✓</span>
+                            <div>
+                              <p className="usub-success-title">Month {subStatus.months_generated} diet plan is being generated!</p>
+                              <p className="usub-success-sub">You'll receive your plan by email shortly.</p>
+                            </div>
+                          </div>
+                        ) : (walletBalance ?? 0) >= subStatus.per_month_amount ? (
+                          <>
+                            {!redeemConfirm ? (
+                              <button
+                                className="btn-primary usub-generate-btn"
+                                onClick={() => setRedeemConfirm(true)}
+                              >
+                                Generate Month {subStatus.months_generated + 1} Diet Chart
+                              </button>
+                            ) : (
+                              <div className="usub-confirm-box">
+                                <p className="usub-confirm-title">Confirm Generation</p>
+                                <p className="usub-confirm-body">
+                                  ₹{subStatus.per_month_amount.toLocaleString('en-IN')} will be deducted from your wallet to generate
+                                  Month {subStatus.months_generated + 1} of your 3-month plan using your saved preferences.
+                                </p>
+                                {lastFormData && (
+                                  <div className="usub-prefill-preview">
+                                    <span>Using preferences for: <strong>{String(lastFormData.full_name ?? '')}</strong></span>
+                                    {lastFormData.city ? <span> · {String(lastFormData.city)}, {String(lastFormData.state ?? '')}</span> : null}
+                                  </div>
+                                )}
+                                <p className="usub-confirm-edit-note">
+                                  Want to update your preferences first?{' '}
+                                  <Link to="/form" onClick={() => setRedeemConfirm(false)}>Edit preferences →</Link>
+                                </p>
+                                <div className="usub-confirm-actions">
+                                  <button
+                                    className="btn-primary usub-confirm-btn"
+                                    onClick={handleRedeemMonth}
+                                    disabled={redeemLoading}
+                                  >
+                                    {redeemLoading ? 'Processing…' : 'Confirm & Generate'}
+                                  </button>
+                                  <button
+                                    className="usub-cancel-btn"
+                                    onClick={() => setRedeemConfirm(false)}
+                                    disabled={redeemLoading}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="usub-insufficient-banner">
+                            <span className="usub-insufficient-icon">⚠</span>
+                            <div>
+                              <p className="usub-insufficient-title">Insufficient wallet balance</p>
+                              <p className="usub-insufficient-sub">
+                                You need ₹{subStatus.per_month_amount.toLocaleString('en-IN')} but have ₹{(walletBalance ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}.{' '}
+                                <Link to="/form">Purchase a new plan →</Link>
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
+
+                    {subStatus.months_remaining === 0 && (
+                      <div className="appt-empty" style={{ paddingTop: '16px' }}>
+                        <span className="appt-empty-icon">🎉</span>
+                        <p className="appt-empty-text">All 3 months have been generated! <Link to="/form">Start a new plan →</Link></p>
                       </div>
                     )}
                   </>

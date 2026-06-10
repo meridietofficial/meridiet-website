@@ -8,6 +8,7 @@ const ENDPOINTS = {
   },
   dietForm: {
     submit: '/diet-form',
+    myAll:  '/diet-form/my/all',
   },
   user: {
     profile:        '/user/profile',
@@ -30,6 +31,15 @@ const ENDPOINTS = {
     createOrder: '/payment/create-order',
     verify:      '/payment/verify',
     failed:      '/payment/failed',
+  },
+  wallet: {
+    balance:      '/wallet/balance',
+    transactions: '/wallet/transactions',
+  },
+  dietPlan: {
+    subscriptionStatus: '/diet-plan/subscription-status',
+    redeemMonth:        '/diet-plan/redeem-month',
+    get:                '/diet-plan',
   },
   appointment: {
     slots:          '/appointments/slots',

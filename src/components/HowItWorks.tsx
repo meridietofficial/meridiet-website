@@ -18,7 +18,7 @@ const steps = [
     icon: FileText,
     step: '03',
     title: 'Get Your Plan',
-    desc: 'Receive a complete 7-day personalized Indian diet plan with recipes and shopping list.',
+    desc: 'Receive your complete personalized Indian diet plan delivered straight to you — within 24 hours.',
   },
   {
     icon: BadgeCheck,

@@ -89,6 +89,7 @@ export default function ConsultDietitian() {
   const [experience, setExperience] = useState<string[]>([])
   const [language, setLanguage] = useState('')
   const [availableNow, setAvailableNow] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Cities for the selected state (local map, keyed by state code)
   const cities = stateCode ? getCitiesOfState(stateCode).map(c => c.name) : []
@@ -194,8 +195,15 @@ export default function ConsultDietitian() {
       {/* ── Main Body ── */}
       <div className="container cd-body">
 
+        {/* Mobile filter toggle — only visible on ≤900px */}
+        <button className="cd-filter-toggle" onClick={() => setSidebarOpen(o => !o)}>
+          <SlidersHorizontal size={16} strokeWidth={2.2} />
+          {sidebarOpen ? 'Hide Filters' : 'Filters'}
+          {sidebarOpen ? <X size={15} strokeWidth={2.5} /> : null}
+        </button>
+
         {/* Sidebar */}
-        <aside className="cd-sidebar">
+        <aside className={`cd-sidebar${sidebarOpen ? ' cd-sidebar--open' : ''}`}>
           <div className="cd-sidebar-header">
             <span className="cd-sidebar-title">
               <SlidersHorizontal size={16} strokeWidth={2.2} /> Filters
@@ -376,7 +384,15 @@ export default function ConsultDietitian() {
                   <div className="cd-card-section">
                     <p className="cd-card-section-label">Specializations</p>
                     <div className="cd-tags">
-                      {d.specialization.map(s => <span key={s} className="cd-tag">{s}</span>)}
+                      {d.specialization.slice(0, 3).map(s => <span key={s} className="cd-tag">{s}</span>)}
+                      {d.specialization.length > 3 && (
+                        <button
+                          className="cd-tag cd-tag--more"
+                          onClick={() => navigate(`/dietitian/${d.id}`)}
+                        >
+                          +{d.specialization.length - 3} more · See more
+                        </button>
+                      )}
                     </div>
                   </div>
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { X, Eye, EyeOff, Mail, Lock, User, Phone, ChevronDown, Check, Stethoscope } from 'lucide-react'
 import { useGoogleLogin } from '@react-oauth/google'
@@ -207,7 +208,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
     return () => document.removeEventListener('mousedown', handler)
   }, [codeOpen, closeCode])
 
-  return (
+  return createPortal(
     <div className="auth-overlay" ref={overlayRef} onClick={handleOverlayClick}>
       <div className="auth-modal">
 
@@ -484,7 +485,8 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
         )}
 
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

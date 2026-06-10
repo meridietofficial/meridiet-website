@@ -9,6 +9,7 @@ export type AuthUser = {
   phone_number: string
   role: string
   avatar_url: string | null
+  wallet_balance?: number
 }
 
 export type AuthResponse = {

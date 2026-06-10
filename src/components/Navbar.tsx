@@ -68,37 +68,45 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
           </div>
 
           {user && (
-            <div className="navbar-user" ref={dropdownRef}>
-              <button className="navbar-avatar" onClick={() => setDropdownOpen(p => !p)}>
-                {user.avatar_url
-                  ? <img src={user.avatar_url} alt={user.full_name} />
-                  : <span>{initials}</span>
-                }
-              </button>
-              {dropdownOpen && (
-                <div className="navbar-dropdown">
-                  <div className="navbar-dropdown-name">{user.full_name}</div>
-                  <div className="navbar-dropdown-email">{user.email}</div>
-                  <span className={`navbar-role-badge${user.role === 'dietitian' ? ' navbar-role-badge--dietitian' : ''}`}>
-                    {user.role === 'dietitian' ? '🩺 Dietitian' : '👤 User'}
-                  </span>
-                  <hr className="navbar-dropdown-divider" />
-                  <Link
-                    to={user.role === 'dietitian' ? '/dietitian-dashboard' : '/profile'}
-                    className="navbar-dropdown-profile"
-                    onClick={() => setDropdownOpen(false)}
-                  >
-                    {user.role === 'dietitian' ? 'My Dashboard' : 'My Profile'}
-                  </Link>
-                  <button
-                    className="navbar-dropdown-logout"
-                    onClick={() => { clearAuth(); setDropdownOpen(false) }}
-                  >
-                    Logout
-                  </button>
+            <>
+              <div className="navbar-user" ref={dropdownRef}>
+                <button className="navbar-avatar" onClick={() => setDropdownOpen(p => !p)}>
+                  {user.avatar_url
+                    ? <img src={user.avatar_url} alt={user.full_name} />
+                    : <span>{initials}</span>
+                  }
+                </button>
+                {dropdownOpen && (
+                  <div className="navbar-dropdown">
+                    <div className="navbar-dropdown-name">{user.full_name}</div>
+                    <div className="navbar-dropdown-email">{user.email}</div>
+                    <span className={`navbar-role-badge${user.role === 'dietitian' ? ' navbar-role-badge--dietitian' : ''}`}>
+                      {user.role === 'dietitian' ? '🩺 Dietitian' : '👤 User'}
+                    </span>
+                    <hr className="navbar-dropdown-divider" />
+                    <Link
+                      to={user.role === 'dietitian' ? '/dietitian-dashboard' : '/profile'}
+                      className="navbar-dropdown-profile"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      {user.role === 'dietitian' ? 'My Dashboard' : 'My Profile'}
+                    </Link>
+                    <button
+                      className="navbar-dropdown-logout"
+                      onClick={() => { clearAuth(); setDropdownOpen(false) }}
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+              {user.wallet_balance !== undefined && (
+                <div className="navbar-wallet-chip">
+                  <svg className="navbar-wallet-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#f4c430" stroke="#d4a017" strokeWidth="1.5"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="#d4a017" strokeWidth="0.8" strokeDasharray="2 1"/><text x="12" y="16.5" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#8B6914">₹</text></svg>
+                  <span>₹ {Number(user.wallet_balance).toLocaleString('en-IN')}</span>
                 </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </nav>
@@ -186,6 +194,12 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
               <button className="navbar-login" onClick={() => setAuthOpen(true)}>
                 Login / Sign Up
               </button>
+            )}
+            {user?.wallet_balance !== undefined && (
+              <div className="navbar-wallet-chip">
+                <svg className="navbar-wallet-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" fill="currentColor" stroke="none"/><path d="M22 7V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2"/></svg>
+                <span>₹ {Number(user.wallet_balance).toLocaleString('en-IN')}</span>
+              </div>
             )}
           </div>
 

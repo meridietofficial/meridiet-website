@@ -1,4 +1,7 @@
+import { useNavigate } from 'react-router-dom'
+
 const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
+  const navigate = useNavigate()
   return (
     <section className="hero" id="hero">
       <div className="container hero-inner">
@@ -11,8 +14,9 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
             <span className="hero-title-line">in Minutes</span>
           </h1>
           <p className="hero-desc">
-            Answer a few simple questions about your body, lifestyle, food habits,
-            and goals — and receive a personalized diet plan tailored for you.
+            <span style={{ color: '#1a2e1a', fontWeight: 700 }}>India's First AI-Powered Platform Blending<br />
+            Intelligent Technology with Expert Dietitians.</span><br />
+            <span style={{ opacity: 0.8 }}>Smarter, personalized nutrition — thoughtfully crafted for complete well-being.</span>
           </p>
 
           <div className="hero-actions">
@@ -21,7 +25,7 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
             </button>
             <button
               className="hero-btn-outline"
-              onClick={() => document.getElementById('sample-diet')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => navigate('/consult-dietitian')}
             >
               <i className="fa-solid fa-user-doctor" /> Consult Dietitians
             </button>

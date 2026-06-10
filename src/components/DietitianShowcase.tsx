@@ -3,7 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import dietitianApi from '../api/dietitian'
 import type { DietitianCard } from '../api/dietitian'
 
-const VISIBLE = 3
+const GAP = 16
+
+function getVisibleCount() {
+  const w = window.innerWidth
+  if (w <= 600) return 1
+  if (w <= 900) return 2
+  return 3
+}
 
 function getInitials(name: string) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -28,6 +35,7 @@ export default function DietitianShowcase() {
   const [index, setIndex] = useState(0)
   const [dietitians, setDietitians] = useState<DietitianCard[]>([])
   const [loading, setLoading] = useState(true)
+  const [visibleCount, setVisibleCount] = useState(3)
   const trackRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -37,10 +45,30 @@ export default function DietitianShowcase() {
       .finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    const update = () => setVisibleCount(getVisibleCount())
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+
   const items = loading ? Array(6).fill(null) : dietitians
-  const max = Math.max(0, items.length - VISIBLE)
+  const max = Math.max(0, items.length - visibleCount)
+
+  // Clamp index when screen size changes
+  useEffect(() => {
+    setIndex(i => Math.min(i, max))
+  }, [max])
+
   const prev = () => setIndex(i => Math.max(0, i - 1))
   const next = () => setIndex(i => Math.min(max, i + 1))
+
+  // Exact translation per step: card-width + gap
+  // card-width = (100% - (visibleCount-1)*GAP) / visibleCount
+  // step = card-width + GAP = 100%/visibleCount + GAP/visibleCount
+  const stepPct = (100 / visibleCount).toFixed(6)
+  const stepPx  = (GAP / visibleCount).toFixed(6)
+  const translate = `translateX(calc(-${index} * (${stepPct}% + ${stepPx}px)))`
 
   return (
     <section className="ds-section">
@@ -60,21 +88,15 @@ export default function DietitianShowcase() {
 
         {/* Carousel */}
         <div className="ds-carousel-wrap">
-          <div
-            className="ds-track"
-            ref={trackRef}
-            style={{ transform: `translateX(calc(-${index} * (100% / ${VISIBLE} + 8px)))` }}
-          >
+          <div className="ds-track" ref={trackRef} style={{ transform: translate }}>
             {loading
               ? Array(6).fill(null).map((_, i) => <SkeletonCard key={i} />)
               : dietitians.map(d => (
                 <div key={d.id} className="ds-card">
-                  {/* Availability badge */}
                   <span className={`ds-avail ${d.availability === 'online' ? 'ds-avail--online' : 'ds-avail--offline'}`}>
                     {d.availability === 'online' ? 'Available Online' : 'Available Offline'}
                   </span>
 
-                  {/* Avatar */}
                   <div className="ds-avatar">
                     {d.avatar_url
                       ? <img src={d.avatar_url} alt={d.full_name} />
@@ -82,7 +104,6 @@ export default function DietitianShowcase() {
                     }
                   </div>
 
-                  {/* Info */}
                   <h3 className="ds-name">
                     {d.full_name}
                     {(d.is_verified === true || d.is_verified === 1) && <span className="ds-verified">✓</span>}
@@ -100,7 +121,6 @@ export default function DietitianShowcase() {
                     <span>📍 {d.location?.split(',')[0] ?? '—'}</span>
                   </div>
 
-                  {/* Specializations */}
                   <div className="ds-tags">
                     {d.specialization.slice(0, 2).map(s => (
                       <span key={s} className="ds-tag">{s}</span>
@@ -110,7 +130,6 @@ export default function DietitianShowcase() {
                     )}
                   </div>
 
-                  {/* Actions */}
                   <div className="ds-actions">
                     <button className="ds-view-btn" onClick={() => navigate(`/dietitian/${d.id}`)}>
                       View Profile
@@ -126,7 +145,7 @@ export default function DietitianShowcase() {
         </div>
 
         {/* Nav buttons */}
-        {!loading && items.length > VISIBLE && (
+        {!loading && items.length > visibleCount && (
           <div className="ds-nav">
             <button className="ds-nav-btn" onClick={prev} disabled={index === 0} aria-label="Previous">‹</button>
             <div className="ds-dots">

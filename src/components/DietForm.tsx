@@ -758,7 +758,7 @@ const PLAN_OPTS = [
 ]
 
 const DELIVERY_OPTS = [
-  { k: 'whatsapp', icon: '💬', lbl: 'WhatsApp', sub: 'Instant delivery on WhatsApp', badge: '⚡ Recommended' },
+  // { k: 'whatsapp', icon: '💬', lbl: 'WhatsApp', sub: 'Instant delivery on WhatsApp', badge: '⚡ Recommended' },
   { k: 'email',   icon: '📧', lbl: 'Email',     sub: 'Delivered to your inbox',      badge: null },
 ]
 
@@ -850,8 +850,7 @@ const Step5 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
 
         <div className="df-field">
           <label className="df-label">
-            Phone / WhatsApp Number
-            {hasMethod('whatsapp') && <span className="df-req"> *</span>}
+            Phone / WhatsApp Number <span className="df-optional">(Optional)</span>
           </label>
           <div className="df-phone-row">
             <select className="df-phone-code"><option>+91</option></select>
@@ -894,7 +893,7 @@ const Step5 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
       {/* Delivery method */}
       <div className="df-card-field">
         <label className="df-label">Where should we send your plan?</label>
-        <p className="df-field-sub">You can select both WhatsApp and email</p>
+        <p className="df-field-sub">Your plan will be delivered to your email</p>
         <div className="ct-delivery-grid">
           {DELIVERY_OPTS.map((m) => (
             <button
@@ -1148,9 +1147,8 @@ function validateStep(s: number, d: FormData): Errors {
     const methods = d.deliveryMethod as string[]
     if (!d.planType) e.planType = 'Please select a plan'
     if (!d.contactName.trim()) e.contactName = 'Contact name is required'
-    if (methods.includes('whatsapp')) {
-      if (!d.whatsapp.trim()) e.whatsapp = 'WhatsApp number is required'
-      else if (!/^\d{10}$/.test(d.whatsapp.replace(/\s|-/g, ''))) e.whatsapp = 'Enter a valid 10-digit number'
+    if (d.whatsapp.trim() && !/^\d{10}$/.test(d.whatsapp.replace(/\s|-/g, ''))) {
+      e.whatsapp = 'Enter a valid 10-digit number'
     }
     if (methods.includes('email') && !d.email.trim()) e.email = 'Email address is required'
     if (!d.city)  e.city  = 'Please select your city'

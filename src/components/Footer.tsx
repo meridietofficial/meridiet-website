@@ -18,7 +18,7 @@ const Footer = () => {
               <img src="/logo-footer.png" alt="MeriDiet" className="footer-logo-img" />
             </a>
             <p className="footer-tagline">
-              India's most personalized nutrition platform, crafted by expert dietitians. Real Indian food. Real results.
+              India's First AI-Powered Platform Blending Intelligent Technology with Expert Dietitians. Smarter, personalized nutrition — thoughtfully crafted for complete well-being.
             </p>
             <div className="footer-social">
               {socialLinks.map((s, i) => (
