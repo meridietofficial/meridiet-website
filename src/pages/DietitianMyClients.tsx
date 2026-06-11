@@ -207,26 +207,27 @@ function ClientRow({
             </span>
           </div>
           <p className="mc-row-meta">
-            <i className="fa-regular fa-calendar" /> Last: {formatDate(c.last_appointment_date)}
-          </p>
-          <p className="mc-row-plan">
-            <i className="fa-solid fa-chart-simple" /> {c.total_appointments} appointment{c.total_appointments !== 1 ? 's' : ''} total
+            <i className="fa-regular fa-calendar" /> {formatDate(c.last_appointment_date)}
           </p>
         </div>
       </div>
 
       <div className="mc-row-mid">
         <div className="mc-row-stat">
-          <span className="mc-row-stat-label">Last Appt</span>
-          <span className="mc-row-stat-val">{formatDate(c.last_appointment_date)}</span>
-        </div>
-        <div className="mc-row-stat">
           <span className="mc-row-stat-label">Total</span>
           <span className="mc-row-stat-val">{c.total_appointments}</span>
         </div>
         <div className="mc-row-stat">
           <span className="mc-row-stat-label">Completed</span>
-          <span className="mc-row-stat-val">{c.completed}</span>
+          <span className="mc-row-stat-val mc-row-stat-val--green">{c.completed}</span>
+        </div>
+        <div className="mc-row-stat">
+          <span className="mc-row-stat-label">Pending</span>
+          <span className="mc-row-stat-val mc-row-stat-val--orange">{c.pending}</span>
+        </div>
+        <div className="mc-row-stat">
+          <span className="mc-row-stat-label">Cancelled</span>
+          <span className="mc-row-stat-val mc-row-stat-val--red">{c.cancelled}</span>
         </div>
       </div>
 

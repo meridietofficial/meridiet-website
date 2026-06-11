@@ -291,6 +291,13 @@ const appointmentApi = {
     return res.data
   },
 
+  async getById(id: number): Promise<DietitianAppointment> {
+    const res = await apiClient.apiGet<{ success: boolean; data: DietitianAppointment }>(
+      `${ENDPOINTS.appointment.single}/${id}`
+    )
+    return res.data
+  },
+
   async updateAppointmentStatus(
     id: number,
     status: 'confirmed' | 'completed' | 'cancelled'
