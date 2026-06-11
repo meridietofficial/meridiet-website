@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom'
 import DietitianTopbar from './DietitianTopbar'
 import dietitianApi from '../api/dietitian'
+import { ApiError } from '../api/client'
 
 export type DietitianOutletContext = {
   online: boolean
@@ -29,6 +30,7 @@ export default function DietitianLayout() {
   const { pathname } = useLocation()
   const [online, setOnline] = useState(false)
   const toggling = useRef(false)
+  const [onlineError, setOnlineError] = useState<string | null>(null)
 
   // Load initial online status from the profile
   useEffect(() => {
@@ -47,8 +49,10 @@ export default function DietitianLayout() {
     try {
       const confirmed = await dietitianApi.setOnlineStatus(next)
       setOnline(confirmed)
-    } catch {
-      setOnline(!next) // revert on failure
+    } catch (err) {
+      setOnline(!next)
+      const msg = err instanceof ApiError ? err.message : 'Failed to update status. Please try again.'
+      setOnlineError(msg)
     } finally {
       toggling.current = false
     }
@@ -62,8 +66,41 @@ export default function DietitianLayout() {
     if (item.route && item.route !== pathname) navigate(item.route)
   }
 
+  // Parse "Cannot go online. Please fix the following:\n• item1\n• item2"
+  const errorLines = onlineError ? onlineError.split('\n').filter(Boolean) : []
+  const errorTitle = errorLines[0] ?? ''
+  const errorBullets = errorLines.slice(1).map(l => l.replace(/^[•\-]\s*/, '').trim()).filter(Boolean)
+
   return (
     <div className="dd-root">
+
+      {/* Online status error modal */}
+      {onlineError && (
+        <div className="dd-online-err-backdrop" onClick={() => setOnlineError(null)}>
+          <div className="dd-online-err-modal" onClick={e => e.stopPropagation()}>
+            <div className="dd-online-err-icon">⚠️</div>
+            <h3 className="dd-online-err-title">Cannot Go Online</h3>
+            {errorTitle && <p className="dd-online-err-desc">{errorTitle.replace(/^cannot go online[^:]*:\s*/i, '')}</p>}
+            {errorBullets.length > 0 && (
+              <ul className="dd-online-err-list">
+                {errorBullets.map((b, i) => <li key={i}>{b}</li>)}
+              </ul>
+            )}
+            <div className="dd-online-err-actions">
+              <button
+                className="dd-online-err-fix-btn"
+                onClick={() => { setOnlineError(null); navigate('/dietitian-profile') }}
+              >
+                Fix in Profile →
+              </button>
+              <button className="dd-online-err-dismiss" onClick={() => setOnlineError(null)}>
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside className="dd-sidebar">
         <div className="dd-sidebar-logo">

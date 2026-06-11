@@ -64,7 +64,7 @@ const INIT: FormData = {
   contactName: '',
   whatsapp: '',
   email: '',
-  deliveryMethod: ['whatsapp'],
+  deliveryMethod: ['email'],
   city: '',
   state: '',
   stateCode: '',
@@ -251,7 +251,7 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
           </label>
           <div className="df-unit-tog">
             {(['cm', 'ft/in'] as const).map((u) => (
-              <button key={u} className={d.heightUnit === u ? 'act' : ''} onClick={() => set('heightUnit', u)}>
+              <button key={u} className={d.heightUnit === u ? 'act' : ''} onClick={() => { if (u !== d.heightUnit) { set('heightUnit', u); set('height', '') } }}>
                 {u}
               </button>
             ))}
@@ -276,7 +276,7 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
           </label>
           <div className="df-unit-tog">
             {(['kg', 'lbs'] as const).map((u) => (
-              <button key={u} className={d.weightUnit === u ? 'act' : ''} onClick={() => set('weightUnit', u)}>
+              <button key={u} className={d.weightUnit === u ? 'act' : ''} onClick={() => { if (u !== d.weightUnit) { set('weightUnit', u); set('weight', '') } }}>
                 {u}
               </button>
             ))}

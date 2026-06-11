@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MessageCircle, Search, SlidersHorizontal, X, UserRound, MessagesSquare, ShieldCheck, Lock, Stethoscope, ClipboardList, Headset } from 'lucide-react'
 import dietitianApi, {
@@ -12,7 +12,9 @@ import SearchableSelect from '../components/SearchableSelect'
 import { IN_STATES, getCitiesOfState } from '../data/indiaCities'
 
 const ALL_CATEGORY = 'All Dietitians'
-const CONSULT_FEE = 2499   // fallback until /consultation-fee resolves
+const CONSULT_FEE = 0
+const FEE_RANGE_MIN = 1499
+const FEE_RANGE_MAX = 4500
 
 const TRUST_ITEMS = [
   { icon: Lock,           title: 'Secure Payments',     desc: '100% safe & secure' },
@@ -72,7 +74,8 @@ export default function ConsultDietitian() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [consulting, setConsulting] = useState<DietitianCard | null>(null)
-  const [fee, setFee] = useState(CONSULT_FEE)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const sentinelRef = useRef<HTMLDivElement>(null)
 
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
@@ -89,6 +92,8 @@ export default function ConsultDietitian() {
   const [experience, setExperience] = useState<string[]>([])
   const [language, setLanguage] = useState('')
   const [availableNow, setAvailableNow] = useState(false)
+  const [feeMin, setFeeMin] = useState(FEE_RANGE_MIN)
+  const [feeMax, setFeeMax] = useState(FEE_RANGE_MAX)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Cities for the selected state (local map, keyed by state code)
@@ -99,9 +104,6 @@ export default function ConsultDietitian() {
       .then(list => setSpecializations(list.filter(s => s.is_active)))
       .catch(err => console.error('[Specializations] Failed to load:', err))
 
-    dietitianApi.getConsultationFee()
-      .then(amount => { if (amount > 0) setFee(amount) })
-      .catch(err => console.error('[Consultation Fee] Failed to load:', err))
   }, [])
 
   // Debounce the search box
@@ -113,7 +115,7 @@ export default function ConsultDietitian() {
   // Any filter change resets to page 1 (no-op re-render if already 1)
   useEffect(() => {
     setPage(1)
-  }, [debouncedSearch, activeCategory, sort, gender, stateName, city, specialization, experience, language, availableNow])
+  }, [debouncedSearch, activeCategory, sort, gender, stateName, city, specialization, experience, language, availableNow, feeMin, feeMax])
 
   // Fetch the dietitian list whenever the query changes (filters apply live)
   useEffect(() => {
@@ -124,20 +126,45 @@ export default function ConsultDietitian() {
       location:       city || stateName || undefined,
       language:       language || undefined,
       available_now:  availableNow || undefined,
+      min_fee: feeMin > FEE_RANGE_MIN ? feeMin : undefined,
+      max_fee: feeMax < FEE_RANGE_MAX ? feeMax : undefined,
       sort,
       page,
       limit: 12,
       ...experienceRange(experience),
     }
     let cancelled = false
-    setLoading(true)
+    if (page === 1) { setLoading(true); setResults([]) }
+    else setLoadingMore(true)
     setError(null)
     dietitianApi.listDietitians(params)
-      .then(({ data, meta }) => { if (!cancelled) { setResults(data); setMeta(meta) } })
-      .catch(err => { if (!cancelled) { setError(err?.message ?? 'Failed to load dietitians'); setResults([]) } })
-      .finally(() => { if (!cancelled) setLoading(false) })
+      .then(({ data, meta }) => {
+        if (!cancelled) {
+          setResults(prev => page === 1 ? data : [...prev, ...data])
+          setMeta(meta)
+        }
+      })
+      .catch(err => { if (!cancelled) { setError(err?.message ?? 'Failed to load dietitians'); if (page === 1) setResults([]) } })
+      .finally(() => { if (!cancelled) { setLoading(false); setLoadingMore(false) } })
     return () => { cancelled = true }
-  }, [debouncedSearch, activeCategory, sort, page, gender, stateName, city, specialization, experience, language, availableNow])
+  }, [debouncedSearch, activeCategory, sort, page, gender, stateName, city, specialization, experience, language, availableNow, feeMin, feeMax])
+
+  // IntersectionObserver — load next page when sentinel enters view
+  const loadMore = useCallback(() => {
+    if (!loadingMore && !loading && meta && page < meta.totalPages) {
+      setPage(p => p + 1)
+    }
+  }, [loadingMore, loading, meta, page])
+
+  useEffect(() => {
+    const el = sentinelRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting) loadMore()
+    }, { rootMargin: '200px' })
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [loadMore])
 
   // Tabs: "All" + each specialization's short label (value kept for filtering)
   const categories = [{ value: ALL_CATEGORY, label: ALL_CATEGORY }, ...specializations]
@@ -154,6 +181,8 @@ export default function ConsultDietitian() {
     setExperience([])
     setLanguage('')
     setAvailableNow(false)
+    setFeeMin(FEE_RANGE_MIN)
+    setFeeMax(FEE_RANGE_MAX)
   }
 
   return (
@@ -166,20 +195,40 @@ export default function ConsultDietitian() {
             <h1 className="cd-hero-title">
               Consult Top <span className="cd-green">Dietitians</span> Online
             </h1>
-            <p className="cd-hero-sub">Personalized guidance. Real results. Anytime, anywhere.</p>
+            <p className="cd-hero-sub">Get a personalised diet plan, expert guidance, and ongoing support — all in one place.</p>
             <div className="cd-hero-badges">
-              <span className="cd-badge"><span className="cd-badge-icon"><UserRound size={15} strokeWidth={2.4} /></span> Live 1-on-1 Consultation</span>
-              <span className="cd-badge"><span className="cd-badge-icon"><MessagesSquare size={15} strokeWidth={2.4} /></span> Chat Support 7 Days a Week</span>
-              <span className="cd-badge"><span className="cd-badge-icon"><ShieldCheck size={15} strokeWidth={2.4} /></span> 100% Confidential &amp; Secure</span>
+              <span className="cd-badge"><span className="cd-badge-icon"><UserRound size={14} strokeWidth={2.4} /></span> 1-on-1 Consultation</span>
+              <span className="cd-badge"><span className="cd-badge-icon"><MessagesSquare size={14} strokeWidth={2.4} /></span> 7-Day Chat Support</span>
+              <span className="cd-badge"><span className="cd-badge-icon"><ShieldCheck size={14} strokeWidth={2.4} /></span> 100% Confidential</span>
+            </div>
+            <div className="cd-hero-stats">
+              <div className="cd-hero-stat">
+                <span className="cd-hero-stat-val">500+</span>
+                <span className="cd-hero-stat-label">Verified Dietitians</span>
+              </div>
+              <div className="cd-hero-stat-divider" />
+              <div className="cd-hero-stat">
+                <span className="cd-hero-stat-val">10,000+</span>
+                <span className="cd-hero-stat-label">Happy Clients</span>
+              </div>
+              <div className="cd-hero-stat-divider" />
+              <div className="cd-hero-stat">
+                <span className="cd-hero-stat-val">4.8 ★</span>
+                <span className="cd-hero-stat-label">Average Rating</span>
+              </div>
             </div>
           </div>
 
           <div className="cd-hero-card">
             <div className="cd-hero-card-info">
-              <p className="cd-hero-card-title">Start your health journey today!</p>
-              <p className="cd-hero-card-sub">Book a 1-on-1 consultation</p>
-              <p className="cd-hero-card-price">₹{fee.toLocaleString('en-IN')}</p>
-              <p className="cd-hero-card-validity">Valid for 30 Days</p>
+              <span className="cd-hero-card-badge">✦ 1-on-1 Expert Session</span>
+              <p className="cd-hero-card-title">Start Your Health Journey</p>
+              <p className="cd-hero-card-sub">Personalised consultation with a verified dietitian</p>
+              <div className="cd-hero-card-price-wrap">
+                <span className="cd-hero-card-price-label">Starting from</span>
+                <span className="cd-hero-card-price">₹1,499</span>
+              </div>
+              <p className="cd-hero-card-validity">Price set by each dietitian</p>
               <button
                 className="cd-book-btn"
                 onClick={() => document.getElementById('cd-listing')?.scrollIntoView({ behavior: 'smooth' })}
@@ -211,6 +260,79 @@ export default function ConsultDietitian() {
             <button className="cd-clear-btn" onClick={clearFilters}>Clear All</button>
           </div>
 
+          {/* 1 — Availability */}
+          <div className="cd-filter-group">
+            <p className="cd-filter-label">Availability</p>
+            <label className="cd-check-label">
+              <input type="checkbox" checked={availableNow} onChange={e => setAvailableNow(e.target.checked)} />
+              <span>Available Now</span>
+            </label>
+          </div>
+
+          {/* 2 — Consultation Fee */}
+          <div className="cd-filter-group">
+            <p className="cd-filter-label">Consultation Fee</p>
+            <div className="cd-fee-range-vals">
+              <span>₹{feeMin.toLocaleString('en-IN')}</span>
+              <span>₹{feeMax.toLocaleString('en-IN')}</span>
+            </div>
+            <div className="cd-fee-range-track">
+              <div
+                className="cd-fee-range-fill"
+                style={{
+                  left: `${((feeMin - FEE_RANGE_MIN) / (FEE_RANGE_MAX - FEE_RANGE_MIN)) * 100}%`,
+                  right: `${100 - ((feeMax - FEE_RANGE_MIN) / (FEE_RANGE_MAX - FEE_RANGE_MIN)) * 100}%`,
+                }}
+              />
+              <input
+                type="range"
+                className="cd-fee-slider cd-fee-slider--min"
+                min={FEE_RANGE_MIN}
+                max={FEE_RANGE_MAX}
+                step={1}
+                value={feeMin}
+                onChange={e => setFeeMin(Math.min(Number(e.target.value), feeMax - 1))}
+              />
+              <input
+                type="range"
+                className="cd-fee-slider cd-fee-slider--max"
+                min={FEE_RANGE_MIN}
+                max={FEE_RANGE_MAX}
+                step={1}
+                value={feeMax}
+                onChange={e => setFeeMax(Math.max(Number(e.target.value), feeMin + 1))}
+              />
+            </div>
+            <div className="cd-fee-range-labels">
+              <span>₹{FEE_RANGE_MIN.toLocaleString('en-IN')}</span>
+              <span>₹{FEE_RANGE_MAX.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+
+          {/* 3 — Specialization */}
+          <div className="cd-filter-group">
+            <p className="cd-filter-label">Specialization</p>
+            <SearchableSelect
+              options={specializations.map(s => ({ value: s.value, label: s.value }))}
+              value={specialization}
+              onChange={setSpecialization}
+              placeholder="Select specialization"
+              searchPlaceholder="Search specialization..."
+            />
+          </div>
+
+          {/* 4 — Experience */}
+          <div className="cd-filter-group">
+            <p className="cd-filter-label">Experience</p>
+            {EXPERIENCE_OPTIONS.map(exp => (
+              <label key={exp} className="cd-check-label">
+                <input type="checkbox" checked={experience.includes(exp)} onChange={() => toggleExperience(exp)} />
+                <span>{exp}</span>
+              </label>
+            ))}
+          </div>
+
+          {/* 5 — Gender */}
           <div className="cd-filter-group">
             <p className="cd-filter-label">Gender</p>
             {(['all', 'female', 'male'] as const).map(g => (
@@ -221,6 +343,19 @@ export default function ConsultDietitian() {
             ))}
           </div>
 
+          {/* 6 — Language */}
+          <div className="cd-filter-group">
+            <p className="cd-filter-label">Language</p>
+            <SearchableSelect
+              options={LANGUAGE_OPTIONS.map(l => ({ value: l, label: l }))}
+              value={language}
+              onChange={setLanguage}
+              placeholder="Select language"
+              searchPlaceholder="Search language..."
+            />
+          </div>
+
+          {/* 7 — Location */}
           <div className="cd-filter-group">
             <p className="cd-filter-label">State</p>
             <SearchableSelect
@@ -247,46 +382,6 @@ export default function ConsultDietitian() {
               searchPlaceholder="Search city..."
               disabled={!stateCode}
             />
-          </div>
-
-          <div className="cd-filter-group">
-            <p className="cd-filter-label">Specialization</p>
-            <SearchableSelect
-              options={specializations.map(s => ({ value: s.value, label: s.value }))}
-              value={specialization}
-              onChange={setSpecialization}
-              placeholder="Select specialization"
-              searchPlaceholder="Search specialization..."
-            />
-          </div>
-
-          <div className="cd-filter-group">
-            <p className="cd-filter-label">Experience</p>
-            {EXPERIENCE_OPTIONS.map(exp => (
-              <label key={exp} className="cd-check-label">
-                <input type="checkbox" checked={experience.includes(exp)} onChange={() => toggleExperience(exp)} />
-                <span>{exp}</span>
-              </label>
-            ))}
-          </div>
-
-          <div className="cd-filter-group">
-            <p className="cd-filter-label">Language Known</p>
-            <SearchableSelect
-              options={LANGUAGE_OPTIONS.map(l => ({ value: l, label: l }))}
-              value={language}
-              onChange={setLanguage}
-              placeholder="Select language"
-              searchPlaceholder="Search language..."
-            />
-          </div>
-
-          <div className="cd-filter-group">
-            <p className="cd-filter-label">Availability</p>
-            <label className="cd-check-label">
-              <input type="checkbox" checked={availableNow} onChange={e => setAvailableNow(e.target.checked)} />
-              <span>Available Now</span>
-            </label>
           </div>
 
         </aside>
@@ -347,6 +442,8 @@ export default function ConsultDietitian() {
                 const avail = availabilityLabel(d.availability)
                 return (
                 <div key={d.id} className="cd-card">
+
+                  {/* ── Header ── */}
                   <div className="cd-card-top">
                     <div className="cd-card-avatar">
                       {d.avatar_url
@@ -355,61 +452,72 @@ export default function ConsultDietitian() {
                       }
                     </div>
                     <div className="cd-card-info">
-                      <div className="cd-card-name-row">
-                        <h3 className="cd-card-name">
-                          {d.full_name} {d.is_verified && <span className="cd-verified">✓</span>}
-                        </h3>
-                        <span className={`cd-avail-badge ${avail.cls}`}>{avail.text}</span>
-                      </div>
+                      <h3 className="cd-card-name">
+                        {d.full_name} {d.is_verified && <span className="cd-verified">✓</span>}
+                      </h3>
                       <p className="cd-card-title">{d.title}</p>
-                      <div className="cd-card-rating">
-                        {d.reviews > 0 ? (
-                          <>
-                            <span className="cd-star">★</span>
-                            <span className="cd-rating-num">{d.rating}</span>
-                            <span className="cd-rating-reviews">({d.reviews} reviews)</span>
-                          </>
-                        ) : (
-                          <span className="cd-rating-reviews">New</span>
-                        )}
+                      <div className="cd-card-rating-row">
+                        <div className="cd-card-rating">
+                          {d.reviews > 0 ? (
+                            <>
+                              <span className="cd-star">★</span>
+                              <span className="cd-rating-num">{d.rating}</span>
+                              <span className="cd-rating-reviews">({d.reviews})</span>
+                            </>
+                          ) : (
+                            <span className="cd-rating-reviews">New</span>
+                          )}
+                        </div>
+                        <span className={`cd-avail-badge ${avail.cls}`}>{avail.text}</span>
                       </div>
                     </div>
                   </div>
 
+                  {/* ── Fee row ── */}
+                  {(d.appointment_fee ?? 0) > 0 && (
+                    <div className="cd-card-fee-row">
+                      <span className="cd-card-fee-amt">₹{d.appointment_fee!.toLocaleString('en-IN')}</span>
+                      <span className="cd-card-fee-label">per session <span className="cd-card-fee-followup">+ Follow Up</span></span>
+                    </div>
+                  )}
+
+                  {/* ── Meta ── */}
                   <div className="cd-card-meta">
                     <span className="cd-meta-item">⏱ {d.experience}</span>
                     <span className="cd-meta-item">📍 {d.location}</span>
                   </div>
 
-                  <div className="cd-card-section">
-                    <p className="cd-card-section-label">Specializations</p>
-                    <div className="cd-tags">
-                      {d.specialization.slice(0, 3).map(s => <span key={s} className="cd-tag">{s}</span>)}
-                      {d.specialization.length > 3 && (
-                        <button
-                          className="cd-tag cd-tag--more"
-                          onClick={() => navigate(`/dietitian/${d.id}`)}
-                        >
-                          +{d.specialization.length - 3} more · See more
-                        </button>
-                      )}
+                  {d.specialization.length > 0 && (
+                    <div className="cd-card-section">
+                      <p className="cd-card-section-label">Specializations</p>
+                      <div className="cd-tags">
+                        {d.specialization.slice(0, 3).map(s => <span key={s} className="cd-tag">{s}</span>)}
+                        {d.specialization.length > 3 && (
+                          <button className="cd-tag cd-tag--more" onClick={() => navigate(`/dietitian/${d.id}`)}>
+                            +{d.specialization.length - 3} more
+                          </button>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="cd-card-section">
-                    <p className="cd-card-section-label">Languages</p>
-                    <div className="cd-langs">
-                      {d.languages.map(l => <span key={l} className="cd-lang">{l}</span>)}
+                  {d.languages.length > 0 && (
+                    <div className="cd-card-section">
+                      <p className="cd-card-section-label">Languages</p>
+                      <div className="cd-langs">
+                        {d.languages.map(l => <span key={l} className="cd-lang">{l}</span>)}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {d.next_available && (
                     <div className="cd-card-next">
                       <span className="cd-next-icon">🕐</span>
-                      <span>Next Available: <strong>{d.next_available.day}, {shortDate(d.next_available.date)}</strong></span>
+                      <span>Next: <strong>{d.next_available.day}, {shortDate(d.next_available.date)}</strong></span>
                     </div>
                   )}
 
+                  {/* ── Actions ── */}
                   <div className="cd-card-actions">
                     <button className="cd-view-btn" onClick={() => navigate(`/dietitian/${d.id}`)}>View Profile</button>
                     <button className="cd-consult-btn" onClick={() => setConsulting(d)}>
@@ -422,25 +530,16 @@ export default function ConsultDietitian() {
             )}
           </div>
 
-          {/* Pagination */}
-          {meta && meta.totalPages > 1 && (
-            <div className="cd-pagination">
-              <button
-                className="cd-page-btn"
-                disabled={page <= 1 || loading}
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-              >
-                ← Prev
-              </button>
-              <span className="cd-page-info">Page {meta.page} of {meta.totalPages}</span>
-              <button
-                className="cd-page-btn"
-                disabled={page >= meta.totalPages || loading}
-                onClick={() => setPage(p => p + 1)}
-              >
-                Next →
-              </button>
+          {/* Infinite scroll sentinel */}
+          <div ref={sentinelRef} className="cd-sentinel" />
+          {loadingMore && (
+            <div className="cd-load-more-spinner">
+              <span className="cd-spinner" />
+              <span>Loading more…</span>
             </div>
+          )}
+          {!loadingMore && meta && page >= meta.totalPages && results.length > 0 && (
+            <p className="cd-end-msg">You've seen all dietitians</p>
           )}
 
           {/* Trust Bar */}
@@ -459,7 +558,7 @@ export default function ConsultDietitian() {
       </div>
 
       {consulting && (
-        <ConsultModal dietitian={consulting} fee={fee} onClose={() => setConsulting(null)} />
+        <ConsultModal dietitian={consulting} fee={CONSULT_FEE} onClose={() => setConsulting(null)} />
       )}
     </main>
   )

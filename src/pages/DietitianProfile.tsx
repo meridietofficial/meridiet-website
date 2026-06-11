@@ -127,7 +127,7 @@ export default function DietitianProfile() {
     if (!user) { setShowAuthGate(true); return }
     setSubmitting(true)
     setBookingError('')
-    const consultFee = (currentD.fee != null && currentD.fee > 0) ? currentD.fee : fee
+    const consultFee = (currentD.appointment_fee != null && currentD.appointment_fee > 0) ? currentD.appointment_fee : fee
     try {
       const expanded = expandSlots(date.slots)
       const slotObj = expanded.find(s => s.start === slot)
@@ -423,11 +423,11 @@ export default function DietitianProfile() {
             <div className="dp-booking-card">
 
               {/* Fee */}
-              {d.fee != null && d.fee > 0 && (
+              {(d.appointment_fee ?? 0) > 0 && (
                 <div className="dp-fee-row">
                   <div>
                     <p className="dp-fee-label">Consultation Fee</p>
-                    <p className="dp-fee-amount">₹{d.fee.toLocaleString('en-IN')}</p>
+                    <p className="dp-fee-amount">₹{d.appointment_fee!.toLocaleString('en-IN')}</p>
                   </div>
                   <span className="dp-fee-validity">Valid 30 days</span>
                 </div>

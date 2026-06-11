@@ -206,6 +206,8 @@ export type DietitianProfile = {
     id_proof: string | null
     experience_certificate: string | null
   }
+  appointment_fee: number | null
+  appointment_currency: string | null
   created_at: string
   updated_at: string
 }
@@ -268,6 +270,8 @@ export type DietitianCard = {
   awards?: { title?: string; organization?: string; year?: string }[]
   consultations?: number
   fee?: number | null
+  appointment_fee?: number | null
+  appointment_currency?: string | null
   next_available: NextAvailable | null
   available_dates: AvailableDate[]
   availability: string
@@ -284,6 +288,8 @@ export type DietitianListParams = {
   min_years?: number
   max_years?: number
   available_now?: boolean
+  min_fee?: number
+  max_fee?: number
   sort?: 'top_rated' | 'most_reviewed' | 'available_now' | 'experience'
   page?: number
   limit?: number

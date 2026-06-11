@@ -935,6 +935,113 @@ function TabSecurity() {
   )
 }
 
+const FEE_MIN = 1499
+const FEE_MAX = 4500
+
+function FeeCard({ profile, onSaved }: { profile: DietitianProfile | null; onSaved: (p: DietitianProfile) => void }) {
+  const { save, saving } = useProfileSave(onSaved)
+  const isSet = (profile?.appointment_fee ?? 0) > 0
+  const [editing, setEditing] = useState(false)
+  const [sliderVal, setSliderVal] = useState(FEE_MIN)
+  const [inputText, setInputText] = useState(String(FEE_MIN))
+
+  const startEdit = () => {
+    const cur = profile?.appointment_fee ?? 0
+    const initial = cur >= FEE_MIN && cur <= FEE_MAX ? cur : FEE_MIN
+    setSliderVal(initial)
+    setInputText(String(initial))
+    setEditing(true)
+  }
+
+  const handleSave = async () => {
+    const ok = await save({ appointmentFee: sliderVal, appointmentCurrency: 'INR' })
+    if (ok) setEditing(false)
+  }
+
+  const pct = ((sliderVal - FEE_MIN) / (FEE_MAX - FEE_MIN)) * 100
+
+  return (
+    <div className="dmp-card dmp-fee-card">
+      <div className="dmp-card-header">
+        <h3 className="dmp-card-title">
+          <span className="dmp-fee-icon">💰</span> Consultation Fee
+        </h3>
+        {!editing && (
+          <button className="dmp-edit-link" onClick={startEdit}>
+            <i className={`fa-solid ${isSet ? 'fa-pen' : 'fa-plus'}`} />
+            {isSet ? ' Edit' : ' Set Fee'}
+          </button>
+        )}
+      </div>
+
+      {editing ? (
+        <div className="dmp-fee-edit">
+          <div className="dmp-fee-slider-top">
+            <div className="dmp-fee-input-wrap">
+              <span className="dmp-fee-currency">₹</span>
+              <input
+                className="dmp-field-input dmp-fee-input"
+                type="number"
+                min={FEE_MIN}
+                max={FEE_MAX}
+                value={inputText}
+                onChange={e => {
+                  setInputText(e.target.value)
+                  const v = Number(e.target.value)
+                  if (!isNaN(v) && v >= FEE_MIN && v <= FEE_MAX) setSliderVal(v)
+                }}
+                onBlur={() => {
+                  const v = Number(inputText)
+                  const clamped = isNaN(v) ? FEE_MIN : Math.min(FEE_MAX, Math.max(FEE_MIN, v))
+                  setSliderVal(clamped)
+                  setInputText(String(clamped))
+                }}
+              />
+            </div>
+            <span className="dmp-fee-per">per consultation</span>
+          </div>
+          <div className="dmp-fee-slider-wrap">
+            <input
+              type="range"
+              className="dmp-fee-slider"
+              min={FEE_MIN}
+              max={FEE_MAX}
+              step={1}
+              value={sliderVal}
+              style={{ '--pct': `${pct}%` } as React.CSSProperties}
+              onChange={e => { const v = Number(e.target.value); setSliderVal(v); setInputText(String(v)) }}
+            />
+            <div className="dmp-fee-slider-labels">
+              <span>₹{FEE_MIN.toLocaleString('en-IN')}</span>
+              <span>₹{FEE_MAX.toLocaleString('en-IN')}</span>
+            </div>
+          </div>
+          <div className="dmp-fee-actions">
+            <button className="dmp-complete-btn" disabled={saving} onClick={handleSave}>
+              {saving ? <><i className="fa-solid fa-spinner fa-spin" /> Saving…</> : 'Save Fee'}
+            </button>
+            <button className="dmp-fee-cancel-btn" disabled={saving} onClick={() => setEditing(false)}>
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : isSet ? (
+        <div className="dmp-fee-display">
+          <span className="dmp-fee-amount">₹{profile!.appointment_fee!.toLocaleString('en-IN')}</span>
+          <span className="dmp-fee-per">per consultation</span>
+        </div>
+      ) : (
+        <div className="dmp-fee-unset">
+          <p className="dmp-fee-unset-msg">No fee set yet. Clients won't be able to book until you add one.</p>
+          <button className="dmp-complete-btn" onClick={startEdit}>
+            <i className="fa-solid fa-plus" /> Set Your Fee
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface BannerProfile {
   name: string; title: string; degree: string
   experience: string; licenseNo: string; languages: string
@@ -1112,6 +1219,8 @@ export default function DietitianMyProfile() {
                   </button>
                 )}
               </div>
+
+              <FeeCard profile={profile} onSaved={setProfile} />
 
               <div className="dmp-card">
                 <h3 className="dmp-card-title">Professional Summary</h3>
