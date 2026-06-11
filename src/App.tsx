@@ -26,6 +26,8 @@ const DietitianConsultationRequests = lazy(() => import('./pages/DietitianConsul
 const DietitianMyClients      = lazy(() => import('./pages/DietitianMyClients'))
 const DietitianAppointments   = lazy(() => import('./pages/DietitianAppointments'))
 const DietitianDietPlans      = lazy(() => import('./pages/DietitianDietPlans'))
+const DietitianCreateDietPlan = lazy(() => import('./pages/DietitianCreateDietPlan'))
+const DietitianDraftDietPlan  = lazy(() => import('./pages/DietitianDraftDietPlan'))
 const DietitianChat           = lazy(() => import('./pages/DietitianChat'))
 const DietitianFollowUps      = lazy(() => import('./pages/DietitianFollowUps'))
 const DietitianReports        = lazy(() => import('./pages/DietitianReports'))
@@ -48,8 +50,8 @@ function FormPage() {
   return <DietForm onClose={() => navigate('/')} />
 }
 
-const NO_NAVBAR_ROUTES = ['/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
-const NO_FOOTER_ROUTES = ['/form', '/join-as-dietitian', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
+const NO_NAVBAR_PREFIXES = ['/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
+const NO_FOOTER_PREFIXES = ['/form', '/join-as-dietitian', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
 
 function ActiveVideoCall() {
   const { activeCall, clearCall } = useVideoCall()
@@ -61,8 +63,8 @@ function AppInner() {
   const navigate  = useNavigate()
   const { pathname } = useLocation()
   const openForm  = () => navigate('/form')
-  const showNavbar = !NO_NAVBAR_ROUTES.includes(pathname)
-  const showFooter = !NO_FOOTER_ROUTES.includes(pathname)
+  const showNavbar = !NO_NAVBAR_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
+  const showFooter = !NO_FOOTER_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
 
   return (
     <>
@@ -92,6 +94,8 @@ function AppInner() {
             <Route path="/dietitian-my-clients"              element={<DietitianMyClients />} />
             <Route path="/dietitian-appointments"            element={<DietitianAppointments />} />
             <Route path="/dietitian-diet-plans"              element={<DietitianDietPlans />} />
+            <Route path="/dietitian-diet-plans/new"         element={<DietitianCreateDietPlan />} />
+            <Route path="/dietitian-diet-plans/:planId"     element={<DietitianDraftDietPlan />} />
             <Route path="/dietitian-chat"                   element={<DietitianChat />} />
             <Route path="/dietitian-follow-ups"             element={<DietitianFollowUps />} />
             <Route path="/dietitian-reports"               element={<DietitianReports />} />

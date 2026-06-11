@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import appointmentApi, {
   DietitianSession,
   DietitianSessionGroup,
@@ -29,6 +30,7 @@ export default function DietitianAppointments() {
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [selected, setSelected] = useState<SelectedSession | null>(null)
 
+  const navigate = useNavigate()
   const { startCall } = useVideoCall()
 
   const [loading, setLoading] = useState(true)
@@ -211,6 +213,15 @@ export default function DietitianAppointments() {
                                 </button>
                                 <button
                                   className="ap-btn-outline"
+                                  onClick={e => {
+                                    e.stopPropagation()
+                                    navigate(`/dietitian-diet-plans/new?appointment_id=${s.id}`)
+                                  }}
+                                >
+                                  <i className="fa-solid fa-bowl-food" /> Diet Plan
+                                </button>
+                                <button
+                                  className="ap-btn-outline"
                                   onClick={e => { e.stopPropagation(); selectSession(s, group.label) }}
                                 >
                                   Details
@@ -317,6 +328,12 @@ export default function DietitianAppointments() {
                       onClick={() => startCall(selected.id, selected.client.name)}
                     >
                       <i className="fa-solid fa-video" /> Join Video Call
+                    </button>
+                    <button
+                      className="ap-btn-outline ap-btn-outline--full"
+                      onClick={() => navigate(`/dietitian-diet-plans/new?appointment_id=${selected.id}`)}
+                    >
+                      <i className="fa-solid fa-bowl-food" /> Create Diet Plan
                     </button>
                     <button className="ap-btn-outline ap-btn-outline--full">
                       <i className="fa-solid fa-paper-plane" /> Send Message

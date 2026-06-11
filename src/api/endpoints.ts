@@ -48,7 +48,8 @@ const ENDPOINTS = {
     failed:         '/appointments/failed',
     my:             '/appointments/my',
     dietitianList:  '/appointments/dietitian',
-    updateStatus:   '/appointments',           // used as /appointments/:id/status
+    single:         '/appointments',             // used as /appointments/:id
+    updateStatus:   '/appointments',             // used as /appointments/:id/status
     clientsList:    '/appointments/clients',
     dietitianSessions: '/appointments/dietitian/sessions',
     joinCall:          '/appointments',   // used as /appointments/:id/join-call
@@ -58,6 +59,10 @@ const ENDPOINTS = {
   },
   contact: {
     submit: '/contact',
+  },
+  dietitianDietPlan: {
+    list:   '/dietitian/diet-plans',
+    single: '/dietitian/diet-plans',  // used as /:id, /:id/generate, /:id/archive
   },
 } as const
 
