@@ -45,7 +45,7 @@ const ForDietitians = () => {
           </ul>
 
           <div className="fd-cta-row">
-            <button className="btn-primary fd-cta-btn" onClick={() => navigate('/join-as-dietitian')}>Join as Dietitian</button>
+            <button className="btn-primary fd-cta-btn" onClick={() => navigate('/for-dietitians/basic-info')}>Join as Dietitian</button>
             <button className="btn-outline fd-cta-btn" onClick={() => setLoginOpen(true)}>Login</button>
           </div>
           <p className="fd-free-note">

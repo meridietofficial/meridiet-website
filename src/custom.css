@@ -11610,7 +11610,7 @@
 @media (max-width: 900px) {
   .cd-body {
     flex-direction: column;
-    align-items: stretch;   /* ← key: children fill full width */
+    align-items: stretch;
     gap: 0;
     padding-top: 18px;
     padding-bottom: 36px;
@@ -11618,6 +11618,7 @@
 
   .cd-filter-toggle {
     display: flex;
+    justify-content: space-between;
     margin-bottom: 10px;
   }
 
@@ -11667,8 +11668,35 @@
     gap: 10px;
   }
 
+  /* Sort wrap becomes a styled card row matching the search box */
   .cd-sort-wrap {
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #e4ede8;
+    border-radius: 12px;
+    padding: 2px 4px 2px 14px;
+    box-shadow: 0 2px 8px rgba(16, 40, 28, 0.04);
+  }
+
+  .cd-sort-label {
+    font-size: 13px;
+    color: #6a7a71;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Remove the select's own card styling inside the wrapper */
+  .cd-sort-select {
+    border: none;
+    box-shadow: none;
+    background-color: transparent;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 8px;
+    flex: 1;
+    text-align: right;
   }
 }
 
@@ -11692,32 +11720,76 @@
     gap: 8px;
   }
 
+  .cd-hero-stats {
+    gap: 0;
+    flex-wrap: nowrap;
+  }
+
+  .cd-hero-stat {
+    padding-right: 12px;
+  }
+
+  .cd-hero-stat-val {
+    font-size: 1.1rem;
+  }
+
+  .cd-hero-stat-label {
+    font-size: 10px;
+  }
+
+  .cd-hero-stat-divider {
+    margin-right: 12px;
+  }
+
+
   .cd-badge {
     font-size: 12px;
   }
 
   .cd-hero-card {
-    padding: 14px 16px;
-    gap: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px 18px 18px;
+    gap: 0;
   }
 
   .cd-hero-card-info {
-    min-width: 0;         /* remove the 200px min on phone */
-    flex: 1;
+    min-width: 0;
+    width: 100%;
+    align-items: center;
   }
 
   .cd-hero-card-img {
-    width: 70px;
-    flex-shrink: 0;
+    display: none;
+  }
+
+  .cd-hero-card-title {
+    font-size: 16px;
+  }
+
+  .cd-hero-card-sub {
+    font-size: 12px;
+  }
+
+  .cd-hero-card-price-wrap {
+    width: 100%;
+    padding: 8px 0 6px;
+    margin: 12px 0 0;
   }
 
   .cd-hero-card-price {
-    font-size: 1.3rem;
+    font-size: 1.6rem;
+  }
+
+  .cd-hero-card-validity {
+    margin-bottom: 14px;
   }
 
   .cd-book-btn {
-    font-size: 12px;
-    padding: 8px 12px;
+    width: 100%;
+    font-size: 14px;
+    padding: 12px 16px;
+    border-radius: 10px;
   }
 
   .cd-cards {
@@ -11755,7 +11827,18 @@
   }
 
   .cd-tabs {
-    padding-bottom: 4px;
+    padding-bottom: 6px;
+    gap: 6px;
+  }
+
+  .cd-tab {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .cd-search-row {
+    gap: 8px;
+    margin-bottom: 12px;
   }
 
   .cd-trust-bar {
@@ -11766,17 +11849,6 @@
 
   .cd-trust-item {
     gap: 12px;
-  }
-
-  .cd-search-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    margin-bottom: 12px;
-  }
-
-  .cd-sort-wrap {
-    justify-content: flex-end;
   }
 }
 

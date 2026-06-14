@@ -1,10 +1,11 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
 import DietitianLayout from './components/DietitianLayout'
 import { VideoCallProvider, useVideoCall } from './context/VideoCallContext'
+import { trackPageView } from './utils/analytics'
 const VideoCallModal = lazy(() => import('./components/VideoCallModal'))
 
 const HomePage      = lazy(() => import('./pages/HomePage'))
@@ -18,6 +19,8 @@ const RefundPolicy  = lazy(() => import('./components/RefundPolicy'))
 const ContactUs       = lazy(() => import('./components/ContactUs'))
 const ForDietitians     = lazy(() => import('./pages/ForDietitians'))
 const JoinDietitian     = lazy(() => import('./pages/JoinDietitian'))
+const DietitianOnboarding = lazy(() => import('./pages/DietitianOnboarding'))
+const DietitianVerificationSubmitted = lazy(() => import('./pages/DietitianVerificationSubmitted'))
 const ConsultDietitian    = lazy(() => import('./pages/ConsultDietitian'))
 const DietitianProfile    = lazy(() => import('./pages/DietitianProfile'))
 const DietitianDashboard  = lazy(() => import('./pages/DietitianDashboard'))
@@ -51,7 +54,7 @@ function FormPage() {
 }
 
 const NO_NAVBAR_PREFIXES = ['/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
-const NO_FOOTER_PREFIXES = ['/form', '/join-as-dietitian', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
+const NO_FOOTER_PREFIXES = ['/form', '/join-as-dietitian', '/for-dietitians/basic-info', '/for-dietitians/qualification', '/for-dietitians/document-upload', '/dietitian/verification-submitted', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
 
 function ActiveVideoCall() {
   const { activeCall, clearCall } = useVideoCall()
@@ -65,6 +68,11 @@ function AppInner() {
   const openForm  = () => navigate('/form')
   const showNavbar = !NO_NAVBAR_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
   const showFooter = !NO_FOOTER_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
+
+  // Fire GA4 + Meta Pixel on every route change (SPA navigation fix)
+  useEffect(() => {
+    trackPageView(pathname)
+  }, [pathname])
 
   return (
     <>
@@ -84,9 +92,13 @@ function AppInner() {
           <Route path="/contact"              element={<main><ContactUs /></main>} />
           <Route path="/consult-dietitian"    element={<ConsultDietitian />} />
           <Route path="/dietitian/:id"        element={<DietitianProfile />} />
-          <Route path="/for-dietitians"       element={<ForDietitians />} />
-          <Route path="/join-as-dietitian"    element={<JoinDietitian />} />
-          <Route path="/reset-password"       element={<ResetPassword />} />
+          <Route path="/for-dietitians"                    element={<ForDietitians />} />
+          <Route path="/for-dietitians/basic-info"         element={<DietitianOnboarding />} />
+          <Route path="/for-dietitians/qualification"      element={<DietitianOnboarding />} />
+          <Route path="/for-dietitians/document-upload"    element={<DietitianOnboarding />} />
+          <Route path="/dietitian/verification-submitted"  element={<DietitianVerificationSubmitted />} />
+          <Route path="/join-as-dietitian"                 element={<JoinDietitian />} />
+          <Route path="/reset-password"                    element={<ResetPassword />} />
           <Route element={<DietitianLayout />}>
             <Route path="/dietitian-dashboard"               element={<DietitianDashboard />} />
             <Route path="/dietitian-profile"                 element={<DietitianMyProfile />} />
