@@ -10,7 +10,7 @@ import { mapStep1ToPayload, mapStep2ToPayload, mapStep3ToPayload, mapStep4ToPayl
 import { useToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from './AuthModal'
-import { trackEvent } from '../utils/analytics'
+import { trackEvent, trackInitiateCheckout, trackPurchase } from '../utils/analytics'
 
 const STEPS = [
   { label: 'Basic Details', sub: 'Tell us about yourself' },
@@ -1272,7 +1272,7 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
 
         // Track checkout intent before Razorpay opens
         navigate('/diet-plan/checkout', { replace: true })
-        trackEvent('InitiateCheckout', { plan: data.planType, value: amount, currency: currency ?? 'INR' })
+        trackInitiateCheckout(amount, currency ?? 'INR')
 
         const rzp = new window.Razorpay({
           key:         key_id,
@@ -1292,7 +1292,7 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
             try {
               await paymentApi.verify(rzpResponse)
               // Track confirmed purchase then show success
-              trackEvent('Purchase', { plan: data.planType, value: amount, currency: currency ?? 'INR' })
+              trackPurchase(amount, currency ?? 'INR')
               navigate('/diet-plan/success', { replace: true })
               setSubmitted(true)
             } catch (err) {

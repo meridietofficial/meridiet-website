@@ -61,6 +61,24 @@ export function trackEvent(eventName: string, params?: Record<string, unknown>) 
   }
 }
 
+export function trackInitiateCheckout(value: number, currency: string) {
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'begin_checkout', { value, currency })
+  }
+  if (window.fbq) {
+    window.fbq('track', 'InitiateCheckout', { value, currency })
+  }
+}
+
+export function trackPurchase(value: number, currency: string) {
+  if (typeof gtag !== 'undefined') {
+    gtag('event', 'purchase', { value, currency })
+  }
+  if (window.fbq) {
+    window.fbq('track', 'Purchase', { value, currency })
+  }
+}
+
 export function trackPageView(path: string) {
   const title = resolveTitle(path)
 
