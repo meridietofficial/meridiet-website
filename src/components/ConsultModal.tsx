@@ -5,6 +5,7 @@ import dietitianApi from '../api/dietitian'
 import appointmentApi from '../api/appointment'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from './AuthModal'
+import { trackPurchase } from '../utils/analytics'
 
 const SLOT_MINUTES = 30
 const PLAN_FEATURES = [
@@ -158,6 +159,7 @@ export default function ConsultModal({ dietitian, fee, onClose }: ConsultModalPr
               ? `${fmtTime(result.slot)} – ${fmtTime(slotObj.end)}`
               : fmtTime(result.slot)
             setConfirmedLabel(`${shortDate(result.appointment_date)} · ${slotDisplay}`)
+            trackPurchase(consultFee, 'INR')
             navigate('/consult-dietitian/success', { replace: true })
             setDone(true)
           } catch {
