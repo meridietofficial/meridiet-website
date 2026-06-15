@@ -1,6 +1,5 @@
 import apiClient from './client'
 import ENDPOINTS from './endpoints'
-import { mapFormToPayload } from './dietFormMapper'
 
 const PLAN_SLUG: Record<string, string> = {
   '1 Week':   '1_week',
@@ -29,23 +28,18 @@ export type FailedResponse = {
 }
 
 const paymentApi = {
-  createOrder: (planType: string) =>
+  createOrder: (planType: string, formId: number) =>
     apiClient.apiPost<CreateOrderResponse>(ENDPOINTS.payment.createOrder, {
-      plan: PLAN_SLUG[planType] ?? '1_month',
+      plan:         PLAN_SLUG[planType] ?? '1_month',
+      diet_form_id: formId,
     }),
 
-  verify: (
-    razorpayData: {
-      razorpay_order_id: string
-      razorpay_payment_id: string
-      razorpay_signature: string
-    },
-    formData: Record<string, unknown>,
-  ) =>
-    apiClient.apiPost<VerifyResponse>(ENDPOINTS.payment.verify, {
-      ...razorpayData,
-      ...mapFormToPayload(formData),
-    }),
+  verify: (razorpayData: {
+    razorpay_order_id: string
+    razorpay_payment_id: string
+    razorpay_signature: string
+  }) =>
+    apiClient.apiPost<VerifyResponse>(ENDPOINTS.payment.verify, razorpayData),
 
   failed: (orderId: string) =>
     apiClient.apiPost<FailedResponse>(ENDPOINTS.payment.failed, {

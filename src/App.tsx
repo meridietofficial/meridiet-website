@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from 'react'
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
@@ -54,7 +54,7 @@ function FormPage() {
 }
 
 const NO_NAVBAR_PREFIXES = ['/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
-const NO_FOOTER_PREFIXES = ['/form', '/join-as-dietitian', '/for-dietitians/basic-info', '/for-dietitians/qualification', '/for-dietitians/document-upload', '/dietitian/verification-submitted', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
+const NO_FOOTER_PREFIXES = ['/diet-plan', '/form', '/join-as-dietitian', '/for-dietitians/basic-info', '/for-dietitians/qualification', '/for-dietitians/document-upload', '/dietitian/verification-submitted', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
 
 function ActiveVideoCall() {
   const { activeCall, clearCall } = useVideoCall()
@@ -65,7 +65,7 @@ function ActiveVideoCall() {
 function AppInner() {
   const navigate  = useNavigate()
   const { pathname } = useLocation()
-  const openForm  = () => navigate('/form')
+  const openForm  = () => navigate('/diet-plan')
   const showNavbar = !NO_NAVBAR_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
   const showFooter = !NO_FOOTER_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
 
@@ -85,7 +85,8 @@ function AppInner() {
           <Route path="/about"                element={<main><AboutUs /></main>} />
           <Route path="/faq"                  element={<main><FAQ /></main>} />
           <Route path="/profile"              element={<UserProfile />} />
-          <Route path="/form"                 element={<FormPage />} />
+          <Route path="/diet-plan/*"            element={<FormPage />} />
+          <Route path="/form"                 element={<Navigate to="/diet-plan" replace />} />
           <Route path="/privacy-policy"       element={<main><PrivacyPolicy /></main>} />
           <Route path="/terms-conditions"     element={<main><TermsConditions /></main>} />
           <Route path="/refund-policy"        element={<main><RefundPolicy /></main>} />

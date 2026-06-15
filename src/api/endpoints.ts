@@ -7,8 +7,10 @@ const ENDPOINTS = {
     resetPassword:  '/auth/reset-password',
   },
   dietForm: {
-    submit: '/diet-form',
-    myAll:  '/diet-form/my/all',
+    create:  '/diet-form',            // POST   → create draft, returns form_id
+    update:  '/diet-form',            // PUT    /:id → save step fields
+    submit:  '/diet-form',            // POST   /:id/submit → finalize + trigger plan gen
+    myAll:   '/diet-form/my/all',
   },
   user: {
     profile:        '/user/profile',

@@ -1,11 +1,16 @@
 import apiClient from './client'
 import ENDPOINTS from './endpoints'
-import { mapFormToPayload } from './dietFormMapper'
 
 export type DietFormResponse = {
   success: true
   message: string
   data: Record<string, unknown>
+}
+
+export type DietFormCreateResponse = {
+  success: true
+  message: string
+  data: { id: number }
 }
 
 export type MyDietChart = {
@@ -35,11 +40,17 @@ export type MyDietChartsResponse = {
 }
 
 const dietFormApi = {
-  submit: (formData: Record<string, unknown>) =>
-    apiClient.apiPost<DietFormResponse>(
-      ENDPOINTS.dietForm.submit,
-      mapFormToPayload(formData),
-    ),
+  /* Step 1: POST /diet-form — create draft, returns form_id */
+  create: (payload: Record<string, unknown>) =>
+    apiClient.apiPost<DietFormCreateResponse>(ENDPOINTS.dietForm.create, payload),
+
+  /* Steps 2–4: PUT /diet-form/:id — partial save */
+  update: (formId: number, payload: Record<string, unknown>) =>
+    apiClient.apiPut<DietFormResponse>(`${ENDPOINTS.dietForm.update}/${formId}`, payload),
+
+  /* Step 5 final: POST /diet-form/:id/submit — triggers plan generation */
+  submitForm: (formId: number) =>
+    apiClient.apiPost<DietFormResponse>(`${ENDPOINTS.dietForm.submit}/${formId}/submit`),
 
   myAll: () =>
     apiClient.apiGet<MyDietChartsResponse>(ENDPOINTS.dietForm.myAll),

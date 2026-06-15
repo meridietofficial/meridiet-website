@@ -21,7 +21,15 @@ const PAGE_TITLES: Record<string, string> = {
   '/terms-conditions':                    'Terms & Conditions | MeriDiet',
   '/refund-policy':                       'Refund Policy | MeriDiet',
   '/profile':                             'My Profile | MeriDiet',
-  '/form':                                'Diet Plan Form | MeriDiet',
+  '/diet-plan':                           'Get Your AI Diet Plan | MeriDiet',
+  '/diet-plan/step-1':                    'Diet Plan – Basic Details | MeriDiet',
+  '/diet-plan/step-2':                    'Diet Plan – Lifestyle | MeriDiet',
+  '/diet-plan/step-3':                    'Diet Plan – Food Preferences | MeriDiet',
+  '/diet-plan/step-4':                    'Diet Plan – Health & Medical | MeriDiet',
+  '/diet-plan/step-5':                    'Diet Plan – Contact Details | MeriDiet',
+  '/diet-plan/checkout':                  'Diet Plan – Checkout | MeriDiet',
+  '/diet-plan/success':                   'Diet Plan – Order Confirmed | MeriDiet',
+  '/form':                                'Get Your AI Diet Plan | MeriDiet',
   '/reset-password':                      'Reset Password | MeriDiet',
 }
 

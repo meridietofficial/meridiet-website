@@ -133,7 +133,86 @@ function omitEmpty(val: unknown) {
   return val
 }
 
-// ── Main mapper ───────────────────────────────────────────────
+// ── Per-step mappers (step-by-step API) ──────────────────────
+
+export function mapStep1ToPayload(d: FormData) {
+  const p: Record<string, unknown> = {}
+  const s = (k: string, v: unknown) => { const val = omitEmpty(v); if (val !== undefined) p[k] = val }
+
+  s('full_name',   d.fullName)
+  s('age',         d.age ? Number(d.age) : undefined)
+  s('gender',      lookup(GENDER, String(d.gender ?? '')))
+  s('dob',         d.dob)
+  s('height_unit', lookup(HEIGHT_UNIT, String(d.heightUnit ?? '')))
+  s('height',      d.height ? Number(d.height) : undefined)
+  s('weight_unit', lookup(WEIGHT_UNIT, String(d.weightUnit ?? '')))
+  s('weight',      d.weight ? Number(d.weight) : undefined)
+  s('goals',       lookupArr(GOALS, (d.goals as string[]) ?? []))
+  s('plan_type',   d.planType ? PLAN_TYPE[String(d.planType)] : undefined)
+  s('email',       d.email)
+  s('whatsapp',    d.whatsapp
+    ? `+91${String(d.whatsapp).replace(/^\+91/, '')}`
+    : undefined)
+  return p
+}
+
+export function mapStep2ToPayload(d: FormData) {
+  const p: Record<string, unknown> = {}
+  const s = (k: string, v: unknown) => { const val = omitEmpty(v); if (val !== undefined) p[k] = val }
+
+  s('activity_level', lookup(ACTIVITY,     String(d.activityLevel ?? '')))
+  s('work_type',      lookup(WORK_TYPE,    String(d.workType      ?? '')))
+  s('workout_type',   lookup(WORKOUT_TYPE, String(d.workoutType   ?? '')))
+  return p
+}
+
+export function mapStep3ToPayload(d: FormData) {
+  const p: Record<string, unknown> = {}
+  const s = (k: string, v: unknown) => { const val = omitEmpty(v); if (val !== undefined) p[k] = val }
+
+  s('diet_type',          lookup(DIET_TYPE, String(d.dietType ?? '')))
+  s('cuisine_preference', (d.cuisinePreference as string[] | undefined)?.length
+    ? (d.cuisinePreference as string[]).map((v: string) => lookup(CUISINE, v))
+    : undefined)
+  s('food_allergies',  d.foodAllergies
+    ? [lookup(ALLERGIES, String(d.foodAllergies))]
+    : undefined)
+  s('foods_dislike',   d.foodsDislike)
+  s('favorite_foods',  d.favoriteFoods)
+  return p
+}
+
+export function mapStep4ToPayload(d: FormData) {
+  const p: Record<string, unknown> = {}
+  const s = (k: string, v: unknown) => { const val = omitEmpty(v); if (val !== undefined) p[k] = val }
+
+  s('medical_conditions', (d.medicalConditions as string[] ?? [])
+    .filter(v => v !== 'Other')
+    .map(v => v.toLowerCase().replace(/[\s\/]+/g, '_')))
+  s('other_condition',  d.otherCondition)
+  s('on_medication',    lookup(ON_MEDICATION, String(d.onMedication   ?? '')))
+  s('medications',      d.medications)
+  s('digestive_health', lookup(DIGESTIVE,     String(d.digestiveHealth ?? '')))
+  s('smoke_alcohol',    lookup(SMOKE_ALCOHOL, String(d.smokeAlcohol   ?? '')))
+  s('health_notes',     d.healthNotes)
+  return p
+}
+
+export function mapStep5ToPayload(d: FormData) {
+  const p: Record<string, unknown> = {}
+  const s = (k: string, v: unknown) => { const val = omitEmpty(v); if (val !== undefined) p[k] = val }
+
+  s('plan_type',       d.planType ? PLAN_TYPE[String(d.planType)] : undefined)
+  s('contact_name',    d.contactName)
+  s('delivery_method', lookupArr(DELIVERY_METHOD, (d.deliveryMethod as string[]) ?? []))
+  s('city',            d.city)
+  s('state',           d.state)
+  s('state_code',      d.stateCode)
+  s('final_notes',     d.finalNotes)
+  return p
+}
+
+// ── Main mapper (kept for backward compatibility) ─────────────
 
 export function mapFormToPayload(d: FormData) {
   const payload: Record<string, unknown> = {}

@@ -1,12 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { IN_STATES } from '../data/indiaCities'
 import DatePicker from './DatePicker'
 import SearchableSelect from './SearchableSelect'
 import { ApiError } from '../api/client'
 import paymentApi from '../api/payment'
+import dietFormApi from '../api/dietForm'
+import { mapStep1ToPayload, mapStep2ToPayload, mapStep3ToPayload, mapStep4ToPayload, mapStep5ToPayload } from '../api/dietFormMapper'
 import { useToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from './AuthModal'
+import { trackEvent } from '../utils/analytics'
 
 const STEPS = [
   { label: 'Basic Details', sub: 'Tell us about yourself' },
@@ -210,6 +214,47 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
       </div>
     </div>
 
+    {/* ── Contact info (collected early so plan can be emailed) ── */}
+    <div className="df-grid-2">
+      <div className="df-field">
+        <label className="df-label">
+          Mobile Number <span className="df-opt">(Optional)</span>
+        </label>
+        <div className="df-phone-row">
+          <select className="df-phone-code"><option>+91</option></select>
+          <div className={`df-input-wrap${err.whatsapp ? ' df-input-wrap--err' : ''}`} style={{ flex: 1 }}>
+            <span className="df-icon">📱</span>
+            <input
+              className="df-input"
+              type="tel"
+              placeholder="10-digit number"
+              maxLength={10}
+              value={d.whatsapp}
+              onChange={(e) => set('whatsapp', e.target.value.replace(/\D/g, ''))}
+            />
+          </div>
+        </div>
+        <FieldErr msg={err.whatsapp} />
+      </div>
+
+      <div className="df-field">
+        <label className="df-label">
+          Email Address <span className="df-req">*</span> <span className="df-opt">(diet plan sent here)</span>
+        </label>
+        <div className={`df-input-wrap${err.email ? ' df-input-wrap--err' : ''}`}>
+          <span className="df-icon">📧</span>
+          <input
+            className="df-input"
+            type="email"
+            placeholder="Enter your email address"
+            value={d.email}
+            onChange={(e) => set('email', e.target.value)}
+          />
+        </div>
+        <FieldErr msg={err.email} />
+      </div>
+    </div>
+
     <div className="df-grid-2">
       <div className="df-field">
         <label className="df-label">
@@ -316,6 +361,7 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
       </div>
       <FieldErr msg={err.goals} />
     </div>
+
   </div>
   )
 }
@@ -1127,7 +1173,11 @@ function validateStep(s: number, d: FormData): Errors {
       if (d.weightUnit === 'kg'  && (w < 1 || w > 300)) e.weight = 'Weight must be between 1 and 300 kg'
       if (d.weightUnit === 'lbs' && (w < 1 || w > 660)) e.weight = 'Weight must be between 1 and 660 lbs'
     }
-    if (d.goals.length === 0) e.goals = 'Please select at least one goal'
+    if (d.goals.length === 0)   e.goals = 'Please select at least one goal'
+    if (!d.email.trim())        e.email = 'Email address is required'
+    else if (!/\S+@\S+\.\S+/.test(d.email)) e.email = 'Please enter a valid email address'
+    if (d.whatsapp.trim() && !/^\d{10}$/.test(d.whatsapp.replace(/\s|-/g, '')))
+      e.whatsapp = 'Enter a valid 10-digit number'
   }
   if (s === 2) {
     if (!d.activityLevel) e.activityLevel = 'Please select your activity level'
@@ -1144,15 +1194,10 @@ function validateStep(s: number, d: FormData): Errors {
     if (!d.smokeAlcohol)                  e.smokeAlcohol      = 'Please select an option'
   }
   if (s === 5) {
-    const methods = d.deliveryMethod as string[]
-    if (!d.planType) e.planType = 'Please select a plan'
+    if (!d.planType)           e.planType    = 'Please select a plan'
     if (!d.contactName.trim()) e.contactName = 'Contact name is required'
-    if (d.whatsapp.trim() && !/^\d{10}$/.test(d.whatsapp.replace(/\s|-/g, ''))) {
-      e.whatsapp = 'Enter a valid 10-digit number'
-    }
-    if (methods.includes('email') && !d.email.trim()) e.email = 'Email address is required'
-    if (!d.city)  e.city  = 'Please select your city'
-    if (!d.state) e.state = 'Please select your state'
+    if (!d.city)               e.city        = 'Please select your city'
+    if (!d.state)              e.state       = 'Please select your state'
   }
   return e
 }
@@ -1160,6 +1205,7 @@ function validateStep(s: number, d: FormData): Errors {
 const DietForm = ({ onClose }: { onClose: () => void }) => {
   const { showToast } = useToast()
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [step, setStep] = useState(1)
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
   const [data, setData] = useState<FormData>(INIT)
@@ -1167,12 +1213,19 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [showAuthGate, setShowAuthGate] = useState(false)
+  const [formId, setFormId] = useState<number | null>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
+    navigate('/diet-plan/step-1', { replace: true })
     return () => { document.body.style.overflow = '' }
   }, [])
+
+  // Push step URL so every step is tracked as a separate page view
+  useEffect(() => {
+    navigate(`/diet-plan/step-${step}`, { replace: true })
+  }, [step])
 
   // Auto-fill contact name from step 1 whenever fullName changes
   useEffect(() => {
@@ -1187,8 +1240,8 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
       setData(p => ({
         ...p,
         ...(user.full_name    && !p.fullName  ? { fullName: user.full_name, contactName: user.full_name } : {}),
-        ...(user.phone_number && !p.whatsapp  ? { whatsapp: user.phone_number } : {}),
-        ...(user.email        && !p.email     ? { email: user.email }           : {}),
+        ...(user.phone_number && !p.whatsapp  ? { whatsapp: user.phone_number.replace(/^\+91/, '') } : {}),
+        ...(user.email        && !p.email     ? { email: user.email } : {}),
       }))
     }
   }, [])
@@ -1212,58 +1265,88 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
     set(k, arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v])
   }
 
-  const handlePayAndSubmit = async () => {
+  const openRazorpay = (currentFormId: number) => {
+    paymentApi.createOrder(data.planType, currentFormId)
+      .then(orderRes => {
+        const { order_id, key_id, amount, currency } = orderRes.data
+
+        // Track checkout intent before Razorpay opens
+        navigate('/diet-plan/checkout', { replace: true })
+        trackEvent('InitiateCheckout', { plan: data.planType, value: amount, currency: currency ?? 'INR' })
+
+        const rzp = new window.Razorpay({
+          key:         key_id,
+          amount:      amount * 100,
+          currency:    currency ?? 'INR',
+          order_id,
+          name:        'MeriDiet',
+          description: `${data.planType} Diet Plan`,
+          image:       '/logo.png',
+          prefill: {
+            name:    data.contactName || data.fullName,
+            email:   data.email,
+            contact: data.whatsapp ? `+91${data.whatsapp}` : '',
+          },
+          theme: { color: '#006B28' },
+          handler: async (rzpResponse: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+            try {
+              await paymentApi.verify(rzpResponse)
+              // Track confirmed purchase then show success
+              trackEvent('Purchase', { plan: data.planType, value: amount, currency: currency ?? 'INR' })
+              navigate('/diet-plan/success', { replace: true })
+              setSubmitted(true)
+            } catch (err) {
+              showToast(
+                err instanceof ApiError ? err.message : 'Payment verification failed. Please contact support.',
+                'error',
+              )
+            } finally {
+              setSubmitting(false)
+            }
+          },
+          modal: {
+            ondismiss: async () => {
+              try { await paymentApi.failed(order_id) } catch { /* ignore */ }
+              showToast('Payment cancelled. Your form details are saved — try again anytime.', 'error')
+              navigate('/diet-plan', { replace: true })
+              setSubmitting(false)
+            },
+          },
+        })
+        rzp.open()
+      })
+      .catch(err => {
+        showToast(
+          err instanceof ApiError ? err.message : 'Could not initiate payment. Please try again.',
+          'error',
+        )
+        setSubmitting(false)
+      })
+  }
+
+  const handlePayAndSubmit = async (currentFormId: number) => {
     setSubmitting(true)
     try {
-      const orderRes = await paymentApi.createOrder(data.planType)
-      const { order_id, key_id, amount, currency } = orderRes.data
-
-      const rzp = new window.Razorpay({
-        key:         key_id,
-        amount:      amount * 100,
-        currency:    currency ?? 'INR',
-        order_id,
-        name:        'MeriDiet',
-        description: `${data.planType} Diet Plan`,
-        image:       '/logo.png',
-        prefill: {
-          name:    data.contactName || data.fullName,
-          email:   data.email,
-          contact: data.whatsapp ? `+91${data.whatsapp}` : '',
-        },
-        theme: { color: '#006B28' },
-        handler: async (rzpResponse) => {
-          try {
-            await paymentApi.verify(rzpResponse, data as unknown as Record<string, unknown>)
-            setSubmitted(true)
-          } catch (err) {
-            showToast(
-              err instanceof ApiError ? err.message : 'Payment verification failed. Please contact support.',
-              'error',
-            )
-          } finally {
-            setSubmitting(false)
-          }
-        },
-        modal: {
-          ondismiss: async () => {
-            try { await paymentApi.failed(order_id) } catch { /* ignore */ }
-            showToast('Payment cancelled. Your form details are saved — try again anytime.', 'error')
-            setSubmitting(false)
-          },
-        },
-      })
-      rzp.open()
+      // Save step 5 data
+      await dietFormApi.update(currentFormId, mapStep5ToPayload(data as unknown as Record<string, unknown>))
+      // Open Razorpay — plan generation triggers automatically after payment/verify on the backend
+      openRazorpay(currentFormId)
     } catch (err) {
       showToast(
-        err instanceof ApiError ? err.message : 'Could not initiate payment. Please try again.',
+        err instanceof ApiError ? err.message : 'Could not submit form. Please try again.',
         'error',
       )
       setSubmitting(false)
     }
   }
 
-  const go = (n: number) => {
+  const STEP_MAPPERS: Record<number, (d: Record<string, unknown>) => Record<string, unknown>> = {
+    2: mapStep2ToPayload,
+    3: mapStep3ToPayload,
+    4: mapStep4ToPayload,
+  }
+
+  const go = async (n: number) => {
     if (n > step) {
       const e = validateStep(step, data)
       if (Object.keys(e).length > 0) {
@@ -1271,7 +1354,36 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
         overlayRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
+
+      // Step 1 → 2: create draft if not yet created, otherwise update existing entry
+      if (step === 1) {
+        setSubmitting(true)
+        try {
+          const payload = mapStep1ToPayload(data as unknown as Record<string, unknown>)
+          if (formId) {
+            await dietFormApi.update(formId, payload)
+          } else {
+            const res = await dietFormApi.create(payload)
+            setFormId(res.data.id)
+          }
+        } catch (err) {
+          showToast(
+            err instanceof ApiError ? err.message : 'Could not save your details. Please try again.',
+            'error',
+          )
+          setSubmitting(false)
+          return
+        }
+        setSubmitting(false)
+      }
+
+      // Steps 2–4 → next: save this step's data (best-effort, don't block navigation)
+      if (step >= 2 && step <= 4 && formId !== null) {
+        dietFormApi.update(formId, STEP_MAPPERS[step](data as unknown as Record<string, unknown>))
+          .catch(() => { /* silent: data is still in React state and saved on final submit */ })
+      }
     }
+
     setErrors({})
     setDirection(n > step ? 'forward' : 'backward')
     setStep(n)
@@ -1344,7 +1456,7 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
               </button>
               {step < 5 ? (
                 <button className="btn-primary df-next-btn" onClick={() => go(step + 1)}>
-                  Next Step →
+                  Save &amp; Next →
                 </button>
               ) : (
                 <button
@@ -1354,7 +1466,11 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
                     const e = validateStep(5, data)
                     if (Object.keys(e).length > 0) { setErrors(e); return }
                     if (!user) { setShowAuthGate(true); return }
-                    handlePayAndSubmit()
+                    if (!formId) {
+                      showToast('Something went wrong. Please go back to Step 1 and try again.', 'error')
+                      return
+                    }
+                    handlePayAndSubmit(formId)
                   }}
                 >
                   {submitting ? 'Processing…' : 'Proceed to Payment →'}
@@ -1376,7 +1492,10 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
           prefillName={data.contactName || data.fullName}
           prefillEmail={data.email}
           prefillPhone={data.whatsapp}
-          onAuthSuccess={handlePayAndSubmit}
+          onAuthSuccess={() => {
+            setShowAuthGate(false)
+            if (formId) handlePayAndSubmit(formId)
+          }}
         />
       )}
 
