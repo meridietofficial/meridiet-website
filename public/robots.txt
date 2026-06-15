@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Block private/dashboard routes
+Disallow: /dietitian-dashboard
+Disallow: /dietitian-profile
+Disallow: /dietitian-consultation-requests
+Disallow: /dietitian-my-clients
+Disallow: /dietitian-appointments
+Disallow: /dietitian-diet-plans
+Disallow: /dietitian-chat
+Disallow: /dietitian-follow-ups
+Disallow: /dietitian-reports
+Disallow: /dietitian-earnings
+Disallow: /dietitian-wallet
+Disallow: /dietitian-reviews
+Disallow: /dietitian-settings
+Disallow: /profile
+Disallow: /reset-password
+
+Sitemap: https://meridiet.com/sitemap.xml

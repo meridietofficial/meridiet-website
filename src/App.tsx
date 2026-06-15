@@ -48,9 +48,23 @@ function PageLoader() {
   )
 }
 
+const SEO = lazy(() => import('./components/SEO'))
+
 function FormPage() {
   const navigate = useNavigate()
-  return <DietForm onClose={() => navigate('/')} />
+  return (
+    <>
+      <Suspense fallback={null}>
+        <SEO
+          title="AI Diet Plan Generator | Personalized Indian Diet Chart"
+          description="Generate your personalized AI diet plan in minutes. Tailored for your body, goals, medical conditions, and Indian cuisine preferences. Plans from ₹499."
+          keywords="AI diet plan generator, personalized diet chart India, custom diet plan online, Indian diet plan, diet chart for weight loss, AI nutrition plan India, online diet form"
+          canonical="/diet-plan"
+        />
+      </Suspense>
+      <DietForm onClose={() => navigate('/')} />
+    </>
+  )
 }
 
 const NO_NAVBAR_PREFIXES = ['/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
@@ -91,7 +105,8 @@ function AppInner() {
           <Route path="/terms-conditions"     element={<main><TermsConditions /></main>} />
           <Route path="/refund-policy"        element={<main><RefundPolicy /></main>} />
           <Route path="/contact"              element={<main><ContactUs /></main>} />
-          <Route path="/consult-dietitian"    element={<ConsultDietitian />} />
+          <Route path="/consult-dietitian"         element={<ConsultDietitian />} />
+          <Route path="/consult-dietitian/success" element={<ConsultDietitian />} />
           <Route path="/dietitian/:id"        element={<DietitianProfile />} />
           <Route path="/for-dietitians"                    element={<ForDietitians />} />
           <Route path="/for-dietitians/basic-info"         element={<DietitianOnboarding />} />

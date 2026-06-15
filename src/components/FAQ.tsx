@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, HelpCircle } from 'lucide-react'
+import SEO from './SEO'
 
 const faqs = [
   {
@@ -89,6 +90,23 @@ const FAQ = () => {
 
   return (
     <section className="faq-section" id="faq">
+      <SEO
+        title="FAQ – Diet Plans & Online Dietitian Consultations"
+        description="Have questions about MeriDiet's AI diet plans, dietitian consultations, pricing, or delivery? Find all answers in our FAQ."
+        keywords="MeriDiet FAQ, diet plan questions, online dietitian FAQ, diet chart India questions, nutrition plan help"
+        canonical="/faq"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: [
+            { '@type': 'Question', name: 'What is MeriDiet?', acceptedAnswer: { '@type': 'Answer', text: "MeriDiet is India's personalized diet plan platform. You fill a short health assessment and receive a complete Indian diet plan tailored to your body, goals, and food preferences." } },
+            { '@type': 'Question', name: 'How long does it take to get my plan?', acceptedAnswer: { '@type': 'Answer', text: 'The entire process takes under 3 minutes. Once you submit your assessment, your personalized plan is delivered within a few hours.' } },
+            { '@type': 'Question', name: 'What are the pricing plans?', acceptedAnswer: { '@type': 'Answer', text: 'We offer three plans: ₹199 for a 1-week plan, ₹499 for a 1-month plan (most popular), and ₹3,999 for an annual plan.' } },
+            { '@type': 'Question', name: 'Can I get a plan for a specific health condition?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. We create plans for diabetes, PCOS, thyroid issues, heart health, weight loss, muscle gain, and more.' } },
+            { '@type': 'Question', name: 'Do you offer refunds?', acceptedAnswer: { '@type': 'Answer', text: "If you're not satisfied, contact us within 24 hours and we'll revise your plan free of charge or issue a full refund." } },
+          ],
+        }}
+      />
       <div className="container">
 
         <div className="faq-header">

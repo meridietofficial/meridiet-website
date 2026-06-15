@@ -15,12 +15,28 @@ const WHY_CARDS = [
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthModal from '../components/AuthModal'
+import SEO from '../components/SEO'
 
 const ForDietitians = () => {
   const navigate = useNavigate()
   const [loginOpen, setLoginOpen] = useState(false)
   return (
   <main className="fd-page">
+    <SEO
+      title="Join MeriDiet as a Dietitian | Grow Your Online Practice"
+      description="Are you a dietitian or nutritionist? Join MeriDiet to connect with thousands of clients seeking personalized diet plans. Build your online practice and earn more."
+      keywords="join as dietitian India, online dietitian platform, nutritionist jobs India, dietitian registration, grow dietitian practice online, diet consultation platform India"
+      canonical="/for-dietitians"
+      jsonLd={{
+        '@context': 'https://schema.org',
+        '@type': 'JobPosting',
+        title: 'Online Dietitian / Nutritionist',
+        description: 'Join MeriDiet as a verified dietitian. Connect with clients across India, provide online consultations, and grow your nutrition practice.',
+        hiringOrganization: { '@type': 'Organization', name: 'MeriDiet', sameAs: 'https://meridiet.com' },
+        jobLocation: { '@type': 'Place', address: { '@type': 'PostalAddress', addressCountry: 'IN' } },
+        employmentType: 'CONTRACTOR',
+      }}
+    />
 
     {/* ── Hero ── */}
     <section className="fd-hero">

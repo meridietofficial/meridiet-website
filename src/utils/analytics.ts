@@ -11,6 +11,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/faq':                                 'FAQ | MeriDiet',
   '/contact':                             'Contact Us | MeriDiet',
   '/consult-dietitian':                   'Consult a Dietitian Online | MeriDiet',
+  '/consult-dietitian/success':           'Consultation Booked – Thank You | MeriDiet',
   '/for-dietitians':                      'For Dietitians | MeriDiet',
   '/for-dietitians/basic-info':           'Join as Dietitian – Basic Info | MeriDiet',
   '/for-dietitians/qualification':        'Join as Dietitian – Qualifications | MeriDiet',

@@ -1,6 +1,7 @@
 import { StrictMode, Component, type ReactNode, type ErrorInfo } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { HelmetProvider } from 'react-helmet-async'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import './global.css'
 import './custom.css'
@@ -33,15 +34,17 @@ class RootErrorBoundary extends Component<{ children: ReactNode }, { crashed: bo
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <RootErrorBoundary>
-      <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''}>
-        <BrowserRouter>
-          <AuthProvider>
-            <ToastProvider>
-              <App />
-            </ToastProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </GoogleOAuthProvider>
+      <HelmetProvider>
+        <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID ?? ''}>
+          <BrowserRouter>
+            <AuthProvider>
+              <ToastProvider>
+                <App />
+              </ToastProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </GoogleOAuthProvider>
+      </HelmetProvider>
     </RootErrorBoundary>
   </StrictMode>,
 )

@@ -1,4 +1,5 @@
 import { FlaskConical, Leaf, IndianRupee, HeartHandshake } from 'lucide-react'
+import SEO from './SEO'
 
 const values = [
   {
@@ -50,6 +51,12 @@ const founder = {
 const AboutUs = () => {
   return (
     <section className="about-section" id="about">
+      <SEO
+        title="About MeriDiet – India's AI Diet Plan & Nutrition Platform"
+        description="MeriDiet is India's leading platform for AI-powered personalized diet plans and online dietitian consultations. Science-backed nutrition made affordable for every Indian."
+        keywords="about MeriDiet, Indian diet platform, AI nutrition India, personalized diet India, online dietitian platform India"
+        canonical="/about"
+      />
       <div className="container">
 
         {/* ── Header ── */}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { DietitianCard } from '../api/dietitian'
 import dietitianApi from '../api/dietitian'
 import appointmentApi from '../api/appointment'
@@ -74,6 +75,7 @@ type ConsultModalProps = {
 
 export default function ConsultModal({ dietitian, fee, onClose }: ConsultModalProps) {
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   // Fetch fresh detail data on open so booked_slots & available_dates are always current
   const [fullData, setFullData] = useState<DietitianCard>(dietitian)
@@ -86,7 +88,7 @@ export default function ConsultModal({ dietitian, fee, onClose }: ConsultModalPr
       .catch(() => { setFullData(dietitian); setLoadingData(false) })
   }, [dietitian.id])
 
-  const consultFee = (fullData.fee != null && fullData.fee > 0) ? fullData.fee : fee
+  const consultFee = fullData.appointment_fee ?? fullData.fee ?? fee
   const dates = fullData.available_dates ?? []
 
 
@@ -156,6 +158,7 @@ export default function ConsultModal({ dietitian, fee, onClose }: ConsultModalPr
               ? `${fmtTime(result.slot)} – ${fmtTime(slotObj.end)}`
               : fmtTime(result.slot)
             setConfirmedLabel(`${shortDate(result.appointment_date)} · ${slotDisplay}`)
+            navigate('/consult-dietitian/success', { replace: true })
             setDone(true)
           } catch {
             setError('Payment received but confirmation failed. Please contact support.')

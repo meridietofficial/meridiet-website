@@ -10,6 +10,7 @@ import dietitianApi, {
 import ConsultModal from '../components/ConsultModal'
 import SearchableSelect from '../components/SearchableSelect'
 import { IN_STATES, getCitiesOfState } from '../data/indiaCities'
+import SEO from '../components/SEO'
 
 const ALL_CATEGORY = 'All Dietitians'
 const CONSULT_FEE = 0
@@ -187,6 +188,24 @@ export default function ConsultDietitian() {
 
   return (
     <main className="cd-page">
+      <SEO
+        title="Consult a Dietitian Online | Expert Nutrition Advice"
+        description="Book a 1-on-1 online consultation with verified Indian dietitians. Get expert diet advice for weight loss, PCOS, diabetes, thyroid & muscle gain. Book your slot now."
+        keywords="consult dietitian online India, online nutritionist India, book dietitian appointment, nutrition consultation India, diet consultation online, best dietitian India, online diet advice"
+        canonical="/consult-dietitian"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'MedicalBusiness',
+          name: 'MeriDiet – Online Dietitian Consultation',
+          url: 'https://meridiet.com/consult-dietitian',
+          description: 'Book 1-on-1 online consultations with verified Indian dietitians for weight loss, PCOS, diabetes and more.',
+          areaServed: 'IN',
+          availableService: {
+            '@type': 'MedicalTherapy',
+            name: 'Online Dietitian Consultation',
+          },
+        }}
+      />
 
       {/* ── Hero ── */}
       <section className="cd-hero">
@@ -558,7 +577,7 @@ export default function ConsultDietitian() {
       </div>
 
       {consulting && (
-        <ConsultModal dietitian={consulting} fee={CONSULT_FEE} onClose={() => setConsulting(null)} />
+        <ConsultModal dietitian={consulting} fee={consulting.appointment_fee ?? 0} onClose={() => setConsulting(null)} />
       )}
     </main>
   )
