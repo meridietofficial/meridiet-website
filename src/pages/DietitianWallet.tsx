@@ -1,56 +1,83 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import earningsApi, { WalletTransaction, WalletOverview } from '../api/earnings'
+import accountsApi, { LinkedAccount } from '../api/accounts'
 
 type TxTab = 'all' | 'credits' | 'debits'
 
-const TRANSACTIONS = [
-  { id: 1,  name: 'Anjali Singh',   plan: '3-Month Weight Loss',       amount: 4500,  type: 'credit', method: 'UPI',         date: 'Jun 6, 2026',  invoice: 'INV-1042', status: 'completed' },
-  { id: 2,  name: 'Rohan Mehta',    plan: '1-Month Muscle Gain',        amount: 1800,  type: 'credit', method: 'Card',        date: 'Jun 5, 2026',  invoice: 'INV-1041', status: 'completed' },
-  { id: 3,  name: 'Bank Withdrawal',plan: 'HDFC Bank ••••4521',         amount: 15000, type: 'debit',  method: 'Bank',        date: 'Jun 4, 2026',  invoice: 'WD-0089',  status: 'completed' },
-  { id: 4,  name: 'Sneha Iyer',     plan: '6-Month PCOS Program',       amount: 8400,  type: 'credit', method: 'UPI',         date: 'Jun 3, 2026',  invoice: 'INV-1040', status: 'completed' },
-  { id: 5,  name: 'Vikram Singh',   plan: '1-Month Consultation',       amount: 1200,  type: 'credit', method: 'Net Banking', date: 'Jun 2, 2026',  invoice: 'INV-1039', status: 'completed' },
-  { id: 6,  name: 'Platform Fee',   plan: 'June 2026 commission',       amount: 1320,  type: 'debit',  method: 'Auto-debit',  date: 'Jun 1, 2026',  invoice: 'FEE-0210', status: 'completed' },
-  { id: 7,  name: 'Priya Sharma',   plan: '3-Month Diabetes Mgmt',      amount: 3600,  type: 'credit', method: 'UPI',         date: 'May 31, 2026', invoice: 'INV-1038', status: 'completed' },
-  { id: 8,  name: 'Arjun Kapoor',   plan: '6-Month Sports Nutrition',   amount: 9000,  type: 'credit', method: 'Card',        date: 'May 29, 2026', invoice: 'INV-1037', status: 'completed' },
-  { id: 9,  name: 'Bank Withdrawal',plan: 'HDFC Bank ••••4521',         amount: 20000, type: 'debit',  method: 'Bank',        date: 'May 25, 2026', invoice: 'WD-0088',  status: 'completed' },
-  { id: 10, name: 'Meera Joshi',    plan: '1-Month Basic Plan',         amount: 900,   type: 'credit', method: 'UPI',         date: 'May 22, 2026', invoice: 'INV-1036', status: 'pending'   },
-]
+function formatINR(amount: number) {
+  return '₹' + amount.toLocaleString('en-IN')
+}
 
-const LINKED_ACCOUNTS = [
-  { id: 1, type: 'bank',  label: 'HDFC Bank',    detail: 'Savings ••••4521', icon: 'fa-solid fa-building-columns', primary: true  },
-  { id: 2, type: 'upi',   label: 'Google Pay',   detail: 'dr.priya@okhdfc',  icon: 'fa-solid fa-mobile-screen',    primary: false },
-  { id: 3, type: 'upi',   label: 'PhonePe',      detail: 'dr.priya@ybl',     icon: 'fa-solid fa-mobile-screen',    primary: false },
-]
+function formatDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+  } catch { return iso }
+}
 
-const METHOD_ICON: Record<string, string> = {
-  'UPI':         'fa-solid fa-mobile-screen',
-  'Card':        'fa-solid fa-credit-card',
-  'Bank':        'fa-solid fa-building-columns',
-  'Net Banking': 'fa-solid fa-globe',
-  'Auto-debit':  'fa-solid fa-rotate',
+function formatSource(source: string) {
+  return source.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
 }
 
 export default function DietitianWallet() {
   const [tab, setTab]       = useState<TxTab>('all')
   const [search, setSearch] = useState('')
-  const [showAdd, setShowAdd]      = useState(false)
+  const [showAdd, setShowAdd]           = useState(false)
   const [showWithdraw, setShowWithdraw] = useState(false)
   const [withdrawAmt, setWithdrawAmt]   = useState('')
   const [addAmt, setAddAmt]             = useState('')
 
-  const balance    = 12_840
-  const pending    = 900
-  const thisMonth  = 28_200
-  const withdrawn  = 35_000
+  const [overview, setOverview]             = useState<WalletOverview | null>(null)
+  const [overviewLoading, setOverviewLoading] = useState(true)
 
-  const filtered = TRANSACTIONS.filter(t => {
+  // Linked accounts state
+  const [accounts, setAccounts]               = useState<LinkedAccount[]>([])
+  const [accountsLoading, setAccountsLoading] = useState(true)
+
+  const [transactions, setTransactions]     = useState<WalletTransaction[]>([])
+  const [total, setTotal]                   = useState(0)
+  const [page, setPage]                     = useState(1)
+  const [totalPages, setTotalPages]         = useState(1)
+  const [loading, setLoading]               = useState(true)
+  const [loadingMore, setLoadingMore]       = useState(false)
+
+  useEffect(() => {
+    setAccountsLoading(true)
+    accountsApi.getAccounts()
+      .then(data => setAccounts(data))
+      .catch(() => {})
+      .finally(() => setAccountsLoading(false))
+  }, [])
+
+  useEffect(() => {
+    setOverviewLoading(true)
+    earningsApi.getWalletOverview()
+      .then(data => setOverview(data))
+      .catch(() => {})
+      .finally(() => setOverviewLoading(false))
+  }, [])
+
+  useEffect(() => {
+    if (page === 1) setLoading(true)
+    else setLoadingMore(true)
+    earningsApi.getWalletTransactions({ page, limit: 10 })
+      .then(res => {
+        setTotal(res.data.total)
+        setTotalPages(res.meta.totalPages)
+        setTransactions(prev => page === 1 ? res.data.transactions : [...prev, ...res.data.transactions])
+      })
+      .catch(() => {})
+      .finally(() => { setLoading(false); setLoadingMore(false) })
+  }, [page])
+
+  const filtered = transactions.filter(t => {
     if (tab === 'credits' && t.type !== 'credit') return false
     if (tab === 'debits'  && t.type !== 'debit')  return false
     const q = search.toLowerCase()
-    return !q || t.name.toLowerCase().includes(q) || t.plan.toLowerCase().includes(q) || t.invoice.toLowerCase().includes(q)
+    return !q || t.description.toLowerCase().includes(q) || t.source.toLowerCase().includes(q)
   })
 
-  const credits = TRANSACTIONS.filter(t => t.type === 'credit')
-  const debits  = TRANSACTIONS.filter(t => t.type === 'debit')
+  const creditCount = transactions.filter(t => t.type === 'credit').length
+  const debitCount  = transactions.filter(t => t.type === 'debit').length
 
   return (
     <div className="wa-root">
@@ -79,7 +106,9 @@ export default function DietitianWallet() {
           <div className="wa-balance-top">
             <div>
               <p className="wa-balance-label">Available Balance</p>
-              <p className="wa-balance-amount">₹{balance.toLocaleString('en-IN')}</p>
+              <p className="wa-balance-amount">
+                {overviewLoading ? <span className="ea-kpi-skel" style={{ width: 120, height: 28, display: 'inline-block' }} /> : formatINR(overview?.available_balance ?? 0)}
+              </p>
               <p className="wa-balance-note"><i className="fa-solid fa-shield-halved" /> Secured by MeriDiet Pay</p>
             </div>
             <div className="wa-balance-icon">
@@ -115,7 +144,9 @@ export default function DietitianWallet() {
             <div className="wa-kpi-icon wa-kpi-icon--orange"><i className="fa-solid fa-hourglass-half" /></div>
             <div>
               <p className="wa-kpi-label">Pending Payout</p>
-              <p className="wa-kpi-val">₹{pending.toLocaleString('en-IN')}</p>
+              <p className="wa-kpi-val">
+                {overviewLoading ? <span className="ea-kpi-skel" style={{ width: 80, height: 20, display: 'inline-block' }} /> : formatINR(overview?.pending_payout ?? 0)}
+              </p>
               <p className="wa-kpi-sub">Clears in 2 days</p>
             </div>
           </div>
@@ -123,16 +154,26 @@ export default function DietitianWallet() {
             <div className="wa-kpi-icon wa-kpi-icon--blue"><i className="fa-solid fa-calendar-day" /></div>
             <div>
               <p className="wa-kpi-label">Earned This Month</p>
-              <p className="wa-kpi-val">₹{thisMonth.toLocaleString('en-IN')}</p>
-              <p className="wa-kpi-sub wa-sub--up">↗ 14% vs last month</p>
+              <p className="wa-kpi-val">
+                {overviewLoading ? <span className="ea-kpi-skel" style={{ width: 80, height: 20, display: 'inline-block' }} /> : formatINR(overview?.earned_this_month ?? 0)}
+              </p>
+              {!overviewLoading && overview && (
+                overview.earned_this_month_change_pct !== null
+                  ? <p className={`wa-kpi-sub ${overview.earned_this_month_change_pct >= 0 ? 'wa-sub--up' : 'wa-sub--down'}`}>
+                      {overview.earned_this_month_change_pct >= 0 ? '↗' : '↘'} {Math.abs(overview.earned_this_month_change_pct)}% vs last month
+                    </p>
+                  : <p className="wa-kpi-sub">This month</p>
+              )}
             </div>
           </div>
           <div className="wa-kpi wa-kpi--purple">
             <div className="wa-kpi-icon wa-kpi-icon--purple"><i className="fa-solid fa-building-columns" /></div>
             <div>
               <p className="wa-kpi-label">Total Withdrawn</p>
-              <p className="wa-kpi-val">₹{withdrawn.toLocaleString('en-IN')}</p>
-              <p className="wa-kpi-sub">Jun 2026 YTD</p>
+              <p className="wa-kpi-val">
+                {overviewLoading ? <span className="ea-kpi-skel" style={{ width: 80, height: 20, display: 'inline-block' }} /> : formatINR(overview?.total_withdrawn ?? 0)}
+              </p>
+              {!overviewLoading && <p className="wa-kpi-sub">{overview?.withdrawn_ytd_label ?? ''}</p>}
             </div>
           </div>
         </div>
@@ -156,13 +197,13 @@ export default function DietitianWallet() {
                     value={withdrawAmt}
                     onChange={e => setWithdrawAmt(e.target.value)}
                     min={1}
-                    max={balance}
+                    max={overview?.available_balance ?? 0}
                   />
                 </div>
                 <button className="wa-action-confirm">Confirm Withdrawal</button>
                 <button className="wa-action-cancel" onClick={() => setShowWithdraw(false)}>Cancel</button>
               </div>
-              <p className="wa-action-hint">Available: ₹{balance.toLocaleString('en-IN')} · Min ₹100 · No fee</p>
+              <p className="wa-action-hint">Available: {formatINR(overview?.available_balance ?? 0)} · Min ₹100 · No fee</p>
             </div>
           </div>
         </div>
@@ -203,16 +244,16 @@ export default function DietitianWallet() {
         <div className="wa-card wa-card--wide">
           <div className="wa-card-header">
             <h2 className="wa-card-title">Transactions</h2>
-            <span className="wa-card-sub">{TRANSACTIONS.length} total</span>
+            <span className="wa-card-sub">{loading ? '—' : `${total} total`}</span>
           </div>
 
           {/* Toolbar */}
           <div className="wa-tx-toolbar">
             <div className="wa-tx-tabs">
               {([
-                { key: 'all',     label: 'All',     count: TRANSACTIONS.length },
-                { key: 'credits', label: 'Credits',  count: credits.length },
-                { key: 'debits',  label: 'Debits',   count: debits.length },
+                { key: 'all',     label: 'All',     count: total        },
+                { key: 'credits', label: 'Credits', count: creditCount  },
+                { key: 'debits',  label: 'Debits',  count: debitCount   },
               ] as { key: TxTab; label: string; count: number }[]).map(t => (
                 <button
                   key={t.key}
@@ -220,7 +261,7 @@ export default function DietitianWallet() {
                   onClick={() => setTab(t.key)}
                 >
                   {t.label}
-                  <span className="wa-tx-count">{t.count}</span>
+                  <span className="wa-tx-count">{loading ? '—' : t.count}</span>
                 </button>
               ))}
             </div>
@@ -237,39 +278,68 @@ export default function DietitianWallet() {
 
           {/* List */}
           <div className="wa-tx-list">
-            {filtered.length === 0 ? (
+            {loading && [1,2,3,4,5].map(i => (
+              <div key={i} className="wa-tx-row">
+                <div className="wa-tx-avatar" style={{ background: '#e5e7eb' }} />
+                <div className="wa-tx-info">
+                  <span className="ea-kpi-skel" style={{ width: 180, height: 13, display: 'block', marginBottom: 6 }} />
+                  <span className="ea-kpi-skel" style={{ width: 120, height: 11, display: 'block' }} />
+                </div>
+                <div className="wa-tx-meta">
+                  <span className="ea-kpi-skel" style={{ width: 80, height: 11, display: 'block', marginBottom: 4 }} />
+                  <span className="ea-kpi-skel" style={{ width: 70, height: 11, display: 'block' }} />
+                </div>
+                <span className="ea-kpi-skel" style={{ width: 80, height: 14, display: 'inline-block' }} />
+                <span className="ea-kpi-skel" style={{ width: 70, height: 14, display: 'inline-block' }} />
+              </div>
+            ))}
+
+            {!loading && filtered.length === 0 && (
               <div className="wa-tx-empty">
                 <i className="fa-solid fa-receipt" />
                 <span>No transactions found</span>
               </div>
-            ) : filtered.map(t => (
-              <div key={t.id} className="wa-tx-row">
-                <div className={`wa-tx-avatar ${t.type === 'credit' ? 'wa-tx-avatar--green' : 'wa-tx-avatar--red'}`}>
-                  <i className={t.type === 'credit' ? 'fa-solid fa-arrow-down' : 'fa-solid fa-arrow-up'} />
+            )}
+
+            {!loading && filtered.map(tx => (
+              <div key={tx.id} className="wa-tx-row">
+                <div className={`wa-tx-avatar ${tx.type === 'credit' ? 'wa-tx-avatar--green' : 'wa-tx-avatar--red'}`}>
+                  <i className={tx.type === 'credit' ? 'fa-solid fa-arrow-down' : 'fa-solid fa-arrow-up'} />
                 </div>
                 <div className="wa-tx-info">
-                  <p className="wa-tx-name">{t.name}</p>
-                  <p className="wa-tx-plan">{t.plan}</p>
+                  <p className="wa-tx-name">{tx.description}</p>
+                  <p className="wa-tx-plan">{formatSource(tx.source)}</p>
                 </div>
                 <div className="wa-tx-meta">
-                  <span className="wa-tx-invoice">{t.invoice}</span>
-                  <span className="wa-tx-date">{t.date}</span>
+                  <span className="wa-tx-invoice">Balance: {formatINR(tx.balance_after)}</span>
+                  <span className="wa-tx-date">{formatDate(tx.created_at)}</span>
                 </div>
                 <div className="wa-tx-method">
-                  <i className={METHOD_ICON[t.method] ?? 'fa-solid fa-circle'} />
-                  {t.method}
+                  <i className="fa-solid fa-circle-check" />
+                  Completed
                 </div>
-                <span className={`wa-tx-status wa-tx-status--${t.status === 'completed' ? 'green' : 'orange'}`}>
-                  {t.status}
+                <span className="wa-tx-status wa-tx-status--green">
+                  {tx.type === 'credit' ? 'Credit' : 'Debit'}
                 </span>
-                <span className={`wa-tx-amount ${t.type === 'debit' ? 'wa-tx-amount--red' : ''}`}>
-                  {t.type === 'debit' ? '−' : '+'}₹{t.amount.toLocaleString('en-IN')}
+                <span className={`wa-tx-amount ${tx.type === 'debit' ? 'wa-tx-amount--red' : ''}`}>
+                  {tx.type === 'debit' ? '−' : '+'}{formatINR(tx.net_amount)}
                 </span>
-                <button className="wa-tx-dl" title="Download receipt">
-                  <i className="fa-solid fa-download" />
-                </button>
               </div>
             ))}
+
+            {loadingMore && (
+              <div style={{ textAlign: 'center', padding: '12px 0', color: '#9ca3af', fontSize: 13 }}>
+                Loading…
+              </div>
+            )}
+
+            {!loading && !loadingMore && page < totalPages && (
+              <div style={{ textAlign: 'center', paddingTop: 16 }}>
+                <button className="rv-load-more" onClick={() => setPage(p => p + 1)}>
+                  Load more
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -280,22 +350,36 @@ export default function DietitianWallet() {
           <div className="wa-card">
             <div className="wa-card-header">
               <h2 className="wa-card-title">Linked Accounts</h2>
-              <button className="wa-add-account-btn"><i className="fa-solid fa-plus" /> Add</button>
             </div>
             <div className="wa-account-list">
-              {LINKED_ACCOUNTS.map(a => (
+              {accountsLoading && [1, 2].map(i => (
+                <div key={i} className="wa-account-row">
+                  <div className="wa-account-icon" style={{ background: '#e5e7eb' }} />
+                  <div className="wa-account-info">
+                    <span className="ea-kpi-skel" style={{ width: 100, height: 12, display: 'block', marginBottom: 5 }} />
+                    <span className="ea-kpi-skel" style={{ width: 140, height: 11, display: 'block' }} />
+                  </div>
+                </div>
+              ))}
+
+              {!accountsLoading && accounts.length === 0 && (
+                <p style={{ fontSize: 13, color: '#9ca3af', padding: '8px 0' }}>
+                  No accounts linked. Go to Profile → Bank Information to add one.
+                </p>
+              )}
+
+              {!accountsLoading && accounts.map(a => (
                 <div key={a.id} className="wa-account-row">
                   <div className="wa-account-icon">
-                    <i className={a.icon} />
+                    <i className={a.type === 'upi' ? 'fa-solid fa-mobile-screen' : 'fa-solid fa-building-columns'} />
                   </div>
                   <div className="wa-account-info">
-                    <p className="wa-account-label">{a.label}</p>
-                    <p className="wa-account-detail">{a.detail}</p>
+                    <p className="wa-account-label">{a.type === 'upi' ? 'UPI' : a.bank_name}</p>
+                    <p className="wa-account-detail">
+                      {a.type === 'upi' ? a.upi_id : `••••${a.account_number?.slice(-4)}`}
+                    </p>
                   </div>
-                  {a.primary && <span className="wa-account-primary">Primary</span>}
-                  <button className="wa-account-menu" title="Options">
-                    <i className="fa-solid fa-ellipsis-vertical" />
-                  </button>
+                  {a.is_primary && <span className="wa-account-primary">Primary</span>}
                 </div>
               ))}
             </div>
@@ -347,9 +431,9 @@ export default function DietitianWallet() {
             </div>
             <div className="wa-summary-rows">
               {[
-                { label: 'Gross Earnings', val: '₹28,200', color: '#16a34a' },
-                { label: 'Platform Fee (10%)', val: '−₹2,820', color: '#f97316' },
-                { label: 'GST Deducted',      val: '−₹508',  color: '#f97316' },
+                { label: 'Gross Earnings',    val: '₹28,200',  color: '#16a34a' },
+                { label: 'Platform Fee (10%)',val: '−₹2,820',  color: '#f97316' },
+                { label: 'GST Deducted',      val: '−₹508',    color: '#f97316' },
                 { label: 'Net Payable',        val: '₹24,872', color: '#16a34a', bold: true },
               ].map(r => (
                 <div key={r.label} className="wa-summary-row">

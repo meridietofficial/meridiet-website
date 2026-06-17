@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 
 const stats = [
-  { icon: Users,        value: '50,000+', label: 'Happy Clients' },
+  { icon: Users,        value: '1,000+', label: 'Happy Clients' },
   { icon: Star,         value: '4.9/5',   label: 'Average Rating' },
   { icon: Leaf,         value: '100%',    label: 'Indian Recipes' },
   { icon: Trophy,       value: '#1',      label: 'Diet Platform' },
@@ -17,7 +17,7 @@ const features = [
   { icon: BadgeCheck,      label: 'Certified nutritionist review' },
   { icon: IndianRupee,     label: 'Affordable pricing' },
   { icon: BookOpen,        label: 'Recipe & shopping list included' },
-  { icon: CalendarCheck,   label: '7-day free trial available' },
+  { icon: CalendarCheck,   label: 'Flexible plan durations (1 week to 3 months)' },
   { icon: MessageCircle,   label: 'WhatsApp support' },
   { icon: Target,          label: 'Tracks your health goals' },
 ]

@@ -60,15 +60,26 @@ const ENDPOINTS = {
     dashboardStats:    '/appointments/dietitian/dashboard',
     dietitianReviews:  '/appointments/dietitian/reviews',
   },
+  followUps: {
+    list: '/follow-ups',
+  },
   contact: {
     submit: '/contact',
   },
+  accounts: {
+    list: '/dietitian/accounts',
+  },
+  banks: {
+    list: '/banks',
+  },
   earnings: {
-    summary:        '/dietitian/earnings/summary',
-    monthlyRevenue: '/dietitian/earnings/monthly-revenue',
-    byPlan:         '/dietitian/earnings/by-plan',
-    payout:         '/dietitian/earnings/payout',
-    transactions:   '/dietitian/earnings/transactions',
+    summary:            '/dietitian/earnings/summary',
+    monthlyRevenue:     '/dietitian/earnings/monthly-revenue',
+    byPlan:             '/dietitian/earnings/by-plan',
+    payout:             '/dietitian/earnings/payout',
+    transactions:       '/dietitian/earnings/transactions',
+    walletTransactions: '/dietitian/earnings/wallet-transactions',
+    wallet:             '/dietitian/earnings/wallet',
   },
   dietitianDietPlan: {
     list:   '/dietitian/diet-plans',

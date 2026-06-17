@@ -18,7 +18,7 @@ const NAV_ITEMS: { icon: string; label: string; route?: string; badge?: number }
   { icon: 'fa-solid fa-bowl-food',       label: 'Diet Plans',            route: '/dietitian-diet-plans' },
   // { icon: 'fa-solid fa-comments',        label: 'Chat',                  route: '/dietitian-chat' },
   { icon: 'fa-solid fa-bell',            label: 'Follow Ups',            route: '/dietitian-follow-ups' },
-  { icon: 'fa-solid fa-chart-line',      label: 'Reports',               route: '/dietitian-reports' },
+  // { icon: 'fa-solid fa-chart-line',      label: 'Reports',               route: '/dietitian-reports' },
   { icon: 'fa-solid fa-sack-dollar',     label: 'Earnings',              route: '/dietitian-earnings' },
   { icon: 'fa-solid fa-wallet',          label: 'Wallet',                route: '/dietitian-wallet' },
   { icon: 'fa-solid fa-star',            label: 'Reviews',               route: '/dietitian-reviews' },

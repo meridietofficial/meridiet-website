@@ -15,7 +15,7 @@ export type EarningsSummary = {
   pending_booking_gross: number
   pending_booking_commission: number
   pending_booking_net: number
-  pending_withdrawal: number
+  earnings_balance: number
 }
 
 export type MonthlyRevenueItem = {
@@ -95,6 +95,43 @@ export type PayoutData = {
   pending_booking_net: number
 }
 
+export type WalletOverview = {
+  available_balance: number
+  platform_commission_pct: number
+  pending_payout: number
+  earned_this_month: number
+  earned_this_month_change_pct: number | null
+  total_withdrawn: number
+  withdrawn_ytd_label: string
+}
+
+export type WalletTransaction = {
+  id: number
+  dietitian_id: number
+  type: 'credit' | 'debit'
+  source: string
+  gross_amount: number
+  commission: number
+  net_amount: number
+  balance_after: number
+  description: string
+  appointment_id: number | null
+  created_at: string
+}
+
+export type WalletTransactionsResponse = {
+  data: {
+    transactions: WalletTransaction[]
+    total: number
+  }
+  meta: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+}
+
 const earningsApi = {
   async getMonthlyRevenue(months = 6): Promise<MonthlyRevenueData> {
     const res = await apiClient.apiGet<{ success: boolean; data: MonthlyRevenueData }>(
@@ -132,6 +169,23 @@ const earningsApi = {
       ENDPOINTS.earnings.byPlan
     )
     return res.data
+  },
+
+  async getWalletOverview(): Promise<WalletOverview> {
+    const res = await apiClient.apiGet<{ success: boolean; data: WalletOverview }>(
+      ENDPOINTS.earnings.wallet
+    )
+    return res.data
+  },
+
+  async getWalletTransactions(params: { page?: number; limit?: number } = {}): Promise<WalletTransactionsResponse> {
+    const qs = new URLSearchParams()
+    qs.set('page', String(params.page ?? 1))
+    qs.set('limit', String(params.limit ?? 10))
+    const res = await apiClient.apiGet<WalletTransactionsResponse & { success: boolean }>(
+      `${ENDPOINTS.earnings.walletTransactions}?${qs}`
+    )
+    return res
   },
 
   async getSummary(period: EarningsPeriod): Promise<EarningsSummary> {

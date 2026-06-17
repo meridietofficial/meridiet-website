@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import appointmentApi, { DietitianAppointment, DietitianSession, AppointmentSlot, AppointmentReviews } from '../api/appointment'
+import appointmentApi, { DietitianAppointment, DietitianSession, AppointmentSlot, AppointmentReviews, CreateFollowUpBody, FollowUpAppointment } from '../api/appointment'
 import { useVideoCall } from '../context/VideoCallContext'
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
@@ -112,6 +112,23 @@ export default function DietitianAppointmentDetail() {
   const [reviewError, setReviewError]           = useState<string | null>(null)
   const [reviews, setReviews]                   = useState<AppointmentReviews | null>(null)
 
+  const [followUpOpen, setFollowUpOpen]           = useState(false)
+  const [followUps, setFollowUps]                 = useState<FollowUpAppointment[]>([])
+  const [followUpsLoading, setFollowUpsLoading]   = useState(false)
+  const [fuDate, setFuDate]                       = useState('')
+  const [fuSlot, setFuSlot]                       = useState('')
+  const [fuDuration, setFuDuration]               = useState('')
+  const [fuFee, setFuFee]                         = useState('')
+  const [fuSessionType, setFuSessionType]         = useState<'video_call' | 'in_person' | ''>('')
+  const [fuNotes, setFuNotes]                     = useState('')
+  const [fuSubmitting, setFuSubmitting]           = useState(false)
+  const [fuError, setFuError]                     = useState<string | null>(null)
+  const [fuSlots, setFuSlots]                     = useState<AppointmentSlot[]>([])
+  const [fuBookedSlots, setFuBookedSlots]         = useState<AppointmentSlot[]>([])
+  const [fuSlotsLoading, setFuSlotsLoading]       = useState(false)
+  const [fuCustomTime, setFuCustomTime]           = useState(false)
+  const [fuShowOverrides, setFuShowOverrides]     = useState(false)
+
   useEffect(() => {
     if (!appt || appt.status !== 'completed') return
     appointmentApi.getReviews(appt.id)
@@ -198,7 +215,43 @@ export default function DietitianAppointmentDetail() {
     }
   }
 
-  function getUpcomingDates() {
+  function openFollowUp() {
+    setFuDate(new Date().toLocaleDateString('en-CA'))
+    setFuSlot('')
+    setFuDuration(String(session?.duration ?? ''))
+    setFuFee(String(appt?.fee ?? '').replace(/\.00$/, ''))
+    setFuSessionType((session?.session_type as 'video_call' | 'in_person' | '') ?? '')
+    setFuNotes('')
+    setFuError(null)
+    setFuCustomTime(false)
+    setFuShowOverrides(false)
+    setFollowUpOpen(true)
+  }
+
+  async function handleScheduleFollowUp() {
+    if (!appt) return
+    setFuSubmitting(true)
+    setFuError(null)
+    try {
+      const body: CreateFollowUpBody = {
+        appointment_date: fuDate,
+        slot: fuSlot,
+        ...(fuDuration    ? { duration: Number(fuDuration) }          : {}),
+        ...(fuFee         ? { fee: Number(fuFee) }                    : {}),
+        ...(fuSessionType ? { session_type: fuSessionType }           : {}),
+        ...(fuNotes       ? { notes: fuNotes }                        : {}),
+      }
+      const created = await appointmentApi.scheduleFollowUp(appt.id, body)
+      setFollowUps(prev => [...prev, created])
+      setFollowUpOpen(false)
+    } catch (e: any) {
+      setFuError(e.message ?? 'Failed to schedule follow-up. Please try again.')
+    } finally {
+      setFuSubmitting(false)
+    }
+  }
+
+  function getUpcomingDatesFrom(slots: AppointmentSlot[]) {
     const today = new Date()
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today)
@@ -208,7 +261,7 @@ export default function DietitianAppointmentDetail() {
         date,
         dayLabel: i === 0 ? 'Today' : i === 1 ? 'Tmrw' : d.toLocaleDateString('en-IN', { weekday: 'short' }),
         dateLabel: d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
-        hasSlots: (availableSlots.find(s => s.date === date)?.slots?.length ?? 0) > 0,
+        hasSlots: (slots.find(s => s.date === date)?.slots?.length ?? 0) > 0,
       }
     })
   }
@@ -235,6 +288,29 @@ export default function DietitianAppointmentDetail() {
       .catch(err => setError(err?.message ?? 'Failed to load appointment'))
       .finally(() => setLoading(false))
   }, [id])
+
+  useEffect(() => {
+    if (!appt || !['confirmed', 'completed'].includes(appt.status)) return
+    setFollowUpsLoading(true)
+    appointmentApi.getFollowUps(appt.id)
+      .then(data => setFollowUps(data))
+      .catch(() => {})
+      .finally(() => setFollowUpsLoading(false))
+  }, [appt?.id, appt?.status])
+
+  useEffect(() => {
+    if (!followUpOpen || !appt) return
+    setFuSlotsLoading(true)
+    setFuSlots([])
+    setFuBookedSlots([])
+    appointmentApi.getRescheduleSlots(appt.id)
+      .then(data => {
+        setFuSlots(data.available_slots)
+        setFuBookedSlots(data.booked_slots)
+      })
+      .catch(() => {})
+      .finally(() => setFuSlotsLoading(false))
+  }, [followUpOpen, appt?.id])
 
   if (loading) {
     return (
@@ -320,6 +396,11 @@ export default function DietitianAppointmentDetail() {
               >
                 <i className="fa-solid fa-bowl-food" /> Diet Plan
               </button>
+              {!appt.follow_up && (
+                <button className="apd-hero-btn" onClick={openFollowUp}>
+                  <i className="fa-solid fa-calendar-plus" /> Follow-up
+                </button>
+              )}
               <button
                 className="apd-hero-btn apd-hero-btn--green"
                 onClick={handleMarkComplete}
@@ -339,12 +420,19 @@ export default function DietitianAppointmentDetail() {
             </button>
           )}
           {(appt.status === 'completed' || appt.status === 'cancelled') && (
-            <button
-              className="apd-hero-btn"
-              onClick={() => navigate(`/dietitian-diet-plans/new?appointment_id=${appt.id}`)}
-            >
-              <i className="fa-solid fa-bowl-food" /> Create Diet Plan
-            </button>
+            <>
+              <button
+                className="apd-hero-btn"
+                onClick={() => navigate(`/dietitian-diet-plans/new?appointment_id=${appt.id}`)}
+              >
+                <i className="fa-solid fa-bowl-food" /> Create Diet Plan
+              </button>
+              {appt.status === 'completed' && !appt.follow_up && (
+                <button className="apd-hero-btn apd-hero-btn--primary" onClick={openFollowUp}>
+                  <i className="fa-solid fa-calendar-plus" /> Schedule Follow-up
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -398,6 +486,18 @@ export default function DietitianAppointmentDetail() {
                 <span className="apd-info-label">Fee</span>
                 <span className="apd-info-val">₹{Number(appt.fee).toLocaleString('en-IN')} {appt.currency}</span>
               </div>
+              {appt.follow_up && (
+                <div className="apd-info-field" style={{ gridColumn: '1 / -1' }}>
+                  <span className="apd-info-label">Follow-up</span>
+                  <span className="apd-info-val apd-fu-inline">
+                    <i className="fa-solid fa-calendar-plus" />
+                    {formatDateShort(appt.follow_up.date)} · {formatSlot(appt.follow_up.slot)}
+                    <span className={`ap-status ap-status--${STATUS_META[appt.follow_up.status]?.color ?? 'blue'}`} style={{ marginLeft: 6 }}>
+                      {STATUS_META[appt.follow_up.status]?.label ?? appt.follow_up.status}
+                    </span>
+                  </span>
+                </div>
+              )}
               {session?.session_number && (
                 <div className="apd-info-field">
                   <span className="apd-info-label">Session #</span>
@@ -454,6 +554,13 @@ export default function DietitianAppointmentDetail() {
                     <span className="apd-action-label">Reschedule Session</span>
                     <i className="fa-solid fa-chevron-right apd-action-arrow" />
                   </button>
+                  {!appt.follow_up && (
+                    <button className="apd-action-row" onClick={openFollowUp}>
+                      <span className="apd-action-icon"><i className="fa-solid fa-calendar-plus" /></span>
+                      <span className="apd-action-label">Schedule Follow-up</span>
+                      <i className="fa-solid fa-chevron-right apd-action-arrow" />
+                    </button>
+                  )}
                   <button
                     className="apd-action-row apd-action-row--green"
                     onClick={handleMarkComplete}
@@ -483,6 +590,13 @@ export default function DietitianAppointmentDetail() {
                     <span className="apd-action-label">Rebook Session</span>
                     <i className="fa-solid fa-chevron-right apd-action-arrow" />
                   </button>
+                  {appt.status === 'completed' && !appt.follow_up && (
+                    <button className="apd-action-row" onClick={openFollowUp}>
+                      <span className="apd-action-icon"><i className="fa-solid fa-calendar-plus" /></span>
+                      <span className="apd-action-label">Schedule Follow-up</span>
+                      <i className="fa-solid fa-chevron-right apd-action-arrow" />
+                    </button>
+                  )}
                   {appt.status === 'completed' && !reviews?.dietitian_review_done && (
                     <button
                       className="apd-action-row"
@@ -524,6 +638,56 @@ export default function DietitianAppointmentDetail() {
               )}
             </div>
           </div>
+
+          {/* Follow-up Sessions */}
+          {(appt.status === 'confirmed' || appt.status === 'completed') && (
+            <div className="apd-section">
+              <div className="apd-fu-section-header">
+                <p className="apd-section-title" style={{ marginBottom: 0 }}>
+                  <i className="fa-solid fa-calendar-plus" /> Follow-up Sessions
+                  {appt.follow_up && (
+                    <span className={`ap-status ap-status--${STATUS_META[appt.follow_up.status]?.color ?? 'blue'}`} style={{ marginLeft: 8, verticalAlign: 'middle' }}>
+                      {STATUS_META[appt.follow_up.status]?.label ?? appt.follow_up.status}
+                    </span>
+                  )}
+                </p>
+                {!appt.follow_up && (
+                  <button className="apd-fu-add-btn" onClick={openFollowUp}>
+                    <i className="fa-solid fa-plus" /> Schedule
+                  </button>
+                )}
+              </div>
+              {followUpsLoading ? (
+                <p className="apd-fu-loading"><i className="fa-solid fa-circle-notch fa-spin" /> Loading…</p>
+              ) : followUps.length === 0 ? (
+                <p className="apd-fu-empty">No follow-up sessions scheduled yet</p>
+              ) : (
+                followUps.map(fu => {
+                  const fuMeta     = STATUS_META[fu.status] ?? { label: fu.status, color: 'blue' }
+                  const fuTypeMeta = SESSION_TYPE_META[fu.session_type] ?? null
+                  return (
+                    <div key={fu.id} className="apd-fu-card">
+                      <div className={`apd-fu-accent apd-fu-accent--${fuMeta.color}`} />
+                      <div className="apd-fu-body">
+                        <div className="apd-fu-top">
+                          <span className="apd-fu-date">
+                            <i className="fa-regular fa-calendar" /> {formatDate(fu.appointment_date)} · {formatSlot(fu.slot)}
+                          </span>
+                          <span className={`ap-status ap-status--${fuMeta.color}`}>{fuMeta.label}</span>
+                        </div>
+                        <div className="apd-fu-meta">
+                          {fuTypeMeta && <span><i className={fuTypeMeta.icon} /> {fuTypeMeta.label}</span>}
+                          <span><i className="fa-solid fa-indian-rupee-sign" /> {Number(fu.fee).toLocaleString('en-IN')}</span>
+                          {fu.duration > 0 && <span><i className="fa-regular fa-clock" /> {fu.duration} min</span>}
+                        </div>
+                        {fu.notes && <p className="apd-fu-notes">{fu.notes}</p>}
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </div>
+          )}
 
           {/* Reviews — only for completed */}
           {appt.status === 'completed' && reviews && (
@@ -695,6 +859,263 @@ export default function DietitianAppointmentDetail() {
         </div>
       )}
 
+      {/* ── Follow-up Modal ── */}
+      {followUpOpen && appt && (
+        <div className="cr-modal-overlay" onClick={() => setFollowUpOpen(false)}>
+          <div className="cr-modal" onClick={e => e.stopPropagation()}>
+            <div className="cr-modal-header">
+              <h3 className="cr-modal-title"><i className="fa-solid fa-calendar-plus" /> Schedule Follow-up</h3>
+              <button className="cr-detail-close" onClick={() => setFollowUpOpen(false)}>
+                <i className="fa-solid fa-xmark" />
+              </button>
+            </div>
+
+            {/* Client info */}
+            <div className="cr-modal-client">
+              <div className="cr-avatar">
+                {clientAvatar
+                  ? <img src={clientAvatar} alt={clientName} />
+                  : clientInitials}
+              </div>
+              <div>
+                <p className="cr-modal-client-name">{clientName}</p>
+                <p className="cr-modal-client-orig">
+                  Parent: {formatDateShort(appt.appointment_date)} · {formatSlot(appt.slot)}
+                </p>
+              </div>
+            </div>
+
+            {/* Date chips */}
+            <div className="cr-rsc-section">
+              <span className="cr-modal-label" style={{ marginBottom: 8, display: 'block' }}>Select Date</span>
+              <div className="cr-rsc-date-row">
+                {getUpcomingDatesFrom(fuSlots).map(d => (
+                  <button
+                    key={d.date}
+                    className={[
+                      'cr-rsc-date-chip',
+                      fuDate === d.date ? 'cr-rsc-date-chip--active' : '',
+                      !d.hasSlots      ? 'cr-rsc-date-chip--empty'  : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => {
+                      setFuCustomTime(false)
+                      setFuDate(d.date)
+                      setFuSlot('')
+                    }}
+                  >
+                    <span className="cr-rsc-chip-day">{d.dayLabel}</span>
+                    <span className="cr-rsc-chip-date">{d.dateLabel}</span>
+                    {d.hasSlots && <span className="cr-rsc-chip-dot" />}
+                  </button>
+                ))}
+                <label className="cr-rsc-date-chip cr-rsc-date-chip--more" title="Pick another date">
+                  <i className="fa-regular fa-calendar" />
+                  <span className="cr-rsc-chip-day">Other</span>
+                  <input
+                    type="date"
+                    style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', width: '100%' }}
+                    min={new Date().toLocaleDateString('en-CA')}
+                    onChange={e => {
+                      if (!e.target.value) return
+                      setFuCustomTime(false)
+                      setFuDate(e.target.value)
+                      setFuSlot('')
+                    }}
+                  />
+                </label>
+              </div>
+              {fuDate && !getUpcomingDatesFrom(fuSlots).find(d => d.date === fuDate) && (
+                <div className="cr-rsc-custom-date-pill">
+                  <i className="fa-regular fa-calendar-check" />
+                  {formatDateShort(fuDate)}
+                </div>
+              )}
+            </div>
+
+            {/* Slot picker */}
+            {fuDate && (
+              <div className="cr-rsc-section">
+                {fuSlotsLoading ? (
+                  <p className="cr-rsc-loading">
+                    <i className="fa-solid fa-circle-notch fa-spin" /> Loading available slots…
+                  </p>
+                ) : (() => {
+                  const rawRanges = fuSlots.find(s => s.date === fuDate)?.slots ?? []
+                  const available = rawRanges.flatMap(r => r.includes('-') ? expandSlotRange(r) : [r])
+                  const booked    = fuBookedSlots.find(s => s.date === fuDate)?.slots ?? []
+                  const allSlots  = [...new Set([...available, ...booked])].sort()
+                  return (
+                    <>
+                      {allSlots.length > 0 && (
+                        <>
+                          <div className="cr-rsc-slots-header">
+                            <span className="cr-modal-label">Select Time</span>
+                            <div className="cr-rsc-legend">
+                              <span className="cr-rsc-legend-item">
+                                <span className="cr-rsc-legend-dot cr-rsc-legend-dot--avail" /> Available
+                              </span>
+                              <span className="cr-rsc-legend-item">
+                                <span className="cr-rsc-legend-dot cr-rsc-legend-dot--booked" /> Booked
+                              </span>
+                            </div>
+                          </div>
+                          <div className="cr-rsc-slots-grid">
+                            {allSlots.map(slot => {
+                              const isBooked   = booked.includes(slot)
+                              const isPast     = isPastSlot(fuDate, slot)
+                              const isDisabled = isBooked || isPast
+                              const isSelected = !fuCustomTime && fuSlot === slot
+                              return (
+                                <button
+                                  key={slot}
+                                  disabled={isDisabled}
+                                  className={[
+                                    'cr-rsc-slot',
+                                    isBooked            ? 'cr-rsc-slot--booked' : '',
+                                    isPast && !isBooked ? 'cr-rsc-slot--past'   : '',
+                                    isSelected          ? 'cr-rsc-slot--active' : '',
+                                  ].filter(Boolean).join(' ')}
+                                  onClick={() => {
+                                    setFuCustomTime(false)
+                                    setFuSlot(slot)
+                                  }}
+                                >
+                                  {isBooked && <i className="fa-solid fa-lock" />}
+                                  {formatSlot(slot)}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </>
+                      )}
+                      {allSlots.length === 0 && !fuCustomTime && (
+                        <p className="cr-rsc-no-slots">
+                          <i className="fa-regular fa-calendar-xmark" /> No scheduled slots for this date — use custom time below
+                        </p>
+                      )}
+                      <div className={`cr-rsc-custom-row${fuCustomTime ? ' cr-rsc-custom-row--open' : ''}`}>
+                        <button
+                          className={`cr-rsc-custom-toggle${fuCustomTime ? ' cr-rsc-custom-toggle--active' : ''}`}
+                          onClick={() => {
+                            const next = !fuCustomTime
+                            setFuCustomTime(next)
+                            if (next) setFuSlot('')
+                          }}
+                        >
+                          <i className={`fa-solid ${fuCustomTime ? 'fa-xmark' : 'fa-clock'}`} />
+                          {fuCustomTime ? 'Cancel custom time' : 'Book at a different time'}
+                        </button>
+                        {fuCustomTime && (
+                          <input
+                            type="time"
+                            className="cr-modal-input cr-rsc-time-input"
+                            value={fuSlot}
+                            onChange={e => setFuSlot(e.target.value)}
+                            autoFocus
+                          />
+                        )}
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+            )}
+
+            {/* Optional overrides */}
+            <div className="apd-fu-overrides">
+              <button
+                className={`apd-fu-overrides-toggle${fuShowOverrides ? ' apd-fu-overrides-toggle--open' : ''}`}
+                type="button"
+                onClick={() => setFuShowOverrides(p => !p)}
+              >
+                <i className={`fa-solid fa-chevron-${fuShowOverrides ? 'up' : 'down'}`} />
+                {fuShowOverrides ? 'Hide' : 'Customize'} session defaults
+              </button>
+              {fuShowOverrides && (
+                <div className="apd-fu-override-grid">
+                  <div>
+                    <label className="cr-modal-label" style={{ display: 'block', marginBottom: 6 }}>Session Type</label>
+                    <div className="apd-fu-session-btns">
+                      {(['video_call', 'in_person'] as const).map(t => (
+                        <button
+                          key={t}
+                          type="button"
+                          className={`apd-fu-session-btn${fuSessionType === t ? ' apd-fu-session-btn--active' : ''}`}
+                          onClick={() => setFuSessionType(prev => prev === t ? '' : t)}
+                        >
+                          <i className={SESSION_TYPE_META[t].icon} /> {SESSION_TYPE_META[t].label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="cr-modal-fields" style={{ gridTemplateColumns: '1fr 1fr', marginTop: 12 }}>
+                    <div className="cr-modal-field">
+                      <label className="cr-modal-label">Duration (min)</label>
+                      <input
+                        type="number"
+                        className="cr-modal-input"
+                        min={15}
+                        step={15}
+                        placeholder={String(session?.duration ?? 30)}
+                        value={fuDuration}
+                        onChange={e => setFuDuration(e.target.value)}
+                      />
+                    </div>
+                    <div className="cr-modal-field">
+                      <label className="cr-modal-label">Fee (₹)</label>
+                      <input
+                        type="number"
+                        className="cr-modal-input"
+                        min={0}
+                        placeholder={String(appt.fee).replace(/\.00$/, '')}
+                        value={fuFee}
+                        onChange={e => setFuFee(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label className="cr-modal-label" style={{ display: 'block', marginBottom: 6 }}>
+                Notes{' '}
+                <span style={{ color: '#aaa', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+              </label>
+              <input
+                type="text"
+                className="cr-modal-input"
+                placeholder="e.g. Review blood report, check weight progress…"
+                value={fuNotes}
+                onChange={e => setFuNotes(e.target.value)}
+              />
+            </div>
+
+            {fuError && (
+              <p className="cr-modal-error">
+                <i className="fa-solid fa-triangle-exclamation" /> {fuError}
+              </p>
+            )}
+
+            <div className="cr-modal-actions">
+              <button className="cr-btn-detail" onClick={() => setFollowUpOpen(false)}>Cancel</button>
+              <button
+                className="cr-btn-reschedule"
+                disabled={fuSubmitting || !fuDate || !fuSlot}
+                onClick={handleScheduleFollowUp}
+                style={{ padding: '9px 20px', fontSize: 13 }}
+              >
+                {fuSubmitting
+                  ? <><i className="fa-solid fa-circle-notch fa-spin" /> Scheduling…</>
+                  : <><i className="fa-solid fa-calendar-plus" /> Confirm Follow-up</>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Reschedule Modal ── */}
       {rescheduleOpen && appt && (
         <div className="cr-modal-overlay" onClick={() => setRescheduleOpen(false)}>
@@ -725,7 +1146,7 @@ export default function DietitianAppointmentDetail() {
             <div className="cr-rsc-section">
               <span className="cr-modal-label" style={{ marginBottom: 8, display: 'block' }}>Select Date</span>
               <div className="cr-rsc-date-row">
-                {getUpcomingDates().map(d => (
+                {getUpcomingDatesFrom(availableSlots).map(d => (
                   <button
                     key={d.date}
                     className={[
@@ -760,7 +1181,7 @@ export default function DietitianAppointmentDetail() {
                   />
                 </label>
               </div>
-              {rescheduleDate && !getUpcomingDates().find(d => d.date === rescheduleDate) && (
+              {rescheduleDate && !getUpcomingDatesFrom(availableSlots).find(d => d.date === rescheduleDate) && (
                 <div className="cr-rsc-custom-date-pill">
                   <i className="fa-regular fa-calendar-check" />
                   {formatDateShort(rescheduleDate)}

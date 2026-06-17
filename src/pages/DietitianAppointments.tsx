@@ -395,9 +395,14 @@ export default function DietitianAppointments() {
                               <span className="ap-meta-pill">
                                 <i className={typeMeta.icon} /> {typeMeta.label}
                               </span>
-                              <span className="ap-meta-pill">
-                                <i className="fa-solid fa-hashtag" /> Session {s.session_number}
-                              </span>
+                              {s.is_follow_up
+                                ? <span className="ap-meta-pill ap-meta-pill--followup">
+                                    <i className="fa-solid fa-calendar-plus" /> Follow-up
+                                  </span>
+                                : <span className="ap-meta-pill">
+                                    <i className="fa-solid fa-hashtag" /> Session {s.session_number}
+                                  </span>
+                              }
                               {s.status === 'completed' && (
                                 s.dietitian_review_done
                                   ? <span className="ap-meta-pill ap-meta-pill--review">

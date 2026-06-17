@@ -207,7 +207,7 @@ export default function DietitianEarnings() {
           <div className="ea-kpi-body">
             <p className="ea-kpi-label">Available to Withdraw</p>
             <p className="ea-kpi-val">
-              {summaryLoading ? <span className="ea-kpi-skel" /> : summary ? formatINR(summary.pending_withdrawal) : '—'}
+              {summaryLoading ? <span className="ea-kpi-skel" /> : summary ? formatINR(summary.earnings_balance) : '—'}
             </p>
             {!summaryLoading && <p className="ea-kpi-sub">All-time net balance</p>}
           </div>

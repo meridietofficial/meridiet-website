@@ -4,18 +4,18 @@ const CTA = ({ onOpenForm }: { onOpenForm: () => void }) => {
       <div className="container">
         <div className="cta-box">
           <div className="cta-content">
-            <span className="section-tag">Free to Start</span>
+            <span className="section-tag">Expert Dietitians</span>
             <h2 className="cta-title">Start Your Personalized Nutrition Journey Today</h2>
             <p className="cta-sub">
-              Get your free 7-day Indian diet plan in just 3 minutes. No credit card required.
+              Get a customized Indian diet plan crafted by certified dietitians — tailored to your health goals and lifestyle.
             </p>
             <div className="cta-actions">
               <button className="btn-primary cta-btn" onClick={onOpenForm}>
-                Get My Diet Plan →
+                Book a Consultation →
               </button>
             </div>
             <p className="cta-note">
-              ✓ Free plan &nbsp;|&nbsp; ✓ No spam &nbsp;|&nbsp; ✓ 100% Indian food
+              ✓ Certified Dietitians &nbsp;|&nbsp; ✓ Personalized Plans &nbsp;|&nbsp; ✓ 100% Indian food
             </p>
           </div>
 

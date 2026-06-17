@@ -46,11 +46,11 @@ const faqs = [
     items: [
       {
         q: 'What are the pricing plans?',
-        a: 'We offer three plans: ₹199 for a 1-week plan (great for trying us out), ₹499 for a 1-month plan (most popular), and ₹3,999 for a full year plan (best value — saves ₹1,989 vs monthly).',
+        a: 'We offer three plans: ₹199 for a 1-week plan (great for trying us out), ₹499 for a 1-month plan (most popular), and ₹999 for a 3-month plan (best value — saves ₹498 vs monthly).',
       },
       {
-        q: 'Is there a free trial?',
-        a: 'Yes! Our 1-week plan at ₹199 acts as a low-risk trial. If you love your results, you can upgrade to the monthly or annual plan anytime.',
+        q: 'Can I try before committing to a longer plan?',
+        a: 'Absolutely. Our 1-week plan at ₹199 is the perfect way to experience MeriDiet with minimal commitment. If you love your results, you can upgrade to the 1-month or 3-month plan anytime.',
       },
       {
         q: 'What payment methods do you accept?',
@@ -67,7 +67,7 @@ const faqs = [
     items: [
       {
         q: 'Can I talk to a dietitian directly?',
-        a: 'Yes. The 1-month plan includes 1 free dietitian consultation, and the annual plan includes quarterly video consultations with a dedicated nutritionist.',
+        a: 'Yes. The 1-month plan includes 1 dietitian consultation, and the 3-month plan includes 1 video consultation with a dedicated nutritionist.',
       },
       {
         q: 'How do I get WhatsApp support?',

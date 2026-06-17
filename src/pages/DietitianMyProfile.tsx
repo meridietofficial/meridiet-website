@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import dietitianApi, { uploadSingleDocument, deleteDocument, type DietitianProfile } from '../api/dietitian'
 import { ApiError } from '../api/client'
+import accountsApi, { LinkedAccount } from '../api/accounts'
+import banksApi, { Bank } from '../api/banks'
 import SearchableSelect from '../components/SearchableSelect'
 import SpecializationInput from '../components/SpecializationInput'
 import { IN_STATES } from '../data/indiaCities'
@@ -106,7 +108,7 @@ const to12hLabel = (hhmm: string): string => {
   return `${String(h % 12 || 12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ap}`
 }
 
-const TABS =['Personal Information', 'Professional Information', 'Documents', 'Preferences', 'Security']
+const TABS = ['Personal Information', 'Professional Information', 'Documents', 'Preferences', 'Bank Information', 'Security']
 
 function CircularProgress({ pct }: { pct: number }) {
   const r = 36, circ = 2 * Math.PI * r, dash = (pct / 100) * circ
@@ -935,6 +937,351 @@ function TabSecurity() {
   )
 }
 
+function BankPicker({ selected, onSelect }: {
+  selected: Bank | null
+  onSelect: (bank: Bank) => void
+}) {
+  const [open, setOpen]       = useState(false)
+  const [search, setSearch]   = useState('')
+  const [banks, setBanks]     = useState<Bank[]>([])
+  const [fetching, setFetching] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const t = setTimeout(() => {
+      setFetching(true)
+      banksApi.getBanks(search || undefined)
+        .then(setBanks)
+        .catch(() => {})
+        .finally(() => setFetching(false))
+    }, search ? 300 : 0)
+    return () => clearTimeout(t)
+  }, [open, search])
+
+  function handleOpen() {
+    setSearch('')
+    setBanks([])
+    setOpen(true)
+  }
+
+  return (
+    <div className="dmp-bank-picker" ref={ref}>
+      <div
+        className={`dmp-bank-picker-trigger${open ? ' dmp-bank-picker-trigger--open' : ''}`}
+        onClick={handleOpen}
+      >
+        {selected ? (
+          <>
+            {selected.logo_url
+              ? <img src={selected.logo_url} alt={selected.name} className="dmp-bank-picker-logo" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+              : <div className="dmp-bank-picker-logo-fallback"><i className="fa-solid fa-building-columns" /></div>
+            }
+            <span className="dmp-bank-picker-trigger-name">{selected.name}</span>
+          </>
+        ) : (
+          <span className="dmp-bank-picker-placeholder">Select bank</span>
+        )}
+        <i className="fa-solid fa-chevron-down dmp-bank-picker-chevron" />
+      </div>
+
+      {open && (
+        <div className="dmp-bank-picker-dropdown">
+          <div className="dmp-bank-picker-search-wrap">
+            <i className="fa-solid fa-magnifying-glass" />
+            <input
+              autoFocus
+              placeholder="Search bank…"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <div className="dmp-bank-picker-list">
+            {fetching && <p className="dmp-bank-picker-loading"><i className="fa-solid fa-spinner fa-spin" /> Loading…</p>}
+            {!fetching && banks.length === 0 && (
+              <p className="dmp-bank-picker-empty">No banks found</p>
+            )}
+            {!fetching && banks.map(bank => (
+              <div
+                key={bank.id}
+                className={`dmp-bank-picker-item${selected?.id === bank.id ? ' dmp-bank-picker-item--selected' : ''}`}
+                onClick={() => { onSelect(bank); setOpen(false) }}
+              >
+                {bank.logo_url
+                  ? <img src={bank.logo_url} alt={bank.name} className="dmp-bank-picker-item-logo" onError={e => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                  : <div className="dmp-bank-picker-item-fallback"><i className="fa-solid fa-building-columns" /></div>
+                }
+                <span className="dmp-bank-picker-item-name">{bank.name}</span>
+                {selected?.id === bank.id && <i className="fa-solid fa-check dmp-bank-picker-item-check" />}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function TabBankInformation() {
+  const { showToast } = useToast()
+  const [accounts, setAccounts]       = useState<LinkedAccount[]>([])
+  const [loading, setLoading]         = useState(true)
+  const [showForm, setShowForm]       = useState(false)
+  const [formType, setFormType]       = useState<'upi' | 'bank'>('upi')
+  const [selectedBank, setSelectedBank] = useState<Bank | null>(null)
+  const [form, setForm] = useState({
+    upi_id: '', bank_name: '', account_holder: '', account_number: '', ifsc_code: '', set_primary: false,
+  })
+  const [submitting, setSubmitting]   = useState(false)
+  const [error, setError]             = useState<string | null>(null)
+
+  function loadAccounts() {
+    setLoading(true)
+    accountsApi.getAccounts()
+      .then(data => setAccounts(data))
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }
+  useEffect(() => { loadAccounts() }, [])
+
+  async function handleAdd() {
+    setError(null)
+
+    // ── Client-side validation ──────────────────────────────
+    if (formType === 'upi') {
+      const upi = form.upi_id.trim()
+      if (!upi) { setError('UPI ID is required.'); return }
+      if (!/^[\w.\-]+@[a-zA-Z]+$/.test(upi)) {
+        setError('Invalid UPI ID format. Expected format: yourname@bankhandle (e.g. manish@okhdfc)')
+        return
+      }
+    } else {
+      if (!selectedBank) { setError('Please select a bank.'); return }
+      if (!form.account_holder.trim()) { setError('Account holder name is required.'); return }
+      if (!form.account_number.trim()) { setError('Account number is required.'); return }
+      if (!/^\d{9,18}$/.test(form.account_number.trim())) {
+        setError('Account number must be 9–18 digits with no spaces or letters.')
+        return
+      }
+      if (!form.ifsc_code.trim()) { setError('IFSC code is required.'); return }
+      if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(form.ifsc_code.trim().toUpperCase())) {
+        setError('Invalid IFSC code format (e.g. HDFC0001234)')
+        return
+      }
+    }
+
+    setSubmitting(true)
+    try {
+      if (formType === 'upi') {
+        const result = await accountsApi.addAccount({
+          type: 'upi', upi_id: form.upi_id.trim(), set_primary: form.set_primary,
+        })
+        if ('upi_verified_note' in result && !result.upi_verified) {
+          showToast(`Account added. Note: ${result.upi_verified_note}`, 'success')
+        } else {
+          showToast('UPI account added successfully.', 'success')
+        }
+      } else {
+        const result = await accountsApi.addAccount({
+          type: 'bank',
+          bank_name: form.bank_name.trim(),
+          account_holder: form.account_holder.trim(),
+          account_number: form.account_number.trim(),
+          ifsc_code: form.ifsc_code.trim().toUpperCase(),
+          set_primary: form.set_primary,
+        })
+        if ('ifsc_verified' in result && result.ifsc_verified) {
+          showToast(`Account added. Verified bank: ${result.verified_bank_name}`, 'success')
+        } else {
+          showToast('Bank account added successfully.', 'success')
+        }
+      }
+      setShowForm(false)
+      setSelectedBank(null)
+      setForm({ upi_id: '', bank_name: '', account_holder: '', account_number: '', ifsc_code: '', set_primary: false })
+      loadAccounts()
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to add account.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleSetPrimary(id: number) {
+    try {
+      await accountsApi.setPrimary(id)
+      setAccounts(prev => prev.map(a => ({ ...a, is_primary: a.id === id })))
+      showToast('Primary account updated.', 'success')
+    } catch {
+      showToast('Failed to update primary account.', 'error')
+    }
+  }
+
+  async function handleDelete(id: number) {
+    try {
+      await accountsApi.deleteAccount(id)
+      setAccounts(prev => prev.filter(a => a.id !== id))
+      showToast('Account removed.', 'success')
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Failed to delete account.', 'error')
+    }
+  }
+
+  return (
+    <div className="dmp-left">
+      <div className="dmp-card">
+        <div className="dmp-card-header">
+          <h3 className="dmp-card-title">Linked Accounts</h3>
+          <button
+            className="dmp-edit-link"
+            onClick={() => { setShowForm(s => !s); setError(null) }}
+          >
+            <i className={`fa-solid ${showForm ? 'fa-xmark' : 'fa-plus'}`} />
+            {showForm ? ' Cancel' : ' Add Account'}
+          </button>
+        </div>
+
+        {/* Add form */}
+        {showForm && (
+          <div className="dmp-bi-form">
+            <div className="dmp-bi-type-row">
+              <button
+                className={`dmp-bi-type-btn${formType === 'upi' ? ' dmp-bi-type-btn--active' : ''}`}
+                onClick={() => setFormType('upi')}
+              >
+                <i className="fa-solid fa-mobile-screen" /> UPI
+              </button>
+              <button
+                className={`dmp-bi-type-btn${formType === 'bank' ? ' dmp-bi-type-btn--active' : ''}`}
+                onClick={() => setFormType('bank')}
+              >
+                <i className="fa-solid fa-building-columns" /> Bank Account
+              </button>
+            </div>
+            <div className="dmp-bi-fields">
+              {formType === 'upi' ? (
+                <input
+                  placeholder="UPI ID (e.g. name@upi)"
+                  value={form.upi_id}
+                  onChange={e => setForm(f => ({ ...f, upi_id: e.target.value }))}
+                />
+              ) : (
+                <>
+                  <BankPicker
+                    selected={selectedBank}
+                    onSelect={bank => {
+                      setSelectedBank(bank)
+                      setForm(f => ({ ...f, bank_name: bank.name }))
+                    }}
+                  />
+                  <input
+                    placeholder="Account Holder Name"
+                    value={form.account_holder}
+                    onChange={e => setForm(f => ({ ...f, account_holder: e.target.value }))}
+                  />
+                  <input
+                    placeholder="Account Number"
+                    value={form.account_number}
+                    onChange={e => setForm(f => ({ ...f, account_number: e.target.value }))}
+                  />
+                  <input
+                    placeholder="IFSC Code"
+                    value={form.ifsc_code}
+                    onChange={e => setForm(f => ({ ...f, ifsc_code: e.target.value.toUpperCase() }))}
+                  />
+                </>
+              )}
+            </div>
+
+            <div
+              className="dmp-bi-primary-row"
+              onClick={() => setForm(f => ({ ...f, set_primary: !f.set_primary }))}
+            >
+              <div className="dmp-bi-primary-row-icon">
+                <i className="fa-solid fa-star" />
+              </div>
+              <div className="dmp-bi-primary-row-text">
+                <p className="dmp-bi-primary-row-label">Set as primary account</p>
+                <p className="dmp-bi-primary-row-desc">Payouts will be sent to this account by default</p>
+              </div>
+              <span onClick={e => e.stopPropagation()}>
+                <Toggle on={form.set_primary} onChange={() => setForm(f => ({ ...f, set_primary: !f.set_primary }))} />
+              </span>
+            </div>
+            {error && <p className="dmp-bi-error">{error}</p>}
+            <div className="dmp-bi-form-actions">
+              <button className="dmp-bi-save-btn" onClick={handleAdd} disabled={submitting}>
+                {submitting ? <><i className="fa-solid fa-spinner fa-spin" /> Saving…</> : 'Save Account'}
+              </button>
+              <button className="dmp-bi-cancel-btn" onClick={() => { setShowForm(false); setError(null) }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* List */}
+        {loading && [1, 2].map(i => (
+          <div key={i} className="dmp-bi-account-row">
+            <div className="dmp-bi-icon" style={{ background: '#f3f4f6', color: '#d1d5db' }} />
+            <div className="dmp-bi-info">
+              <span className="ea-kpi-skel" style={{ width: 110, height: 12, display: 'block', marginBottom: 6 }} />
+              <span className="ea-kpi-skel" style={{ width: 160, height: 11, display: 'block' }} />
+            </div>
+          </div>
+        ))}
+
+        {!loading && accounts.length === 0 && (
+          <p className="dmp-bi-empty">No accounts linked yet. Add a UPI ID or bank account to receive payouts.</p>
+        )}
+
+        {!loading && accounts.map(a => (
+          <div key={a.id} className="dmp-bi-account-row">
+            <div className="dmp-bi-icon">
+              <i className={a.type === 'upi' ? 'fa-solid fa-mobile-screen' : 'fa-solid fa-building-columns'} />
+            </div>
+            <div className="dmp-bi-info">
+              <p className="dmp-bi-label">
+                {a.type === 'upi' ? 'UPI' : a.bank_name}
+              </p>
+              <p className="dmp-bi-detail">
+                {a.type === 'upi'
+                  ? a.upi_id
+                  : `${a.account_holder} · ••••${a.account_number?.slice(-4)}`}
+              </p>
+            </div>
+            {a.is_primary
+              ? <span className="dmp-bi-primary">Primary</span>
+              : (
+                <div className="dmp-bi-actions">
+                  <button className="dmp-bi-set-primary-btn" onClick={() => handleSetPrimary(a.id)}>
+                    Set Primary
+                  </button>
+                </div>
+              )
+            }
+            <button
+              className="dmp-bi-delete-btn"
+              title="Delete account"
+              onClick={() => handleDelete(a.id)}
+            >
+              <i className="fa-solid fa-trash" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 const FEE_MIN = 1499
 const FEE_MAX = 4500
 
@@ -1189,6 +1536,7 @@ export default function DietitianMyProfile() {
           {activeTab === 'Professional Information' && <TabProfessional profile={profile} onSaved={setProfile} />}
           {activeTab === 'Documents'                && <TabDocuments profile={profile} onSaved={setProfile} />}
           {activeTab === 'Preferences'              && <TabPreferences profile={profile} onSaved={setProfile} />}
+          {activeTab === 'Bank Information'         && <TabBankInformation />}
           {activeTab === 'Security'                 && <TabSecurity />}
 
           {/* ── Right sidebar (always visible) ── */}

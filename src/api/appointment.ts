@@ -96,6 +96,9 @@ export type DietitianAppointment = {
   dietitian_notes: string | null
   created_at: string
   updated_at: string
+  is_follow_up: boolean
+  parent_appointment_id: number | null
+  follow_up: { id: number; date: string; slot: string; status: string } | null
   user_review_done: boolean
   dietitian_review_done: boolean
   user_rating: number | null
@@ -155,6 +158,34 @@ export type RescheduleSlots = {
   booked_slots: AppointmentSlot[]
 }
 
+export type CreateFollowUpBody = {
+  appointment_date: string
+  slot: string
+  duration?: number
+  fee?: number
+  session_type?: 'video_call' | 'in_person'
+  notes?: string
+}
+
+export type FollowUpAppointment = {
+  id: number
+  dietitian_id: number
+  user_id: number
+  name: string
+  appointment_date: string
+  slot: string
+  duration: number
+  session_type: string
+  fee: number | string
+  currency: string
+  status: string
+  payment_status: string
+  is_follow_up: boolean
+  parent_appointment_id: number
+  notes: string | null
+  dietitian_notes?: string | null
+}
+
 export type DietitianSession = {
   id: number
   time: string
@@ -165,6 +196,8 @@ export type DietitianSession = {
   payment_status: string
   notes: string | null
   session_number: number
+  is_follow_up: boolean
+  parent_appointment_id: number | null
   client: {
     user_id: number
     name: string
@@ -434,6 +467,21 @@ const appointmentApi = {
       `${ENDPOINTS.appointment.single}/${id}/review`,
       body
     )
+  },
+
+  async scheduleFollowUp(id: number, body: CreateFollowUpBody): Promise<FollowUpAppointment> {
+    const res = await apiClient.apiPost<{ success: boolean; data: FollowUpAppointment }>(
+      `${ENDPOINTS.appointment.single}/${id}/follow-up`,
+      body
+    )
+    return res.data
+  },
+
+  async getFollowUps(id: number): Promise<FollowUpAppointment[]> {
+    const res = await apiClient.apiGet<{ success: boolean; data: FollowUpAppointment[] }>(
+      `${ENDPOINTS.appointment.single}/${id}/follow-ups`
+    )
+    return res.data
   },
 }
 
