@@ -198,7 +198,9 @@ function ClientRow({
       onClick={() => onSelect(c)}
     >
       <div className="mc-row-left">
-        <div className="mc-avatar">{getInitials(c.name)}</div>
+        <div className="mc-avatar">
+          {c.avatar_url ? <img src={c.avatar_url} alt={c.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : getInitials(c.name)}
+        </div>
         <div className="mc-row-info">
           <div className="mc-row-name-line">
             <span className="mc-name">{c.name}</span>
@@ -245,8 +247,6 @@ function ClientRow({
           <button className="mc-btn-outline" onClick={e => { e.stopPropagation(); onSelect(c) }}>
             <i className="fa-solid fa-eye" /> View
           </button>
-          <button className="mc-btn-icon" title="Chat"><i className="fa-solid fa-comment" /></button>
-          <button className="mc-btn-icon" title="Diet Plan"><i className="fa-solid fa-bowl-food" /></button>
         </div>
       </div>
     </div>
@@ -265,7 +265,9 @@ function ClientCard({
       onClick={() => onSelect(c)}
     >
       <div className="mc-card-top">
-        <div className="mc-avatar mc-avatar--lg">{getInitials(c.name)}</div>
+        <div className="mc-avatar mc-avatar--lg">
+          {c.avatar_url ? <img src={c.avatar_url} alt={c.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : getInitials(c.name)}
+        </div>
         <span className={`mc-status mc-status--${active ? 'active' : 'inactive'}`}>
           {active ? 'Active' : 'Inactive'}
         </span>
@@ -297,7 +299,6 @@ function ClientCard({
         <button className="mc-btn-outline mc-btn-outline--sm" onClick={e => { e.stopPropagation(); onSelect(c) }}>
           View Profile
         </button>
-        <button className="mc-btn-icon" title="Chat"><i className="fa-solid fa-comment" /></button>
       </div>
     </div>
   )
@@ -318,7 +319,9 @@ function ClientDetail({ client: c, onClose }: { client: DietitianClient; onClose
 
       {/* Avatar + name */}
       <div className="mc-detail-hero">
-        <div className="mc-avatar mc-avatar--xl">{getInitials(c.name)}</div>
+        <div className="mc-avatar mc-avatar--xl">
+          {c.avatar_url ? <img src={c.avatar_url} alt={c.name} style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} /> : getInitials(c.name)}
+        </div>
         <div>
           <p className="mc-detail-name">{c.name}</p>
           <p className="mc-detail-sub">Last appointment: {formatDate(c.last_appointment_date)}</p>
@@ -374,17 +377,6 @@ function ClientDetail({ client: c, onClose }: { client: DietitianClient; onClose
       </div>
 
       {/* Actions */}
-      <div className="mc-detail-btns">
-        <button className="mc-btn-primary mc-btn-primary--full">
-          <i className="fa-solid fa-bowl-food" /> View Diet Plan
-        </button>
-        <button className="mc-btn-outline mc-btn-outline--full">
-          <i className="fa-solid fa-comment" /> Send Message
-        </button>
-        <button className="mc-btn-outline mc-btn-outline--full">
-          <i className="fa-solid fa-video" /> Video Call
-        </button>
-      </div>
     </div>
   )
 }

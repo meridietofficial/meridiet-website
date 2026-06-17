@@ -58,9 +58,17 @@ const ENDPOINTS = {
     leaveCall:         '/appointments',   // used as /appointments/:id/leave-call
     recording:         '/appointments',   // used as /appointments/:id/recording
     dashboardStats:    '/appointments/dietitian/dashboard',
+    dietitianReviews:  '/appointments/dietitian/reviews',
   },
   contact: {
     submit: '/contact',
+  },
+  earnings: {
+    summary:        '/dietitian/earnings/summary',
+    monthlyRevenue: '/dietitian/earnings/monthly-revenue',
+    byPlan:         '/dietitian/earnings/by-plan',
+    payout:         '/dietitian/earnings/payout',
+    transactions:   '/dietitian/earnings/transactions',
   },
   dietitianDietPlan: {
     list:   '/dietitian/diet-plans',

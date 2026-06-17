@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom'
 import DietitianTopbar from './DietitianTopbar'
 import dietitianApi from '../api/dietitian'
 import { ApiError } from '../api/client'
+import { useConsultationCount } from '../context/ConsultationCountContext'
 
 export type DietitianOutletContext = {
   online: boolean
@@ -11,11 +12,11 @@ export type DietitianOutletContext = {
 
 const NAV_ITEMS: { icon: string; label: string; route?: string; badge?: number }[] = [
   { icon: 'fa-solid fa-table-columns',   label: 'Dashboard',             route: '/dietitian-dashboard' },
-  { icon: 'fa-solid fa-clipboard-list',  label: 'Consultation Requests', route: '/dietitian-consultation-requests', badge: 2 },
-  { icon: 'fa-solid fa-users',           label: 'My Clients',            route: '/dietitian-my-clients' },
+  { icon: 'fa-solid fa-clipboard-list',  label: 'Consultation Requests', route: '/dietitian-consultation-requests' },
   { icon: 'fa-solid fa-calendar-check',  label: 'Appointments',          route: '/dietitian-appointments' },
+  { icon: 'fa-solid fa-users',           label: 'My Clients',            route: '/dietitian-my-clients' },
   { icon: 'fa-solid fa-bowl-food',       label: 'Diet Plans',            route: '/dietitian-diet-plans' },
-  { icon: 'fa-solid fa-comments',        label: 'Chat',                  route: '/dietitian-chat' },
+  // { icon: 'fa-solid fa-comments',        label: 'Chat',                  route: '/dietitian-chat' },
   { icon: 'fa-solid fa-bell',            label: 'Follow Ups',            route: '/dietitian-follow-ups' },
   { icon: 'fa-solid fa-chart-line',      label: 'Reports',               route: '/dietitian-reports' },
   { icon: 'fa-solid fa-sack-dollar',     label: 'Earnings',              route: '/dietitian-earnings' },
@@ -58,11 +59,10 @@ export default function DietitianLayout() {
     }
   }
 
-  const routedActive = NAV_ITEMS.find(i => i.route === pathname)?.label ?? 'Dashboard'
-  const [activeNav, setActiveNav] = useState(routedActive)
+  const activeNav = NAV_ITEMS.find(i => i.route && pathname.startsWith(i.route))?.label ?? 'Dashboard'
+  const { pendingCount } = useConsultationCount()
 
   const handleNavClick = (item: typeof NAV_ITEMS[number]) => {
-    setActiveNav(item.label)
     if (item.route && item.route !== pathname) navigate(item.route)
   }
 
@@ -120,7 +120,9 @@ export default function DietitianLayout() {
               >
                 <span className="dd-nav-icon"><i className={item.icon} /></span>
                 <span className="dd-nav-label">{item.label}</span>
-                {!!item.badge && item.badge > 0 && <span className="dd-nav-badge">{item.badge}</span>}
+                {item.label === 'Consultation Requests' && pendingCount > 0 && (
+                  <span className="dd-nav-badge">{pendingCount}</span>
+                )}
               </button>
             ))}
           </nav>

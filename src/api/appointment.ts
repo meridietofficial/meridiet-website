@@ -82,19 +82,77 @@ export type DietitianAppointment = {
   dietitian_id: number
   user_id: number
   name: string
-  email: string | null
-  phone: string | null
+  avatar_url: string | null
   appointment_date: string
   slot: string
   fee: string
   currency: string
-  status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed' | 'missed'
   payment_status: string
   payment_id: string | null
   order_id: string
   notes: string | null
+  missed_reason: string | null
+  dietitian_notes: string | null
   created_at: string
   updated_at: string
+  user_review_done: boolean
+  dietitian_review_done: boolean
+  user_rating: number | null
+  user_review: string | null
+  user_reviewed_at: string | null
+  dietitian_rating: number | null
+  dietitian_review: string | null
+  dietitian_reviewed_at: string | null
+}
+
+export type DietitianReviewItem = {
+  appointment_id: number
+  appointment_date: string
+  user_rating: number
+  user_review: string | null
+  user_reviewed_at: string
+  client_name: string
+  client_avatar: string | null
+}
+
+export type DietitianReviewsSummary = {
+  average_rating: number
+  total_reviews: number
+  breakdown: Record<string, number>
+}
+
+export type DietitianReviewsResponse = {
+  summary: DietitianReviewsSummary
+  reviews: DietitianReviewItem[]
+}
+
+export type AppointmentReviews = {
+  user_review_done: boolean
+  dietitian_review_done: boolean
+  reviews: {
+    user: { rating: number; review: string; reviewed_at: string } | null
+    dietitian: { rating: number; review: string; reviewed_at: string } | null
+  }
+}
+
+export type RescheduleHistory = {
+  id: number
+  appointment_id: number
+  rescheduled_by: number
+  rescheduled_by_name: string
+  previous_date: string
+  previous_slot: string
+  new_date: string
+  new_slot: string
+  reason: string | null
+  created_at: string
+}
+
+export type RescheduleSlots = {
+  current: { date: string; slot: string }
+  available_slots: AppointmentSlot[]
+  booked_slots: AppointmentSlot[]
 }
 
 export type DietitianSession = {
@@ -113,6 +171,11 @@ export type DietitianSession = {
     initials: string
     avatar_url: string | null
   }
+  dietitian_review_done?: boolean
+  dietitian_rating?: number | null
+  dietitian_review?: string | null
+  user_review_done?: boolean
+  user_rating?: number | null
 }
 
 export type DietitianSessionGroup = {
@@ -128,6 +191,7 @@ export type DietitianSessionsSummary = {
   completed: number
   cancelled: number
   pending: number
+  missed: number
 }
 
 export type JoinCallData = {
@@ -242,7 +306,7 @@ const appointmentApi = {
   },
 
   async getDietitianSessions(params?: {
-    tab?: 'all' | 'upcoming' | 'completed' | 'cancelled'
+    tab?: 'all' | 'upcoming' | 'completed' | 'cancelled' | 'missed'
     search?: string
     page?: number
     limit?: number
@@ -252,6 +316,7 @@ const appointmentApi = {
     if (params?.search) q.set('search', params.search)
     if (params?.page)   q.set('page',   String(params.page))
     if (params?.limit)  q.set('limit',  String(params.limit))
+    q.set('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone)
     const qs = q.toString()
     const res = await apiClient.apiGet<{
       success: boolean
@@ -298,13 +363,76 @@ const appointmentApi = {
     return res.data
   },
 
+  async saveDietitianNotes(id: number, notes: string): Promise<void> {
+    await apiClient.apiPut(
+      `${ENDPOINTS.appointment.single}/${id}/dietitian-notes`,
+      { notes }
+    )
+  },
+
   async updateAppointmentStatus(
     id: number,
-    status: 'confirmed' | 'completed' | 'cancelled'
+    status: 'confirmed' | 'completed' | 'cancelled' | 'missed'
   ): Promise<void> {
     await apiClient.apiPatch(
       `${ENDPOINTS.appointment.updateStatus}/${id}/status`,
       { status }
+    )
+  },
+
+  async rescheduleAppointment(
+    id: number,
+    body: { appointment_date: string; slot: string; reason?: string }
+  ): Promise<void> {
+    await apiClient.apiPatch(
+      `${ENDPOINTS.appointment.single}/${id}/reschedule`,
+      body
+    )
+  },
+
+  async getRescheduleHistory(id: number): Promise<RescheduleHistory[]> {
+    const res = await apiClient.apiGet<{ success: boolean; data: RescheduleHistory[] }>(
+      `${ENDPOINTS.appointment.single}/${id}/reschedule-history`
+    )
+    return res.data
+  },
+
+  async getRescheduleSlots(id: number, days = 30): Promise<RescheduleSlots> {
+    const res = await apiClient.apiGet<{ success: boolean; data: RescheduleSlots }>(
+      `${ENDPOINTS.appointment.single}/${id}/reschedule-slots?days=${days}`
+    )
+    return res.data
+  },
+
+  async getReviews(id: number): Promise<AppointmentReviews> {
+    const res = await apiClient.apiGet<{ success: boolean; data: AppointmentReviews }>(
+      `${ENDPOINTS.appointment.single}/${id}/reviews`
+    )
+    return res.data
+  },
+
+  async getDietitianReviews(params?: {
+    rating?: number
+    search?: string
+    page?: number
+    limit?: number
+  }): Promise<{ data: DietitianReviewsResponse; meta: MyAppointmentsMeta }> {
+    const q = new URLSearchParams()
+    if (params?.rating) q.set('rating', String(params.rating))
+    if (params?.search) q.set('search', params.search)
+    if (params?.page)   q.set('page',   String(params.page))
+    if (params?.limit)  q.set('limit',  String(params.limit))
+    const qs = q.toString()
+    const res = await apiClient.apiGet<{ success: boolean; data: DietitianReviewsResponse; meta: MyAppointmentsMeta }>(
+      `${ENDPOINTS.appointment.dietitianReviews}${qs ? '?' + qs : ''}`
+    )
+    return { data: res.data, meta: res.meta }
+  },
+
+  async submitReview(id: number, body: { rating: number; review: string }): Promise<void> {
+    await apiClient.apiPost(
+      `${ENDPOINTS.appointment.single}/${id}/review`,
+      body
     )
   },
 }

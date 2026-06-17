@@ -5,6 +5,7 @@ import Footer from './components/Footer'
 import ScrollToTop from './components/ScrollToTop'
 import DietitianLayout from './components/DietitianLayout'
 import { VideoCallProvider, useVideoCall } from './context/VideoCallContext'
+import { ConsultationCountProvider } from './context/ConsultationCountContext'
 import { trackPageView } from './utils/analytics'
 const VideoCallModal = lazy(() => import('./components/VideoCallModal'))
 
@@ -27,7 +28,8 @@ const DietitianDashboard  = lazy(() => import('./pages/DietitianDashboard'))
 const DietitianMyProfile  = lazy(() => import('./pages/DietitianMyProfile'))
 const DietitianConsultationRequests = lazy(() => import('./pages/DietitianConsultationRequests'))
 const DietitianMyClients      = lazy(() => import('./pages/DietitianMyClients'))
-const DietitianAppointments   = lazy(() => import('./pages/DietitianAppointments'))
+const DietitianAppointments       = lazy(() => import('./pages/DietitianAppointments'))
+const DietitianAppointmentDetail  = lazy(() => import('./pages/DietitianAppointmentDetail'))
 const DietitianDietPlans      = lazy(() => import('./pages/DietitianDietPlans'))
 const DietitianCreateDietPlan = lazy(() => import('./pages/DietitianCreateDietPlan'))
 const DietitianDraftDietPlan  = lazy(() => import('./pages/DietitianDraftDietPlan'))
@@ -115,12 +117,13 @@ function AppInner() {
           <Route path="/dietitian/verification-submitted"  element={<DietitianVerificationSubmitted />} />
           <Route path="/join-as-dietitian"                 element={<JoinDietitian />} />
           <Route path="/reset-password"                    element={<ResetPassword />} />
-          <Route element={<DietitianLayout />}>
+          <Route element={<ConsultationCountProvider><DietitianLayout /></ConsultationCountProvider>}>
             <Route path="/dietitian-dashboard"               element={<DietitianDashboard />} />
             <Route path="/dietitian-profile"                 element={<DietitianMyProfile />} />
             <Route path="/dietitian-consultation-requests"   element={<DietitianConsultationRequests />} />
             <Route path="/dietitian-my-clients"              element={<DietitianMyClients />} />
             <Route path="/dietitian-appointments"            element={<DietitianAppointments />} />
+            <Route path="/dietitian-appointments/:id"       element={<DietitianAppointmentDetail />} />
             <Route path="/dietitian-diet-plans"              element={<DietitianDietPlans />} />
             <Route path="/dietitian-diet-plans/new"         element={<DietitianCreateDietPlan />} />
             <Route path="/dietitian-diet-plans/:planId"     element={<DietitianDraftDietPlan />} />
