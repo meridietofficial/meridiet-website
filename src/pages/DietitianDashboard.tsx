@@ -124,7 +124,7 @@ export default function DietitianDashboard() {
 
         if (!sessionStorage.getItem(SETUP_SKIPPED_KEY)) {
           const items = buildSetupItems(profileData)
-          if (!items[0].done) setSetupItems(items)
+          if (items.some(i => !i.done)) setSetupItems(items)
         }
 
         setPending(pendingRes.data)
@@ -150,7 +150,7 @@ export default function DietitianDashboard() {
 
   const handleSetupComplete = () => {
     setSetupItems(null)
-    navigate('/dietitian-profile', { state: { tab: 'Preferences' } })
+    navigate('/dietitian-profile')
   }
   const handleSetupSkip = () => {
     sessionStorage.setItem(SETUP_SKIPPED_KEY, '1')
