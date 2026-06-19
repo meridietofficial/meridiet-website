@@ -1,4 +1,8 @@
+import { useEffect } from 'react'
+import DatePicker from './DatePicker'
+
 export type DietPlanFormValues = {
+  dob: string
   age: string
   gender: string
   height: string
@@ -6,6 +10,7 @@ export type DietPlanFormValues = {
   weight: string
   weight_unit: 'kg' | 'lbs'
   goals: string[]
+  goals_other: string
   activity_level: string
   work_type: string
   workout_type: string
@@ -25,56 +30,125 @@ export type DietPlanFormValues = {
 }
 
 export const EMPTY_FORM: DietPlanFormValues = {
-  age: '', gender: '', height: '', height_unit: 'cm', weight: '', weight_unit: 'kg',
-  goals: [], activity_level: '', work_type: '', workout_type: '', diet_type: '',
+  dob: '', age: '', gender: '', height: '', height_unit: 'cm', weight: '', weight_unit: 'kg',
+  goals: [], goals_other: '', activity_level: '', work_type: '', workout_type: '', diet_type: '',
   cuisine_preference: [], food_allergies: [], foods_dislike: '', favorite_foods: '',
   medical_conditions: [], other_condition: '', on_medication: '', medications: '',
   digestive_health: '', smoke_alcohol: '', health_notes: '', plan_type: '',
 }
 
+const TODAY = new Date().toISOString().split('T')[0]
+
+function calcAge(dob: string): string {
+  if (!dob) return ''
+  const birth = new Date(dob.split('T')[0] + 'T00:00:00')
+  if (isNaN(birth.getTime())) return ''
+  const now = new Date()
+  let age = now.getFullYear() - birth.getFullYear()
+  const m = now.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--
+  return age >= 0 && age <= 120 ? String(age) : ''
+}
+
 const GOALS_OPTIONS = [
-  { value: 'weight_loss',     label: 'Weight Loss' },
-  { value: 'muscle_gain',     label: 'Muscle Gain' },
-  { value: 'maintenance',     label: 'Maintenance' },
-  { value: 'improve_energy',  label: 'Improve Energy' },
-  { value: 'manage_condition', label: 'Manage Condition' },
-  { value: 'hormonal_balance', label: 'Hormonal Balance' },
-  { value: 'improve_digestion', label: 'Improve Digestion' },
-  { value: 'general_fitness', label: 'General Fitness' },
+  { value: 'weight_loss',       label: 'Weight Loss',       emoji: '⚖️', desc: 'Lose weight & feel lighter' },
+  { value: 'fat_loss',          label: 'Fat Loss',          emoji: '🏋️', desc: 'Reduce body fat & shape up' },
+  { value: 'muscle_gain',       label: 'Muscle Gain',       emoji: '💪', desc: 'Build muscle & get stronger' },
+  { value: 'pcos_support',      label: 'PCOS Support',      emoji: '♀️', desc: 'Manage PCOS symptoms naturally' },
+  { value: 'healthy_lifestyle', label: 'Healthy Lifestyle', emoji: '🌱', desc: 'Overall health & wellness' },
+  { value: 'maintenance',       label: 'Maintenance',       emoji: '⚡', desc: 'Maintain current weight' },
+  { value: 'improve_energy',    label: 'Improve Energy',    emoji: '🔋', desc: 'Boost daily energy levels' },
+  { value: 'manage_condition',  label: 'Manage Condition',  emoji: '🏥', desc: 'Support a medical condition' },
+  { value: 'hormonal_balance',  label: 'Hormonal Balance',  emoji: '⚗️', desc: 'Balance hormones naturally' },
+  { value: 'improve_digestion', label: 'Improve Digestion', emoji: '🌿', desc: 'Improve gut health' },
+  { value: 'general_fitness',   label: 'General Fitness',   emoji: '🎯', desc: 'Overall fitness' },
+  { value: 'other',             label: 'Other',             emoji: '✏️', desc: 'Type a custom goal' },
+]
+
+const ACTIVITY_OPTIONS = [
+  { value: 'sedentary',         label: 'Sedentary',       emoji: '🛋️', sub: 'Little / no exercise' },
+  { value: 'lightly_active',    label: 'Lightly Active',  emoji: '🚶', sub: '1–3 days/week' },
+  { value: 'moderately_active', label: 'Moderate',        emoji: '🏃', sub: '3–5 days/week' },
+  { value: 'very_active',       label: 'Very Active',     emoji: '💪', sub: '6–7 days/week' },
+  { value: 'super_active',      label: 'Super Active',    emoji: '🏆', sub: 'Athlete level' },
+]
+
+const WORK_OPTIONS = [
+  { value: 'desk_job',     label: 'Desk Job',      emoji: '💻' },
+  { value: 'standing_job', label: 'Standing Job',  emoji: '🧍' },
+  { value: 'physical_job', label: 'Physical Job',  emoji: '⚒️' },
+]
+
+const WORKOUT_OPTIONS = [
+  { value: 'gym',     label: 'Gym / Weights',  emoji: '🏋️' },
+  { value: 'yoga',    label: 'Yoga / Pilates', emoji: '🧘' },
+  { value: 'running', label: 'Running',        emoji: '🏃' },
+  { value: 'sports',  label: 'Sports',         emoji: '⚽' },
+  { value: 'mixed',   label: 'Mixed',          emoji: '🔄' },
+  { value: 'none',    label: 'No Exercise',    emoji: '😴' },
+]
+
+const DIET_OPTIONS = [
+  { value: 'vegetarian',     label: 'Vegetarian',     emoji: '🌿', desc: 'Pure plant-based' },
+  { value: 'non_vegetarian', label: 'Non-Veg',        emoji: '🍗', desc: 'Includes meat & fish' },
+  { value: 'eggetarian',     label: 'Eggetarian',     emoji: '🥚', desc: 'Veg + eggs' },
+  { value: 'vegan',          label: 'Vegan',          emoji: '🌱', desc: 'No animal products' },
 ]
 
 const CUISINE_OPTIONS = [
-  { value: 'north_indian',   label: 'North Indian' },
-  { value: 'south_indian',   label: 'South Indian' },
-  { value: 'east_indian',    label: 'East Indian' },
-  { value: 'chinese',        label: 'Chinese' },
-  { value: 'continental',    label: 'Continental' },
-  { value: 'mediterranean',  label: 'Mediterranean' },
-  { value: 'mughlai',        label: 'Mughlai' },
-  { value: 'thai',           label: 'Thai' },
+  { value: 'north_indian',   label: 'North Indian',   emoji: '🫓' },
+  { value: 'south_indian',   label: 'South Indian',   emoji: '🌶️' },
+  { value: 'bengali',        label: 'Bengali',        emoji: '🐟' },
+  { value: 'gujarati',       label: 'Gujarati',       emoji: '🥜' },
+  { value: 'punjabi',        label: 'Punjabi',        emoji: '🧈' },
+  { value: 'maharashtrian',  label: 'Maharashtrian',  emoji: '🥘' },
+  { value: 'continental',    label: 'Continental',    emoji: '🥗' },
+  { value: 'no_preference',  label: 'No Preference',  emoji: '✌️' },
 ]
 
 const ALLERGY_OPTIONS = [
-  { value: 'dairy',      label: 'Dairy' },
-  { value: 'gluten',     label: 'Gluten' },
-  { value: 'nuts',       label: 'Nuts' },
-  { value: 'eggs',       label: 'Eggs' },
-  { value: 'shellfish',  label: 'Shellfish' },
-  { value: 'soy',        label: 'Soy' },
-  { value: 'none',       label: 'None' },
+  { value: 'none',    label: 'None',    emoji: '✅' },
+  { value: 'gluten',  label: 'Gluten',  emoji: '🌾' },
+  { value: 'dairy',   label: 'Dairy',   emoji: '🥛' },
+  { value: 'nuts',    label: 'Nuts',    emoji: '🥜' },
+  { value: 'soy',     label: 'Soy',     emoji: '🫘' },
+  { value: 'eggs',    label: 'Eggs',    emoji: '🥚' },
+  { value: 'shellfish', label: 'Shellfish', emoji: '🦐' },
 ]
 
 const MEDICAL_OPTIONS = [
-  { value: 'diabetes',        label: 'Diabetes' },
-  { value: 'hypertension',    label: 'Hypertension' },
-  { value: 'thyroid',         label: 'Thyroid' },
-  { value: 'pcod_pcos',       label: 'PCOD/PCOS' },
-  { value: 'high_cholesterol', label: 'High Cholesterol' },
-  { value: 'heart_disease',   label: 'Heart Disease' },
-  { value: 'kidney_disease',  label: 'Kidney Disease' },
-  { value: 'ibs',             label: 'IBS/IBD' },
-  { value: 'arthritis',       label: 'Arthritis' },
-  { value: 'none',            label: 'None' },
+  { value: 'diabetes',          label: 'Diabetes',         emoji: '💉' },
+  { value: 'hypertension',      label: 'Hypertension',     emoji: '❤️' },
+  { value: 'thyroid',           label: 'Thyroid',          emoji: '🦋' },
+  { value: 'pcod_pcos',         label: 'PCOD/PCOS',        emoji: '♀️' },
+  { value: 'high_cholesterol',  label: 'High Cholesterol', emoji: '🫀' },
+  { value: 'heart_disease',     label: 'Heart Disease',    emoji: '💔' },
+  { value: 'kidney_disease',    label: 'Kidney Disease',   emoji: '🫘' },
+  { value: 'ibs',               label: 'IBS/IBD',          emoji: '🌿' },
+  { value: 'arthritis',         label: 'Arthritis',        emoji: '🦴' },
+  { value: 'none',              label: 'None',             emoji: '✅' },
+]
+
+const MEDICATION_OPTIONS = [
+  { value: 'yes_regularly',    label: 'Yes, Regularly',   emoji: '💊', desc: 'Takes medicines daily' },
+  { value: 'yes_occasionally', label: 'Yes, Occasionally',emoji: '🩺', desc: 'Sometimes as needed' },
+  { value: 'no',               label: 'No',               emoji: '✅', desc: 'Not on medication' },
+]
+
+const DIGESTION_OPTIONS = [
+  { value: 'excellent', label: 'Excellent', emoji: '😄', color: '#22c55e' },
+  { value: 'good',      label: 'Good',      emoji: '🙂', color: '#84cc16' },
+  { value: 'average',   label: 'Average',   emoji: '😐', color: '#f59e0b' },
+  { value: 'poor',      label: 'Poor',      emoji: '😟', color: '#ef4444' },
+]
+
+const SMOKE_OPTIONS = [
+  { value: 'neither',             label: 'Neither',             emoji: '🌿' },
+  { value: 'smoke',               label: 'Smokes',              emoji: '🚬' },
+  { value: 'occasionally_smoke',  label: 'Occasionally Smokes', emoji: '💨' },
+  { value: 'alcohol',             label: 'Drinks Alcohol',      emoji: '🍺' },
+  { value: 'occasionally_drinks', label: 'Occasionally Drinks', emoji: '🥂' },
+  { value: 'both',                label: 'Both',                emoji: '⚠️' },
 ]
 
 type Props = {
@@ -83,113 +157,133 @@ type Props = {
   disabled?: boolean
 }
 
-function MultiChip({
-  options, value, onChange, disabled,
-}: {
-  options: { value: string; label: string }[]
-  value: string[]
-  onChange: (v: string[]) => void
-  disabled?: boolean
-}) {
-  return (
-    <div className="cdp-chips">
-      {options.map(opt => (
-        <button
-          key={opt.value}
-          type="button"
-          disabled={disabled}
-          className={`cdp-chip${value.includes(opt.value) ? ' cdp-chip--active' : ''}`}
-          onClick={() => onChange(
-            value.includes(opt.value)
-              ? value.filter(v => v !== opt.value)
-              : [...value, opt.value]
-          )}
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
-  )
+function toggleArr(arr: string[], val: string, solo?: boolean): string[] {
+  if (solo) return arr.includes(val) ? [] : [val]
+  if (val === 'none') return arr.includes('none') ? [] : ['none']
+  const without = arr.filter(x => x !== 'none' && x !== val)
+  return arr.includes(val) ? without : [...without, val]
 }
 
 export default function DietPlanFormFields({ form, onChange, disabled }: Props) {
+  // Plan is fixed at 1 Month (value 2) for now
+  useEffect(() => {
+    if (form.plan_type !== '2') onChange('plan_type', '2')
+  }, [])
+
   return (
     <>
       {/* ─── Basic Information ─── */}
       <div className="cdp-section">
         <h3 className="cdp-section-title">
-          <i className="fa-solid fa-user" /> Basic Information
+          <span>📋</span> Basic Information
         </h3>
+
+        {/* DOB + Age row */}
         <div className="cdp-row">
           <div className="cdp-field">
-            <label className="cdp-label">Age</label>
+            <label className="cdp-label">Date of Birth</label>
+            <DatePicker
+              value={form.dob}
+              min="1900-01-01"
+              max={TODAY}
+              onChange={val => {
+                onChange('dob', val)
+                onChange('age', calcAge(val))
+              }}
+            />
+          </div>
+          <div className="cdp-field">
+            <div className="dpf-label-row">
+              <label className="cdp-label">
+                Age
+                {form.dob && <span className="dpf-age-badge">Auto-filled from DOB</span>}
+              </label>
+            </div>
             <input
               type="number" min="1" max="120"
               className="cdp-input"
               placeholder="e.g. 28"
               value={form.age}
-              onChange={e => onChange('age', e.target.value)}
+              readOnly={!!form.dob}
+              onChange={e => { if (!form.dob) onChange('age', e.target.value) }}
+              disabled={disabled}
+              style={form.dob ? { background: '#f0fdf4', color: '#15803d', fontWeight: 600 } : {}}
+            />
+          </div>
+        </div>
+
+        {/* Gender */}
+        <div className="cdp-field">
+          <label className="cdp-label">Gender</label>
+          <div className="dpf-pill-row">
+            {[
+              { value: 'male',   label: 'Male',   emoji: '👨' },
+              { value: 'female', label: 'Female', emoji: '👩' },
+              { value: 'other',  label: 'Other',  emoji: '🧑' },
+              { value: 'prefer_not_to_say', label: 'Prefer not to say', emoji: '🤐' },
+            ].map(o => (
+              <button
+                key={o.value}
+                type="button"
+                disabled={disabled}
+                className={`dpf-pill${form.gender === o.value ? ' active' : ''}`}
+                onClick={() => onChange('gender', form.gender === o.value ? '' : o.value)}
+              >
+                <span>{o.emoji}</span> {o.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Height + Weight */}
+        <div className="cdp-row" style={{ marginTop: 14 }}>
+          <div className="cdp-field">
+            <div className="dpf-label-row">
+              <label className="cdp-label">Height</label>
+              <div className="dpf-unit-tog">
+                {(['cm', 'ft_in'] as const).map(u => (
+                  <button
+                    key={u}
+                    type="button"
+                    disabled={disabled}
+                    className={form.height_unit === u ? 'active' : ''}
+                    onClick={() => { if (u !== form.height_unit) { onChange('height_unit', u); onChange('height', '') } }}
+                  >{u === 'ft_in' ? 'ft/in' : 'cm'}</button>
+                ))}
+              </div>
+            </div>
+            <input
+              className="cdp-input"
+              type="number" step="0.1"
+              placeholder={form.height_unit === 'cm' ? '50–300 cm' : '1–9 ft'}
+              value={form.height}
+              onChange={e => onChange('height', e.target.value)}
               disabled={disabled}
             />
           </div>
           <div className="cdp-field">
-            <label className="cdp-label">Gender</label>
-            <select
-              className="cdp-select"
-              value={form.gender}
-              onChange={e => onChange('gender', e.target.value)}
+            <div className="dpf-label-row">
+              <label className="cdp-label">Weight</label>
+              <div className="dpf-unit-tog">
+                {(['kg', 'lbs'] as const).map(u => (
+                  <button
+                    key={u}
+                    type="button"
+                    disabled={disabled}
+                    className={form.weight_unit === u ? 'active' : ''}
+                    onClick={() => { if (u !== form.weight_unit) { onChange('weight_unit', u); onChange('weight', '') } }}
+                  >{u}</button>
+                ))}
+              </div>
+            </div>
+            <input
+              type="number" step="0.1" min="1"
+              className="cdp-input"
+              placeholder={form.weight_unit === 'kg' ? '1–300 kg' : '1–660 lbs'}
+              value={form.weight}
+              onChange={e => onChange('weight', e.target.value)}
               disabled={disabled}
-            >
-              <option value="">Select</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
-        </div>
-        <div className="cdp-row">
-          <div className="cdp-field">
-            <label className="cdp-label">Height</label>
-            <div className="cdp-input-unit">
-              <input
-                className="cdp-input"
-                placeholder={form.height_unit === 'cm' ? 'e.g. 165' : "e.g. 5'6\""}
-                value={form.height}
-                onChange={e => onChange('height', e.target.value)}
-                disabled={disabled}
-              />
-              <select
-                className="cdp-unit-sel"
-                value={form.height_unit}
-                onChange={e => onChange('height_unit', e.target.value as 'cm' | 'ft_in')}
-                disabled={disabled}
-              >
-                <option value="cm">cm</option>
-                <option value="ft_in">ft</option>
-              </select>
-            </div>
-          </div>
-          <div className="cdp-field">
-            <label className="cdp-label">Weight</label>
-            <div className="cdp-input-unit">
-              <input
-                type="number" min="1"
-                className="cdp-input"
-                placeholder="e.g. 65"
-                value={form.weight}
-                onChange={e => onChange('weight', e.target.value)}
-                disabled={disabled}
-              />
-              <select
-                className="cdp-unit-sel"
-                value={form.weight_unit}
-                onChange={e => onChange('weight_unit', e.target.value as 'kg' | 'lbs')}
-                disabled={disabled}
-              >
-                <option value="kg">kg</option>
-                <option value="lbs">lbs</option>
-              </select>
-            </div>
+            />
           </div>
         </div>
       </div>
@@ -197,71 +291,108 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
       {/* ─── Fitness Goals ─── */}
       <div className="cdp-section">
         <h3 className="cdp-section-title">
-          <i className="fa-solid fa-bullseye" /> Fitness Goals
+          <span>🎯</span> Fitness Goals
         </h3>
-        <div className="cdp-field">
-          <label className="cdp-label">Select all that apply</label>
-          <MultiChip
-            options={GOALS_OPTIONS}
-            value={form.goals}
-            onChange={v => onChange('goals', v)}
+        <p className="cdp-section-sub">Select all that apply for this client.</p>
+        <div className="dpf-goals-grid">
+          {GOALS_OPTIONS.map(g => {
+            const active = form.goals.includes(g.value)
+            return (
+              <button
+                key={g.value}
+                type="button"
+                disabled={disabled}
+                className={`dpf-goal-card${active ? ' active' : ''}`}
+                onClick={() => onChange('goals',
+                  active ? form.goals.filter(v => v !== g.value) : [...form.goals, g.value]
+                )}
+              >
+                {active && <span className="dpf-goal-check">✓</span>}
+                <span className="dpf-goal-icon">{g.emoji}</span>
+                <span className="dpf-goal-name">{g.label}</span>
+                <span className="dpf-goal-desc">{g.desc}</span>
+              </button>
+            )
+          })}
+        </div>
+        {form.goals.includes('other') && (
+          <input
+            className="cdp-input"
+            style={{ marginTop: 10 }}
+            placeholder="Describe the custom goal…"
+            value={form.goals_other}
+            onChange={e => onChange('goals_other', e.target.value)}
             disabled={disabled}
           />
-        </div>
+        )}
       </div>
 
       {/* ─── Lifestyle ─── */}
       <div className="cdp-section">
         <h3 className="cdp-section-title">
-          <i className="fa-solid fa-person-running" /> Lifestyle
+          <span>🏃</span> Lifestyle
         </h3>
-        <div className="cdp-row cdp-row--3">
-          <div className="cdp-field">
-            <label className="cdp-label">Activity Level</label>
-            <select
-              className="cdp-select"
-              value={form.activity_level}
-              onChange={e => onChange('activity_level', e.target.value)}
-              disabled={disabled}
-            >
-              <option value="">Select</option>
-              <option value="sedentary">Sedentary</option>
-              <option value="lightly_active">Lightly Active</option>
-              <option value="moderately_active">Moderately Active</option>
-              <option value="very_active">Very Active</option>
-              <option value="super_active">Super Active (Athlete)</option>
-            </select>
+
+        <div className="cdp-field">
+          <label className="cdp-label">Activity Level</label>
+          <p className="cdp-section-sub" style={{ marginTop: 0, marginBottom: 6 }}>How active is the client daily?</p>
+          <div className="dpf-activity-grid">
+            {ACTIVITY_OPTIONS.map(a => {
+              const active = form.activity_level === a.value
+              return (
+                <button
+                  key={a.value}
+                  type="button"
+                  disabled={disabled}
+                  className={`dpf-activity-card${active ? ' active' : ''}`}
+                  onClick={() => onChange('activity_level', active ? '' : a.value)}
+                >
+                  {active && <span className="dpf-ac-check">✓</span>}
+                  <span className="dpf-ac-icon">{a.emoji}</span>
+                  <span className="dpf-ac-label">{a.label}</span>
+                  <span className="dpf-ac-sub">{a.sub}</span>
+                </button>
+              )
+            })}
           </div>
-          <div className="cdp-field">
-            <label className="cdp-label">Work Type</label>
-            <select
-              className="cdp-select"
-              value={form.work_type}
-              onChange={e => onChange('work_type', e.target.value)}
-              disabled={disabled}
-            >
-              <option value="">Select</option>
-              <option value="desk_job">Desk Job</option>
-              <option value="standing_job">Standing Job</option>
-              <option value="physical_job">Physical Job</option>
-            </select>
+        </div>
+
+        <div className="cdp-field" style={{ marginTop: 16 }}>
+          <label className="cdp-label">Work Type</label>
+          <div className="dpf-pill-row">
+            {WORK_OPTIONS.map(w => (
+              <button
+                key={w.value}
+                type="button"
+                disabled={disabled}
+                className={`dpf-pill${form.work_type === w.value ? ' active' : ''}`}
+                onClick={() => onChange('work_type', form.work_type === w.value ? '' : w.value)}
+              >
+                <span>{w.emoji}</span> {w.label}
+              </button>
+            ))}
           </div>
-          <div className="cdp-field">
-            <label className="cdp-label">Workout Type</label>
-            <select
-              className="cdp-select"
-              value={form.workout_type}
-              onChange={e => onChange('workout_type', e.target.value)}
-              disabled={disabled}
-            >
-              <option value="">Select</option>
-              <option value="none">No Exercise</option>
-              <option value="gym">Gym / Weights</option>
-              <option value="yoga">Yoga / Pilates</option>
-              <option value="running">Running</option>
-              <option value="sports">Sports</option>
-              <option value="mixed">Mixed</option>
-            </select>
+        </div>
+
+        <div className="cdp-field" style={{ marginTop: 16 }}>
+          <label className="cdp-label">Workout Type</label>
+          <div className="dpf-workout-grid">
+            {WORKOUT_OPTIONS.map(w => {
+              const active = form.workout_type === w.value
+              return (
+                <button
+                  key={w.value}
+                  type="button"
+                  disabled={disabled}
+                  className={`dpf-workout-card${active ? ' active' : ''}`}
+                  onClick={() => onChange('workout_type', active ? '' : w.value)}
+                >
+                  {active && <span className="dpf-wt-check">✓</span>}
+                  <span className="dpf-wt-icon">{w.emoji}</span>
+                  <span className="dpf-wt-label">{w.label}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
       </div>
@@ -269,46 +400,77 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
       {/* ─── Food Preferences ─── */}
       <div className="cdp-section">
         <h3 className="cdp-section-title">
-          <i className="fa-solid fa-bowl-food" /> Food Preferences
+          <span>🥗</span> Food Preferences
         </h3>
-        <div className="cdp-row">
-          <div className="cdp-field">
-            <label className="cdp-label">Diet Type</label>
-            <select
-              className="cdp-select"
-              value={form.diet_type}
-              onChange={e => onChange('diet_type', e.target.value)}
-              disabled={disabled}
-            >
-              <option value="">Select</option>
-              <option value="vegetarian">Vegetarian</option>
-              <option value="non_vegetarian">Non-Vegetarian</option>
-              <option value="eggetarian">Eggetarian</option>
-              <option value="vegan">Vegan</option>
-            </select>
+
+        <div className="cdp-field">
+          <label className="cdp-label">Diet Type</label>
+          <div className="dpf-diet-grid">
+            {DIET_OPTIONS.map(d => {
+              const active = form.diet_type === d.value
+              return (
+                <button
+                  key={d.value}
+                  type="button"
+                  disabled={disabled}
+                  className={`dpf-diet-card${active ? ' active' : ''}`}
+                  onClick={() => onChange('diet_type', active ? '' : d.value)}
+                >
+                  {active && <span className="dpf-diet-check">✓</span>}
+                  <span className="dpf-diet-icon">{d.emoji}</span>
+                  <span className="dpf-diet-name">{d.label}</span>
+                  <span className="dpf-diet-desc">{d.desc}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
-        <div className="cdp-field">
+
+        <div className="cdp-field" style={{ marginTop: 16 }}>
           <label className="cdp-label">Cuisine Preference</label>
-          <MultiChip
-            options={CUISINE_OPTIONS}
-            value={form.cuisine_preference}
-            onChange={v => onChange('cuisine_preference', v)}
-            disabled={disabled}
-          />
+          <div className="dpf-chip-group">
+            {CUISINE_OPTIONS.map(c => {
+              const active = form.cuisine_preference.includes(c.value)
+              return (
+                <button
+                  key={c.value}
+                  type="button"
+                  disabled={disabled}
+                  className={`dpf-chip${active ? ' active' : ''}`}
+                  onClick={() => onChange('cuisine_preference', toggleArr(form.cuisine_preference, c.value))}
+                >
+                  <span>{c.emoji}</span> {c.label}
+                  {active && <span className="dpf-chip-x">✓</span>}
+                </button>
+              )
+            })}
+          </div>
         </div>
+
         <div className="cdp-field" style={{ marginTop: 16 }}>
           <label className="cdp-label">Food Allergies</label>
-          <MultiChip
-            options={ALLERGY_OPTIONS}
-            value={form.food_allergies}
-            onChange={v => onChange('food_allergies', v)}
-            disabled={disabled}
-          />
+          <div className="dpf-chip-group">
+            {ALLERGY_OPTIONS.map(a => {
+              const active = form.food_allergies.includes(a.value)
+              return (
+                <button
+                  key={a.value}
+                  type="button"
+                  disabled={disabled}
+                  className={`dpf-chip${active ? ' active' : ''}`}
+                  onClick={() => onChange('food_allergies', toggleArr(form.food_allergies, a.value))}
+                >
+                  <span>{a.emoji}</span> {a.label}
+                  {active && <span className="dpf-chip-x">✓</span>}
+                </button>
+              )
+            })}
+          </div>
         </div>
+
         <div className="cdp-row" style={{ marginTop: 16 }}>
           <div className="cdp-field">
-            <label className="cdp-label">Foods to Avoid</label>
+            <label className="cdp-label">🚫 Foods to Avoid</label>
             <input
               className="cdp-input"
               placeholder="e.g. bitter gourd, cabbage"
@@ -318,7 +480,7 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
             />
           </div>
           <div className="cdp-field">
-            <label className="cdp-label">Favourite Foods</label>
+            <label className="cdp-label">❤️ Favourite Foods</label>
             <input
               className="cdp-input"
               placeholder="e.g. dal, rice, idli"
@@ -333,17 +495,38 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
       {/* ─── Health History ─── */}
       <div className="cdp-section">
         <h3 className="cdp-section-title">
-          <i className="fa-solid fa-heart-pulse" /> Health History
+          <span>🏥</span> Health History
         </h3>
+
         <div className="cdp-field">
           <label className="cdp-label">Medical Conditions</label>
-          <MultiChip
-            options={MEDICAL_OPTIONS}
-            value={form.medical_conditions}
-            onChange={v => onChange('medical_conditions', v)}
-            disabled={disabled}
-          />
+          <p className="cdp-section-sub" style={{ marginTop: 0, marginBottom: 6 }}>Select all that apply</p>
+          <div className="dpf-chip-group">
+            {MEDICAL_OPTIONS.map(m => {
+              const active = form.medical_conditions.includes(m.value)
+              return (
+                <button
+                  key={m.value}
+                  type="button"
+                  disabled={disabled}
+                  className={`dpf-chip${active ? ' active' : ''}`}
+                  onClick={() => {
+                    if (m.value === 'none') {
+                      onChange('medical_conditions', active ? [] : ['none'])
+                    } else {
+                      const without = form.medical_conditions.filter(x => x !== 'none' && x !== m.value)
+                      onChange('medical_conditions', active ? without : [...without, m.value])
+                    }
+                  }}
+                >
+                  <span>{m.emoji}</span> {m.label}
+                  {active && <span className="dpf-chip-x">✓</span>}
+                </button>
+              )
+            })}
+          </div>
         </div>
+
         <div className="cdp-field" style={{ marginTop: 16 }}>
           <label className="cdp-label">Other Condition</label>
           <input
@@ -354,62 +537,85 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
             disabled={disabled}
           />
         </div>
-        <div className="cdp-row" style={{ marginTop: 16 }}>
-          <div className="cdp-field">
-            <label className="cdp-label">On Medication?</label>
-            <select
-              className="cdp-select"
-              value={form.on_medication}
-              onChange={e => onChange('on_medication', e.target.value)}
-              disabled={disabled}
-            >
-              <option value="">Select</option>
-              <option value="yes_regularly">Yes, Regularly</option>
-              <option value="yes_occasionally">Yes, Occasionally</option>
-              <option value="no">No</option>
-            </select>
+
+        <div className="cdp-field" style={{ marginTop: 16 }}>
+          <label className="cdp-label">On Medication?</label>
+          <div className="dpf-answer-row">
+            {MEDICATION_OPTIONS.map(m => {
+              const active = form.on_medication === m.value
+              return (
+                <button
+                  key={m.value}
+                  type="button"
+                  disabled={disabled}
+                  className={`dpf-answer-card${active ? ' active' : ''}`}
+                  onClick={() => onChange('on_medication', active ? '' : m.value)}
+                >
+                  {active && <span className="dpf-answer-check">✓</span>}
+                  <span className="dpf-answer-icon">{m.emoji}</span>
+                  <span className="dpf-answer-label">{m.label}</span>
+                  <span className="dpf-answer-desc">{m.desc}</span>
+                </button>
+              )
+            })}
           </div>
-          <div className="cdp-field">
-            <label className="cdp-label">Medications (if any)</label>
+        </div>
+
+        {(form.on_medication === 'yes_regularly' || form.on_medication === 'yes_occasionally') && (
+          <div className="cdp-field" style={{ marginTop: 12 }}>
+            <label className="cdp-label">List Medications</label>
             <input
               className="cdp-input"
-              placeholder="List medications"
+              placeholder="e.g. Metformin, Thyroxine, Vitamin D"
               value={form.medications}
               onChange={e => onChange('medications', e.target.value)}
               disabled={disabled}
             />
           </div>
-        </div>
+        )}
+
         <div className="cdp-row" style={{ marginTop: 16 }}>
           <div className="cdp-field">
             <label className="cdp-label">Digestive Health</label>
-            <select
-              className="cdp-select"
-              value={form.digestive_health}
-              onChange={e => onChange('digestive_health', e.target.value)}
-              disabled={disabled}
-            >
-              <option value="">Select</option>
-              <option value="excellent">Excellent</option>
-              <option value="good">Good</option>
-              <option value="average">Average</option>
-              <option value="poor">Poor</option>
-            </select>
+            <div className="dpf-digest-row">
+              {DIGESTION_OPTIONS.map(o => {
+                const active = form.digestive_health === o.value
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    disabled={disabled}
+                    className={`dpf-digest-card${active ? ' active' : ''}`}
+                    style={active ? { borderColor: o.color, background: `${o.color}18` } : {}}
+                    onClick={() => onChange('digestive_health', active ? '' : o.value)}
+                  >
+                    <span className="dpf-digest-icon">{o.emoji}</span>
+                    <span className="dpf-digest-label">{o.label}</span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
+
           <div className="cdp-field">
             <label className="cdp-label">Smoke / Alcohol</label>
-            <select
-              className="cdp-select"
-              value={form.smoke_alcohol}
-              onChange={e => onChange('smoke_alcohol', e.target.value)}
-              disabled={disabled}
-            >
-              <option value="">Select</option>
-              <option value="neither">Neither</option>
-              <option value="smoke">Smoke</option>
-              <option value="alcohol">Drink Alcohol</option>
-              <option value="both">Both</option>
-            </select>
+            <div className="dpf-chip-group" style={{ marginTop: 8 }}>
+              {SMOKE_OPTIONS.map(o => {
+                const active = form.smoke_alcohol === o.value
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    disabled={disabled}
+                    className={`dpf-chip${active ? ' active' : ''}`}
+                    onClick={() => onChange('smoke_alcohol', active ? '' : o.value)}
+                  >
+                    <span>{o.emoji}</span> {o.label}
+                    {active && <span className="dpf-chip-x">✓</span>}
+                  </button>
+                )
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -417,30 +623,27 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
       {/* ─── Plan Details ─── */}
       <div className="cdp-section">
         <h3 className="cdp-section-title">
-          <i className="fa-solid fa-calendar-days" /> Plan Details
+          <span>📅</span> Plan Details
         </h3>
-        <div className="cdp-row">
-          <div className="cdp-field cdp-field--half">
-            <label className="cdp-label">Plan Duration</label>
-            <select
-              className="cdp-select"
-              value={form.plan_type}
-              onChange={e => onChange('plan_type', e.target.value)}
-              disabled={disabled}
-            >
-              <option value="">Select</option>
-              <option value="1">2 Weeks</option>
-              <option value="2">1 Month</option>
-              <option value="3">3 Months</option>
-            </select>
+        <div className="dpf-plan-badge-wrap">
+          <div className="dpf-plan-badge">
+            <span className="dpf-plan-badge-icon">👑</span>
+            <div className="dpf-plan-badge-text">
+              <span className="dpf-plan-badge-title">1 Month Plan</span>
+              <span className="dpf-plan-badge-sub">4 weeks · Personalised daily meals</span>
+            </div>
+            <span className="dpf-plan-badge-tag">Current Plan</span>
           </div>
+          <p className="dpf-plan-note">
+            <i className="fa-solid fa-circle-info" /> Diet plans are currently generated for <strong>1 month (4 weeks)</strong>. More durations coming soon.
+          </p>
         </div>
         <div className="cdp-field" style={{ marginTop: 16 }}>
           <label className="cdp-label">Health Notes</label>
           <textarea
             className="cdp-textarea"
             rows={4}
-            placeholder="Any additional notes about the client's health, preferences, or special requirements…"
+            placeholder="Additional notes about the client's health, preferences, or special requirements…"
             value={form.health_notes}
             onChange={e => onChange('health_notes', e.target.value)}
             disabled={disabled}

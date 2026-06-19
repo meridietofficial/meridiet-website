@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
-import appointmentApi, { DietitianAppointment, DietitianSession, AppointmentSlot, AppointmentReviews, CreateFollowUpBody, FollowUpAppointment } from '../api/appointment'
+import appointmentApi, { DietitianAppointment, DietitianSession, AppointmentSlot, AppointmentReviews, CreateFollowUpBody, FollowUpAppointment, DietPlanRef, FollowUpSlots } from '../api/appointment'
 import { useVideoCall } from '../context/VideoCallContext'
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
@@ -65,10 +65,99 @@ function expandSlotRange(range: string): string[] {
   return slots
 }
 
+function slotEnd30(start: string): string {
+  const [h, m] = start.split(':').map(Number)
+  const t = h * 60 + m + 30
+  return `${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`
+}
+
 type LocationState = {
   session?: DietitianSession
   dateLabel?: string
   fromTab?: string
+}
+
+type DietPlanButtonVariant = 'hero' | 'action-row'
+
+function DietPlanButton({
+  dp, apptId, returnTo, variant, onViewPdf,
+}: {
+  dp: DietPlanRef | null
+  apptId: number
+  returnTo: string
+  variant: DietPlanButtonVariant
+  onViewPdf?: (url: string) => void
+}) {
+  const navigate = useNavigate()
+  const planState = { returnTo, appointmentId: apptId }
+
+  if (!dp) {
+    if (variant === 'hero') return (
+      <button className="apd-hero-btn"
+        onClick={() => navigate(`/dietitian-diet-plans/new?appointment_id=${apptId}`, { state: planState })}>
+        <i className="fa-solid fa-bowl-food" /> Create Diet Plan
+      </button>
+    )
+    return (
+      <button className="apd-action-row"
+        onClick={() => navigate(`/dietitian-diet-plans/new?appointment_id=${apptId}`, { state: planState })}>
+        <span className="apd-action-icon"><i className="fa-solid fa-bowl-food" /></span>
+        <span className="apd-action-label">Create Diet Plan</span>
+        <i className="fa-solid fa-chevron-right apd-action-arrow" />
+      </button>
+    )
+  }
+
+  if (dp.status === 'draft' || dp.status === 'failed') {
+    if (variant === 'hero') return (
+      <button className="apd-hero-btn"
+        onClick={() => navigate(`/dietitian-diet-plans/${dp.id}`, { state: planState })}>
+        <i className="fa-solid fa-pen-to-square" /> Edit Draft
+      </button>
+    )
+    return (
+      <button className="apd-action-row"
+        onClick={() => navigate(`/dietitian-diet-plans/${dp.id}`, { state: planState })}>
+        <span className="apd-action-icon"><i className="fa-solid fa-pen-to-square" /></span>
+        <span className="apd-action-label">{dp.status === 'failed' ? 'Retry Diet Plan' : 'Edit Draft'}</span>
+        <i className="fa-solid fa-chevron-right apd-action-arrow" />
+      </button>
+    )
+  }
+
+  if (dp.status === 'generating') {
+    if (variant === 'hero') return (
+      <button className="apd-hero-btn" disabled>
+        <i className="fa-solid fa-circle-notch fa-spin" /> Generating…
+      </button>
+    )
+    return (
+      <div className="apd-action-row" style={{ opacity: 0.6, cursor: 'default' }}>
+        <span className="apd-action-icon"><i className="fa-solid fa-circle-notch fa-spin" /></span>
+        <span className="apd-action-label">Generating Diet Plan…</span>
+      </div>
+    )
+  }
+
+  if (dp.status === 'completed') {
+    const handleView = () => {
+      if (dp.pdf_url && onViewPdf) onViewPdf(dp.pdf_url)
+    }
+    if (variant === 'hero') return (
+      <button className="apd-hero-btn apd-hero-btn--green" onClick={handleView}>
+        <i className="fa-solid fa-file-pdf" /> View Plan
+      </button>
+    )
+    return (
+      <button className="apd-action-row" onClick={handleView}>
+        <span className="apd-action-icon"><i className="fa-solid fa-file-pdf" /></span>
+        <span className="apd-action-label">View Diet Plan</span>
+        <i className="fa-solid fa-chevron-right apd-action-arrow" />
+      </button>
+    )
+  }
+
+  return null
 }
 
 export default function DietitianAppointmentDetail() {
@@ -86,6 +175,7 @@ export default function DietitianAppointmentDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error' | ''>('')
+  const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null)
 
   const [notes, setNotes] = useState('')
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -123,8 +213,8 @@ export default function DietitianAppointmentDetail() {
   const [fuNotes, setFuNotes]                     = useState('')
   const [fuSubmitting, setFuSubmitting]           = useState(false)
   const [fuError, setFuError]                     = useState<string | null>(null)
-  const [fuSlots, setFuSlots]                     = useState<AppointmentSlot[]>([])
-  const [fuBookedSlots, setFuBookedSlots]         = useState<AppointmentSlot[]>([])
+  const [fuSlots, setFuSlots]                     = useState<FollowUpSlots['available_slots']>([])
+  const [fuBookedSlots, setFuBookedSlots]         = useState<FollowUpSlots['booked_slots']>([])
   const [fuSlotsLoading, setFuSlotsLoading]       = useState(false)
   const [fuCustomTime, setFuCustomTime]           = useState(false)
   const [fuShowOverrides, setFuShowOverrides]     = useState(false)
@@ -218,6 +308,8 @@ export default function DietitianAppointmentDetail() {
   function openFollowUp() {
     setFuDate(new Date().toLocaleDateString('en-CA'))
     setFuSlot('')
+    setFuSlots([])
+    setFuBookedSlots([])
     setFuDuration(String(session?.duration ?? ''))
     setFuFee(String(appt?.fee ?? '').replace(/\.00$/, ''))
     setFuSessionType((session?.session_type as 'video_call' | 'in_person' | '') ?? '')
@@ -251,7 +343,7 @@ export default function DietitianAppointmentDetail() {
     }
   }
 
-  function getUpcomingDatesFrom(slots: AppointmentSlot[]) {
+  function getUpcomingDatesFrom(slots: { date: string; slots: string[] }[]) {
     const today = new Date()
     return Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today)
@@ -302,11 +394,13 @@ export default function DietitianAppointmentDetail() {
     if (!followUpOpen || !appt) return
     setFuSlotsLoading(true)
     setFuSlots([])
-    setFuBookedSlots([])
-    appointmentApi.getRescheduleSlots(appt.id)
+    appointmentApi.getFollowUpSlots(appt.id)
       .then(data => {
-        setFuSlots(data.available_slots)
-        setFuBookedSlots(data.booked_slots)
+        const available = data.available_slots ?? []
+        const booked    = data.booked_slots    ?? []
+        setFuSlots(available)
+        setFuBookedSlots(booked)
+        if (available.length > 0) setFuDate(available[0].date)
       })
       .catch(() => {})
       .finally(() => setFuSlotsLoading(false))
@@ -390,12 +484,9 @@ export default function DietitianAppointmentDetail() {
               >
                 <i className="fa-solid fa-video" /> Join Call
               </button>
-              <button
-                className="apd-hero-btn"
-                onClick={() => navigate(`/dietitian-diet-plans/new?appointment_id=${appt.id}`)}
-              >
-                <i className="fa-solid fa-bowl-food" /> Diet Plan
-              </button>
+              <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
+                returnTo={`/dietitian-appointments/${appt.id}`} variant="hero"
+                onViewPdf={setPdfPreviewUrl} />
               {!appt.follow_up && (
                 <button className="apd-hero-btn" onClick={openFollowUp}>
                   <i className="fa-solid fa-calendar-plus" /> Follow-up
@@ -421,12 +512,9 @@ export default function DietitianAppointmentDetail() {
           )}
           {(appt.status === 'completed' || appt.status === 'cancelled') && (
             <>
-              <button
-                className="apd-hero-btn"
-                onClick={() => navigate(`/dietitian-diet-plans/new?appointment_id=${appt.id}`)}
-              >
-                <i className="fa-solid fa-bowl-food" /> Create Diet Plan
-              </button>
+              <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
+                returnTo={`/dietitian-appointments/${appt.id}`} variant="hero"
+                onViewPdf={setPdfPreviewUrl} />
               {appt.status === 'completed' && !appt.follow_up && (
                 <button className="apd-hero-btn apd-hero-btn--primary" onClick={openFollowUp}>
                   <i className="fa-solid fa-calendar-plus" /> Schedule Follow-up
@@ -533,23 +621,10 @@ export default function DietitianAppointmentDetail() {
                     <span className="apd-action-label">Join Video Call</span>
                     <i className="fa-solid fa-chevron-right apd-action-arrow" />
                   </button>
-                  <button
-                    className="apd-action-row"
-                    onClick={() => navigate(`/dietitian-diet-plans/new?appointment_id=${appt.id}`)}
-                  >
-                    <span className="apd-action-icon"><i className="fa-solid fa-bowl-food" /></span>
-                    <span className="apd-action-label">Create Diet Plan</span>
-                    <i className="fa-solid fa-chevron-right apd-action-arrow" />
-                  </button>
-                  {/* <button className="apd-action-row">
-                    <span className="apd-action-icon"><i className="fa-solid fa-paper-plane" /></span>
-                    <span className="apd-action-label">Send Message</span>
-                    <i className="fa-solid fa-chevron-right apd-action-arrow" />
-                  </button> */}
-                  <button
-                    className="apd-action-row"
-                    onClick={openReschedule}
-                  >
+                  <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
+                    returnTo={`/dietitian-appointments/${appt.id}`} variant="action-row"
+                    onViewPdf={setPdfPreviewUrl} />
+                  <button className="apd-action-row" onClick={openReschedule}>
                     <span className="apd-action-icon"><i className="fa-solid fa-rotate-right" /></span>
                     <span className="apd-action-label">Reschedule Session</span>
                     <i className="fa-solid fa-chevron-right apd-action-arrow" />
@@ -577,19 +652,9 @@ export default function DietitianAppointmentDetail() {
               )}
               {(appt.status === 'completed' || appt.status === 'cancelled') && (
                 <>
-                  <button
-                    className="apd-action-row"
-                    onClick={() => navigate(`/dietitian-diet-plans/new?appointment_id=${appt.id}`)}
-                  >
-                    <span className="apd-action-icon"><i className="fa-solid fa-bowl-food" /></span>
-                    <span className="apd-action-label">Create Diet Plan</span>
-                    <i className="fa-solid fa-chevron-right apd-action-arrow" />
-                  </button>
-                  <button className="apd-action-row apd-action-row--primary">
-                    <span className="apd-action-icon"><i className="fa-solid fa-rotate-right" /></span>
-                    <span className="apd-action-label">Rebook Session</span>
-                    <i className="fa-solid fa-chevron-right apd-action-arrow" />
-                  </button>
+                  <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
+                    returnTo={`/dietitian-appointments/${appt.id}`} variant="action-row"
+                    onViewPdf={setPdfPreviewUrl} />
                   {appt.status === 'completed' && !appt.follow_up && (
                     <button className="apd-action-row" onClick={openFollowUp}>
                       <span className="apd-action-icon"><i className="fa-solid fa-calendar-plus" /></span>
@@ -598,10 +663,7 @@ export default function DietitianAppointmentDetail() {
                     </button>
                   )}
                   {appt.status === 'completed' && !reviews?.dietitian_review_done && (
-                    <button
-                      className="apd-action-row"
-                      onClick={openReviewModal}
-                    >
+                    <button className="apd-action-row" onClick={openReviewModal}>
                       <span className="apd-action-icon"><i className="fa-solid fa-star" /></span>
                       <span className="apd-action-label">Rate This Session</span>
                       <i className="fa-solid fa-chevron-right apd-action-arrow" />
@@ -610,31 +672,15 @@ export default function DietitianAppointmentDetail() {
                 </>
               )}
               {appt.status === 'missed' && (
-                <>
-                  <button
-                    className="apd-action-row apd-action-row--primary"
-                    onClick={openReschedule}
-                  >
-                    <span className="apd-action-icon"><i className="fa-solid fa-rotate-right" /></span>
-                    <span className="apd-action-label">Reschedule Session</span>
-                    <i className="fa-solid fa-chevron-right apd-action-arrow" />
-                  </button>
-                  {/* <button className="apd-action-row">
-                    <span className="apd-action-icon"><i className="fa-solid fa-paper-plane" /></span>
-                    <span className="apd-action-label">Send Message</span>
-                    <i className="fa-solid fa-chevron-right apd-action-arrow" />
-                  </button> */}
-                </>
-              )}
-              {appt.status === 'pending' && (
-                <button
-                  className="apd-action-row"
-                  onClick={() => navigate(`/dietitian-diet-plans/new?appointment_id=${appt.id}`)}
-                >
-                  <span className="apd-action-icon"><i className="fa-solid fa-bowl-food" /></span>
-                  <span className="apd-action-label">Prepare Diet Plan</span>
+                <button className="apd-action-row apd-action-row--primary" onClick={openReschedule}>
+                  <span className="apd-action-icon"><i className="fa-solid fa-rotate-right" /></span>
+                  <span className="apd-action-label">Reschedule Session</span>
                   <i className="fa-solid fa-chevron-right apd-action-arrow" />
                 </button>
+              )}
+              {appt.status === 'pending' && (
+                <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
+                  returnTo={`/dietitian-appointments/${appt.id}`} variant="action-row" />
               )}
             </div>
           </div>
@@ -948,26 +994,18 @@ export default function DietitianAppointmentDetail() {
                     <>
                       {allSlots.length > 0 && (
                         <>
-                          <div className="cr-rsc-slots-header">
-                            <span className="cr-modal-label">Select Time</span>
-                            <div className="cr-rsc-legend">
-                              <span className="cr-rsc-legend-item">
-                                <span className="cr-rsc-legend-dot cr-rsc-legend-dot--avail" /> Available
-                              </span>
-                              <span className="cr-rsc-legend-item">
-                                <span className="cr-rsc-legend-dot cr-rsc-legend-dot--booked" /> Booked
-                              </span>
-                            </div>
-                          </div>
+                          <span className="cr-modal-label" style={{ display: 'block', marginBottom: 8 }}>
+                            Select a time slot <span style={{ fontWeight: 400, color: '#aaa', textTransform: 'none', letterSpacing: 0 }}>(30 min each)</span>
+                          </span>
                           <div className="cr-rsc-slots-grid">
-                            {allSlots.map(slot => {
-                              const isBooked   = booked.includes(slot)
-                              const isPast     = isPastSlot(fuDate, slot)
+                            {allSlots.map(start => {
+                              const isBooked   = booked.includes(start)
+                              const isPast     = isPastSlot(fuDate, start)
                               const isDisabled = isBooked || isPast
-                              const isSelected = !fuCustomTime && fuSlot === slot
+                              const isSelected = !fuCustomTime && fuSlot === start
                               return (
                                 <button
-                                  key={slot}
+                                  key={start}
                                   disabled={isDisabled}
                                   className={[
                                     'cr-rsc-slot',
@@ -975,13 +1013,13 @@ export default function DietitianAppointmentDetail() {
                                     isPast && !isBooked ? 'cr-rsc-slot--past'   : '',
                                     isSelected          ? 'cr-rsc-slot--active' : '',
                                   ].filter(Boolean).join(' ')}
-                                  onClick={() => {
-                                    setFuCustomTime(false)
-                                    setFuSlot(slot)
-                                  }}
+                                  onClick={() => { setFuCustomTime(false); setFuSlot(start) }}
                                 >
-                                  {isBooked && <i className="fa-solid fa-lock" />}
-                                  {formatSlot(slot)}
+                                  <span>{formatSlot(start)} – {formatSlot(slotEnd30(start))}</span>
+                                  {isBooked
+                                    ? <small className="cr-rsc-slot-booked-label">Booked</small>
+                                    : !isPast && <small className="cr-rsc-slot-avail-label">Available</small>
+                                  }
                                 </button>
                               )
                             })}
@@ -990,17 +1028,13 @@ export default function DietitianAppointmentDetail() {
                       )}
                       {allSlots.length === 0 && !fuCustomTime && (
                         <p className="cr-rsc-no-slots">
-                          <i className="fa-regular fa-calendar-xmark" /> No scheduled slots for this date — use custom time below
+                          <i className="fa-regular fa-calendar-xmark" /> No slots available for this date — use custom time below
                         </p>
                       )}
                       <div className={`cr-rsc-custom-row${fuCustomTime ? ' cr-rsc-custom-row--open' : ''}`}>
                         <button
                           className={`cr-rsc-custom-toggle${fuCustomTime ? ' cr-rsc-custom-toggle--active' : ''}`}
-                          onClick={() => {
-                            const next = !fuCustomTime
-                            setFuCustomTime(next)
-                            if (next) setFuSlot('')
-                          }}
+                          onClick={() => { const next = !fuCustomTime; setFuCustomTime(next); if (next) setFuSlot('') }}
                         >
                           <i className={`fa-solid ${fuCustomTime ? 'fa-xmark' : 'fa-clock'}`} />
                           {fuCustomTime ? 'Cancel custom time' : 'Book at a different time'}
@@ -1205,17 +1239,9 @@ export default function DietitianAppointmentDetail() {
                     <>
                       {allSlots.length > 0 && (
                         <>
-                          <div className="cr-rsc-slots-header">
-                            <span className="cr-modal-label">Select Time</span>
-                            <div className="cr-rsc-legend">
-                              <span className="cr-rsc-legend-item">
-                                <span className="cr-rsc-legend-dot cr-rsc-legend-dot--avail" /> Available
-                              </span>
-                              <span className="cr-rsc-legend-item">
-                                <span className="cr-rsc-legend-dot cr-rsc-legend-dot--booked" /> Booked
-                              </span>
-                            </div>
-                          </div>
+                          <span className="cr-modal-label" style={{ display: 'block', marginBottom: 8 }}>
+                            Select a time slot <span style={{ fontWeight: 400, color: '#aaa', textTransform: 'none', letterSpacing: 0 }}>(30 min each)</span>
+                          </span>
                           <div className="cr-rsc-slots-grid">
                             {allSlots.map(slot => {
                               const isBooked   = booked.includes(slot)
@@ -1237,8 +1263,11 @@ export default function DietitianAppointmentDetail() {
                                     setRescheduleSlot(slot)
                                   }}
                                 >
-                                  {isBooked && <i className="fa-solid fa-lock" />}
-                                  {formatSlot(slot)}
+                                  <span>{formatSlot(slot)} – {formatSlot(slotEnd30(slot))}</span>
+                                  {isBooked
+                                    ? <small className="cr-rsc-slot-booked-label">Booked</small>
+                                    : !isPast && <small className="cr-rsc-slot-avail-label">Available</small>
+                                  }
                                 </button>
                               )
                             })}
@@ -1313,6 +1342,42 @@ export default function DietitianAppointmentDetail() {
                 }
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── PDF Preview Modal ── */}
+      {pdfPreviewUrl && (
+        <div className="cr-modal-overlay" onClick={() => setPdfPreviewUrl(null)}>
+          <div
+            className="cr-modal"
+            style={{ maxWidth: 860, width: '95vw', height: '90vh', display: 'flex', flexDirection: 'column', padding: 0, overflow: 'hidden' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="cr-modal-header" style={{ padding: '14px 20px', flexShrink: 0 }}>
+              <h3 className="cr-modal-title">
+                <i className="fa-solid fa-file-pdf" style={{ color: '#ef4444' }} /> Diet Plan PDF
+              </h3>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <a
+                  href={pdfPreviewUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="cr-btn-reschedule"
+                  style={{ padding: '7px 14px', fontSize: 12, textDecoration: 'none' }}
+                >
+                  <i className="fa-solid fa-download" /> Download
+                </a>
+                <button className="cr-detail-close" onClick={() => setPdfPreviewUrl(null)}>
+                  <i className="fa-solid fa-xmark" />
+                </button>
+              </div>
+            </div>
+            <iframe
+              src={pdfPreviewUrl}
+              title="Diet Plan PDF"
+              style={{ flex: 1, border: 'none', width: '100%' }}
+            />
           </div>
         </div>
       )}

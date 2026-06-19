@@ -14,7 +14,11 @@ const MONTHS = ['January','February','March','April','May','June',
                 'July','August','September','October','November','December']
 const WEEK = ['Su','Mo','Tu','We','Th','Fr','Sa']
 
-function toDate(s: string) { return s ? new Date(s + 'T00:00:00') : null }
+function toDate(s: string) {
+  if (!s) return null
+  const d = new Date(s.split('T')[0] + 'T00:00:00')
+  return isNaN(d.getTime()) ? null : d
+}
 
 function toStr(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`

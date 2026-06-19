@@ -22,6 +22,7 @@ const ENDPOINTS = {
     profile:         '/dietitian/profile',
     changePassword:  '/dietitian/change-password',
     onlineStatus:    '/dietitian/online-status',
+    deleteAccount:   '/dietitian/account',
     awsKeys:         '/aws-keys/',   // replace with your actual endpoint
     specializations: '/dietitians/specializations',
     list:            '/dietitians',
@@ -82,8 +83,8 @@ const ENDPOINTS = {
     wallet:             '/dietitian/earnings/wallet',
   },
   dietitianDietPlan: {
-    list:   '/dietitian/diet-plans',
-    single: '/dietitian/diet-plans',  // used as /:id, /:id/generate, /:id/archive
+    list:   '/dietitian/diet-forms',
+    single: '/dietitian/diet-forms',  // used as /:id, /:id/generate, /:id/archive
   },
 } as const
 

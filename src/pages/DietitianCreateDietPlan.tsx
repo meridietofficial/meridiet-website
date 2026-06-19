@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import appointmentApi, { DietitianAppointment } from '../api/appointment'
+import appointmentApi, { DietitianAppointment, AppointmentDietForm } from '../api/appointment'
 import dietitianDietPlanApi from '../api/dietitianDietPlan'
 import DietPlanFormFields, { DietPlanFormValues, EMPTY_FORM } from '../components/DietPlanFormFields'
 
@@ -8,17 +8,63 @@ function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+function fmtEnum(s: string | null | undefined) {
+  return s ? s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : null
+}
+
+const CLIENT_GOAL_MAP: Record<string, string> = {
+  'Weight Loss':       'weight_loss',
+  'Fat Loss':          'fat_loss',
+  'Muscle Gain':       'muscle_gain',
+  'PCOS Support':      'pcos_support',
+  'Healthy Lifestyle': 'healthy_lifestyle',
+}
+function normalizeGoal(g: string): string {
+  return CLIENT_GOAL_MAP[g] ?? g
+}
+
+function dietFormToValues(df: AppointmentDietForm): DietPlanFormValues {
+  return {
+    dob:                df.dob ? df.dob.split('T')[0] : '',
+    age:                df.age?.toString()       ?? '',
+    gender:             df.gender               ?? '',
+    height:             df.height               ?? '',
+    height_unit:        df.height_unit          ?? 'cm',
+    weight:             df.weight?.toString()    ?? '',
+    weight_unit:        df.weight_unit          ?? 'kg',
+    goals:              (df.goals ?? []).map(normalizeGoal),
+    goals_other:        '',
+    activity_level:     df.activity_level       ?? '',
+    work_type:          df.work_type            ?? '',
+    workout_type:       df.workout_type         ?? '',
+    diet_type:          df.diet_type            ?? '',
+    cuisine_preference: df.cuisine_preference   ?? [],
+    food_allergies:     df.food_allergies       ?? [],
+    foods_dislike:      df.foods_dislike        ?? '',
+    favorite_foods:     df.favorite_foods       ?? '',
+    medical_conditions: df.medical_conditions   ?? [],
+    other_condition:    df.other_condition      ?? '',
+    on_medication:      df.on_medication        ?? '',
+    medications:        df.medications          ?? '',
+    digestive_health:   df.digestive_health     ?? '',
+    smoke_alcohol:      df.smoke_alcohol        ?? '',
+    health_notes:       df.health_notes         ?? '',
+    plan_type:          df.plan_type?.toString() ?? '',
+  }
+}
+
 export default function DietitianCreateDietPlan() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const apptIdParam = searchParams.get('appointment_id')
 
-  const [clientName, setClientName]       = useState('')
-  const [apptId, setApptId]               = useState<number | ''>(apptIdParam ? Number(apptIdParam) : '')
-  const [appointments, setAppointments]   = useState<DietitianAppointment[]>([])
-  const [form, setForm]                   = useState<DietPlanFormValues>(EMPTY_FORM)
-  const [submitting, setSubmitting]       = useState(false)
-  const [error, setError]                 = useState<string | null>(null)
+  const [clientName, setClientName]           = useState('')
+  const [apptId, setApptId]                   = useState<number | ''>(apptIdParam ? Number(apptIdParam) : '')
+  const [appointments, setAppointments]       = useState<DietitianAppointment[]>([])
+  const [form, setForm]                       = useState<DietPlanFormValues>(EMPTY_FORM)
+  const [prefilled, setPrefilled]             = useState(false)
+  const [submitting, setSubmitting]           = useState(false)
+  const [error, setError]                     = useState<string | null>(null)
 
   // Load confirmed appointments if no appointment_id in URL
   useEffect(() => {
@@ -28,14 +74,17 @@ export default function DietitianCreateDietPlan() {
       .catch(() => {})
   }, [apptIdParam])
 
-  // Load client name whenever an appointment is selected
+  // Load client name + pre-fill form from client's diet form whenever an appointment is selected
   const resolvedId = apptIdParam ? Number(apptIdParam) : (typeof apptId === 'number' ? apptId : null)
 
   useEffect(() => {
-    if (!resolvedId) { setClientName(''); return }
+    if (!resolvedId) { setClientName(''); setForm(EMPTY_FORM); setPrefilled(false); return }
     appointmentApi.getById(resolvedId)
       .then(a => setClientName(a.name))
       .catch(() => setClientName(''))
+    appointmentApi.getDietFormForAppointment(resolvedId)
+      .then(df => { setForm(dietFormToValues(df)); setPrefilled(true) })
+      .catch(() => { setForm(EMPTY_FORM); setPrefilled(false) })
   }, [resolvedId])
 
   function setField<K extends keyof DietPlanFormValues>(key: K, val: DietPlanFormValues[K]) {
@@ -47,15 +96,19 @@ export default function DietitianCreateDietPlan() {
     setSubmitting(true)
     setError(null)
     try {
+      const goals = form.goals.map(g =>
+        g === 'other' && form.goals_other ? form.goals_other : g
+      )
       const result = await dietitianDietPlanApi.saveDraft({
         appointment_id:   resolvedId,
+        dob:              form.dob || undefined,
         age:              form.age ? Number(form.age) : undefined,
         gender:           form.gender || undefined,
         height:           form.height || undefined,
         height_unit:      form.height_unit,
         weight:           form.weight ? Number(form.weight) : undefined,
         weight_unit:      form.weight_unit,
-        goals:            form.goals.length ? form.goals : undefined,
+        goals:            goals.length ? goals : undefined,
         activity_level:   form.activity_level || undefined,
         work_type:        form.work_type || undefined,
         workout_type:     form.workout_type || undefined,
@@ -128,6 +181,14 @@ export default function DietitianCreateDietPlan() {
                 ))}
               </select>
             </div>
+          </div>
+        )}
+
+        {/* Pre-fill notice */}
+        {prefilled && (
+          <div className="cdp-prefill-notice">
+            <i className="fa-solid fa-circle-check" />
+            <span>Health form pre-filled from {clientName || 'client'}'s booking details — review and adjust if needed.</span>
           </div>
         )}
 

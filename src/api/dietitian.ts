@@ -369,6 +369,13 @@ const dietitianApi = {
     )
     return res.data.is_online
   },
+
+  deleteAccount(password: string) {
+    return apiClient.apiDeleteWithBody<{ success: boolean; message: string }>(
+      ENDPOINTS.dietitian.deleteAccount,
+      { password }
+    )
+  },
 }
 
 export default dietitianApi

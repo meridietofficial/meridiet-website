@@ -5,6 +5,7 @@ import appointmentApi, {
   DietitianSessionGroup,
   DietitianSessionsSummary,
   AppointmentSlot,
+  DietPlanRef,
 } from '../api/appointment'
 import { useVideoCall } from '../context/VideoCallContext'
 
@@ -29,6 +30,14 @@ const SESSION_TYPE_META: Record<string, { label: string; icon: string }> = {
   video_call: { label: 'Video Call', icon: 'fa-solid fa-video'        },
   in_person:  { label: 'In-Person',  icon: 'fa-solid fa-location-dot' },
   chat:       { label: 'Chat',       icon: 'fa-solid fa-comment'      },
+}
+
+const DIET_PLAN_META: Record<DietPlanRef['status'], { label: string; icon: string; pill: string }> = {
+  draft:      { label: 'Draft',       icon: 'fa-solid fa-pen-to-square',  pill: 'ap-meta-pill--dp-draft'      },
+  generating: { label: 'Generating…', icon: 'fa-solid fa-circle-notch',   pill: 'ap-meta-pill--dp-generating' },
+  completed:  { label: 'Plan Sent',   icon: 'fa-solid fa-circle-check',   pill: 'ap-meta-pill--dp-completed'  },
+  failed:     { label: 'Plan Failed', icon: 'fa-solid fa-circle-xmark',   pill: 'ap-meta-pill--dp-failed'     },
+  archived:   { label: 'Archived',    icon: 'fa-solid fa-box-archive',    pill: 'ap-meta-pill--dp-archived'   },
 }
 
 function formatSlot(slot: string): string {
@@ -403,6 +412,23 @@ export default function DietitianAppointments() {
                                     <i className="fa-solid fa-hashtag" /> Session {s.session_number}
                                   </span>
                               }
+                              {/* Diet plan status pill */}
+                              {s.diet_plan
+                                ? (() => {
+                                    const dp = DIET_PLAN_META[s.diet_plan.status]
+                                    return (
+                                      <span className={`ap-meta-pill ${dp.pill}`}>
+                                        <i className={`${dp.icon}${s.diet_plan.status === 'generating' ? ' fa-spin' : ''}`} />
+                                        {dp.label}
+                                      </span>
+                                    )
+                                  })()
+                                : (s.status === 'completed' || s.status === 'confirmed') && (
+                                    <span className="ap-meta-pill ap-meta-pill--no-plan">
+                                      <i className="fa-solid fa-bowl-food" /> No Diet Plan
+                                    </span>
+                                  )
+                              }
                               {s.status === 'completed' && (
                                 s.dietitian_review_done
                                   ? <span className="ap-meta-pill ap-meta-pill--review">
@@ -423,15 +449,25 @@ export default function DietitianAppointments() {
                                 >
                                   <i className="fa-solid fa-video" /> Join
                                 </button>
-                                <button
-                                  className="ap-btn-outline"
-                                  onClick={e => {
-                                    e.stopPropagation()
-                                    navigate(`/dietitian-diet-plans/new?appointment_id=${s.id}`)
-                                  }}
-                                >
-                                  <i className="fa-solid fa-bowl-food" /> Diet Plan
-                                </button>
+                                {/* For upcoming: create plan if none, or edit if draft */}
+                                {(!s.diet_plan || s.diet_plan.status === 'draft') && (
+                                  <button
+                                    className="ap-btn-outline"
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      const returnTo = `/dietitian-appointments?tab=${tab}`
+                                      navigate(
+                                        s.diet_plan
+                                          ? `/dietitian-diet-plans/${s.diet_plan.id}`
+                                          : `/dietitian-diet-plans/new?appointment_id=${s.id}`,
+                                        { state: { returnTo, appointmentId: s.id } }
+                                      )
+                                    }}
+                                  >
+                                    <i className="fa-solid fa-bowl-food" />
+                                    {s.diet_plan ? 'Edit Draft' : 'Diet Plan'}
+                                  </button>
+                                )}
                               </>
                             )}
                             {s.status === 'missed' && (
@@ -442,6 +478,59 @@ export default function DietitianAppointments() {
                                 <i className="fa-solid fa-rotate-right" /> Reschedule
                               </button>
                             )}
+                            {/* Diet plan actions for completed sessions */}
+                            {(() => {
+                              const returnTo = `/dietitian-appointments?tab=${tab}`
+                              const planState = { returnTo, appointmentId: s.id }
+                              return (
+                                <>
+                                  {s.status === 'completed' && !s.diet_plan && (
+                                    <button
+                                      className="ap-btn-outline ap-btn-outline--plan"
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        navigate(`/dietitian-diet-plans/new?appointment_id=${s.id}`, { state: planState })
+                                      }}
+                                    >
+                                      <i className="fa-solid fa-bowl-food" /> Create Plan
+                                    </button>
+                                  )}
+                                  {s.status === 'completed' && s.diet_plan?.status === 'draft' && (
+                                    <button
+                                      className="ap-btn-outline ap-btn-outline--plan"
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        navigate(`/dietitian-diet-plans/${s.diet_plan!.id}`, { state: planState })
+                                      }}
+                                    >
+                                      <i className="fa-solid fa-pen-to-square" /> Edit Draft
+                                    </button>
+                                  )}
+                                  {s.status === 'completed' && s.diet_plan?.status === 'completed' && (
+                                    <button
+                                      className="ap-btn-outline ap-btn-outline--plan-done"
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        navigate(`/dietitian-diet-plans/${s.diet_plan!.id}`, { state: planState })
+                                      }}
+                                    >
+                                      <i className="fa-solid fa-circle-check" /> View Plan
+                                    </button>
+                                  )}
+                                  {s.status === 'completed' && s.diet_plan?.status === 'failed' && (
+                                    <button
+                                      className="ap-btn-outline ap-btn-outline--plan-retry"
+                                      onClick={e => {
+                                        e.stopPropagation()
+                                        navigate(`/dietitian-diet-plans/${s.diet_plan!.id}`, { state: planState })
+                                      }}
+                                    >
+                                      <i className="fa-solid fa-rotate-right" /> Retry Plan
+                                    </button>
+                                  )}
+                                </>
+                              )
+                            })()}
                             {s.status === 'completed' && !s.dietitian_review_done && (
                               <button
                                 className="ap-btn-outline ap-btn-outline--rate"

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import dietitianApi, { uploadSingleDocument, deleteDocument, type DietitianProfile } from '../api/dietitian'
@@ -49,16 +49,17 @@ function getCompletion(p: DietitianProfile | null) {
     },
     {
       label: 'Professional Information', tab: 'Professional Information',
-      done: !!p && has(p.experience) && has(p.registration_number) &&
+      done: !!p && has(p.experience) &&
             (p.specialization?.length ?? 0) > 0 && (p.degrees?.length ?? 0) > 0,
     },
     {
       label: 'Documents', tab: 'Documents',
-      done: !!p && has(p.documents.degree_certificate) &&
-            has(p.documents.registration_certificate) && has(p.documents.id_proof),
+      done: !!p && has(p.documents.degree_certificate) && has(p.documents.id_proof),
     },
-    { label: 'Profile Photo', tab: 'Documents', done: !!p && (has(p.documents.profile_photo) || has(p.avatar_url)) },
-    { label: 'About Me',      tab: 'Personal Information', done: !!p && has(p.bio) },
+    { label: 'Profile Photo',       tab: 'Documents',            done: !!p && (has(p.documents.profile_photo) || has(p.avatar_url)) },
+    { label: 'About Me',            tab: 'Personal Information', done: !!p && has(p.bio) },
+    { label: 'Weekly Availability', tab: 'Preferences',          done: !!p && !!p.availability && Object.keys(p.availability).length > 0 },
+    { label: 'Consultation Fee',    tab: 'Preferences',          done: !!p && (p.appointment_fee ?? 0) > 0 },
   ]
   const doneCount = items.filter(i => i.done).length
   const pct = Math.round((doneCount / items.length) * 100)
@@ -646,11 +647,10 @@ function TabProfessional({ profile, onSaved }: { profile: DietitianProfile | nul
 }
 
 const DOC_DEFS = [
-  { id: 'degree', label: 'Degree Certificate',      icon: 'fa-solid fa-graduation-cap', folder: 'degree-certificates',       apiKey: 'degreeCertificate',       urlKey: 'degree_certificate' },
-  { id: 'reg',    label: 'Registration Certificate', icon: 'fa-solid fa-clipboard',      folder: 'registration-certificates', apiKey: 'registrationCertificate', urlKey: 'registration_certificate' },
-  { id: 'gov-id', label: 'Government ID Proof',      icon: 'fa-solid fa-id-card',        folder: 'id-proofs',                 apiKey: 'idProof',                 urlKey: 'id_proof' },
-  { id: 'exp',    label: 'Experience Certificate',   icon: 'fa-solid fa-briefcase',      folder: 'experience-certificates',   apiKey: 'experienceCertificate',   urlKey: 'experience_certificate' },
-  { id: 'photo',  label: 'Profile Photo',            icon: 'fa-solid fa-image',          folder: 'profile-photos',            apiKey: 'profilePhoto',            urlKey: 'profile_photo' },
+  { id: 'degree', label: 'Degree Certificate',      icon: 'fa-solid fa-graduation-cap', folder: 'degree-certificates',       apiKey: 'degreeCertificate',       urlKey: 'degree_certificate',       required: true,  desc: 'BSc, MSc, PG Diploma in Nutrition or Dietetics — confirms your qualification.' },
+  { id: 'gov-id', label: 'Government ID Proof',      icon: 'fa-solid fa-id-card',        folder: 'id-proofs',                 apiKey: 'idProof',                 urlKey: 'id_proof',                 required: true,  desc: 'Aadhaar, PAN card, Passport, or Driving License — used for identity verification.' },
+  { id: 'reg',    label: 'Registration Certificate', icon: 'fa-solid fa-clipboard',      folder: 'registration-certificates', apiKey: 'registrationCertificate', urlKey: 'registration_certificate', required: false, desc: 'Council registration (IDA, NIN, or state board) if applicable.' },
+  { id: 'exp',    label: 'Experience Certificate',   icon: 'fa-solid fa-briefcase',      folder: 'experience-certificates',   apiKey: 'experienceCertificate',   urlKey: 'experience_certificate',   required: false, desc: 'Employment letter or experience proof (optional but strengthens your profile).' },
 ] as const
 
 function TabDocuments({ profile, onSaved }: { profile: DietitianProfile | null; onSaved: (p: DietitianProfile) => void }) {
@@ -684,41 +684,70 @@ function TabDocuments({ profile, onSaved }: { profile: DietitianProfile | null; 
     }
   }
 
+  const requiredMissing = DOC_DEFS.filter(d => d.required).filter(d => !(profile?.documents[d.urlKey]))
+
   return (
-    <div className="dmp-docs-grid">
-      {DOC_DEFS.map(def => {
-        const url = (profile?.documents[def.urlKey] ?? null) as string | null
-        const status = !url ? 'not-uploaded' : verified ? 'verified' : 'pending'
-        const uploading = busy === def.id
-        return (
-          <div key={def.id} className="dmp-doc-card">
-            <div className="dmp-doc-top">
-              <span className="dmp-doc-icon"><i className={def.icon} /></span>
-              <div className="dmp-doc-info">
-                <p className="dmp-doc-label">{def.label}</p>
-                <p className="dmp-doc-file">{fileNameFromUrl(url) || 'No file uploaded'}</p>
+    <div className="dmp-docs-wrap">
+
+      {/* Info banner */}
+      <div className="dmp-docs-banner">
+        <span className="dmp-docs-banner-icon"><i className="fa-solid fa-shield-halved" /></span>
+        <div className="dmp-docs-banner-body">
+          <p className="dmp-docs-banner-title">Documents are needed to verify your profile</p>
+          <p className="dmp-docs-banner-desc">
+            Verified dietitians appear higher in search results and earn more client trust.
+            {requiredMissing.length > 0
+              ? <> Upload your <strong>{requiredMissing.map(d => d.label).join(' and ')}</strong> to complete verification.</>
+              : <> All required documents are uploaded — our team will review them shortly.</>}
+          </p>
+        </div>
+        {requiredMissing.length === 0 && <span className="dmp-docs-banner-check"><i className="fa-solid fa-check" /></span>}
+      </div>
+
+      <div className="dmp-docs-grid">
+        {DOC_DEFS.map(def => {
+          const url = (profile?.documents[def.urlKey] ?? null) as string | null
+          const status = !url ? 'not-uploaded' : verified ? 'verified' : 'pending'
+          const uploading = busy === def.id
+          return (
+            <div key={def.id} className={`dmp-doc-card${def.required && !url ? ' dmp-doc-card--required' : ''}`}>
+              <div className="dmp-doc-top">
+                <span className="dmp-doc-icon"><i className={def.icon} /></span>
+                <div className="dmp-doc-info">
+                  <div className="dmp-doc-label-row">
+                    <p className="dmp-doc-label">{def.label}</p>
+                    {def.required && (
+                      <span className={`dmp-doc-required-badge${url ? ' dmp-doc-required-badge--done' : ''}`}>
+                        {url ? 'Uploaded' : 'Required'}
+                      </span>
+                    )}
+                  </div>
+                  <p className="dmp-doc-desc">{def.desc}</p>
+                  <p className="dmp-doc-file">{fileNameFromUrl(url) || 'No file uploaded yet'}</p>
+                </div>
+                <span className={`dmp-doc-status dmp-doc-status--${status}`}>
+                  {status === 'verified' ? '✓ Verified' : status === 'pending' ? '⏳ Pending' : '—'}
+                </span>
               </div>
-              <span className={`dmp-doc-status dmp-doc-status--${status}`}>
-                {status === 'verified' ? '✓ Verified' : status === 'pending' ? '⏳ Pending' : '— Not Uploaded'}
-              </span>
+              <div className="dmp-doc-actions">
+                {url && (
+                  <a className="dmp-doc-view-btn" href={url} target="_blank" rel="noopener noreferrer">
+                    <i className="fa-regular fa-eye" /> View
+                  </a>
+                )}
+                <label className={`dmp-doc-upload-btn${uploading ? ' dmp-doc-upload-btn--busy' : ''}`}>
+                  {uploading
+                    ? <><i className="fa-solid fa-spinner fa-spin" /> Uploading…</>
+                    : <><i className="fa-solid fa-upload" /> {status === 'not-uploaded' ? 'Upload' : 'Replace'}</>}
+                  <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} disabled={uploading}
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(def, f) }} />
+                </label>
+              </div>
+              <p className="dmp-doc-formats">Accepted: JPG, PNG or PDF &nbsp;·&nbsp; Max 5 MB</p>
             </div>
-            <div className="dmp-doc-actions">
-              {url && (
-                <a className="dmp-doc-view-btn" href={url} target="_blank" rel="noopener noreferrer">
-                  <i className="fa-regular fa-eye" /> View
-                </a>
-              )}
-              <label className={`dmp-doc-upload-btn${uploading ? ' dmp-doc-upload-btn--busy' : ''}`}>
-                {uploading
-                  ? <><i className="fa-solid fa-spinner fa-spin" /> Uploading…</>
-                  : <><i className="fa-solid fa-upload" /> {status === 'not-uploaded' ? 'Upload' : 'Replace'}</>}
-                <input type="file" accept="image/*,.pdf" style={{ display: 'none' }} disabled={uploading}
-                  onChange={e => { const f = e.target.files?.[0]; if (f) handleUpload(def, f) }} />
-              </label>
-            </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -812,35 +841,54 @@ function TabPreferences({ profile, onSaved }: { profile: DietitianProfile | null
         <div className="dmp-card">
           <div className="dmp-card-header">
             <h3 className="dmp-card-title">Weekly Availability Settings</h3>
-            <button className="dmp-edit-link" disabled={availSaving} onClick={handleAvailSave}>
-              {availSaving
-                ? <><i className="fa-solid fa-spinner fa-spin" /> Saving…</>
-                : availEdit
-                ? <><i className="fa-solid fa-check" /> Save</>
-                : <><i className="fa-solid fa-pen" /> Edit</>}
-            </button>
+            {(availEdit || !!profile?.availability && Object.keys(profile.availability).length > 0) && (
+              <button className="dmp-edit-link" disabled={availSaving} onClick={handleAvailSave}>
+                {availSaving
+                  ? <><i className="fa-solid fa-spinner fa-spin" /> Saving…</>
+                  : availEdit
+                  ? <><i className="fa-solid fa-check" /> Save</>
+                  : <><i className="fa-solid fa-pen" /> Edit</>}
+              </button>
+            )}
           </div>
-          <div className="dmp-week-avail">
-            {availability.map((a, i) => (
-              <div key={a.day} className="dmp-week-row">
-                {availEdit && <Toggle on={!a.closed} onChange={() => toggleDay(i)} />}
-                <span className={`dmp-week-day${a.closed ? ' dmp-week-day--off' : ''}`}>{a.day}</span>
-                {a.closed ? (
-                  <span className="dmp-week-closed">Closed</span>
-                ) : availEdit ? (
-                  <div className="dmp-week-times">
-                    <input type="time" className="dmp-time-input" value={a.start}
-                      onChange={e => setTime(i, 'start', e.target.value)} />
-                    <span className="dmp-week-dash">–</span>
-                    <input type="time" className="dmp-time-input" value={a.end}
-                      onChange={e => setTime(i, 'end', e.target.value)} />
-                  </div>
-                ) : (
-                  <span className="dmp-week-time">{to12hLabel(a.start)} – {to12hLabel(a.end)}</span>
-                )}
+
+          {!availEdit && (!profile?.availability || Object.keys(profile.availability).length === 0) ? (
+            <div className="dmp-avail-empty">
+              <div className="dmp-avail-empty-icon">
+                <i className="fa-solid fa-calendar-days" />
               </div>
-            ))}
-          </div>
+              <p className="dmp-avail-empty-title">No availability set yet</p>
+              <p className="dmp-avail-empty-desc">
+                Set your weekly schedule so clients can see when you're free and book
+                appointments with you directly on the website.
+              </p>
+              <button className="dmp-complete-btn" onClick={() => setAvailEdit(true)}>
+                <i className="fa-solid fa-calendar-plus" /> Set Your Availability
+              </button>
+            </div>
+          ) : (
+            <div className="dmp-week-avail">
+              {availability.map((a, i) => (
+                <div key={a.day} className="dmp-week-row">
+                  {availEdit && <Toggle on={!a.closed} onChange={() => toggleDay(i)} />}
+                  <span className={`dmp-week-day${a.closed ? ' dmp-week-day--off' : ''}`}>{a.day}</span>
+                  {a.closed ? (
+                    <span className="dmp-week-closed">Closed</span>
+                  ) : availEdit ? (
+                    <div className="dmp-week-times">
+                      <input type="time" className="dmp-time-input" value={a.start}
+                        onChange={e => setTime(i, 'start', e.target.value)} />
+                      <span className="dmp-week-dash">–</span>
+                      <input type="time" className="dmp-time-input" value={a.end}
+                        onChange={e => setTime(i, 'end', e.target.value)} />
+                    </div>
+                  ) : (
+                    <span className="dmp-week-time">{to12hLabel(a.start)} – {to12hLabel(a.end)}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </>
@@ -1394,11 +1442,195 @@ interface BannerProfile {
   experience: string; licenseNo: string; languages: string
 }
 
+/* ─── Photo Crop Modal ───────────────────────────────────── */
+
+function PhotoCropModal({ src, onConfirm, onCancel }: {
+  src: string
+  onConfirm: (blob: Blob) => void
+  onCancel: () => void
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const imgRef = useRef<HTMLImageElement | null>(null)
+  const [imgLoaded, setImgLoaded] = useState(false)
+  const [baseScale, setBaseScale] = useState(1)
+  const [zoom, setZoom] = useState(1)
+  const [offset, setOffset] = useState({ x: 0, y: 0 })
+  const dragging = useRef(false)
+  const dragStart = useRef({ mx: 0, my: 0, ox: 0, oy: 0 })
+
+  const SIZE = 300
+  const RADIUS = 128
+  const CX = SIZE / 2
+  const CY = SIZE / 2
+
+  useEffect(() => {
+    const img = new Image()
+    img.onload = () => {
+      imgRef.current = img
+      const scale = Math.max((RADIUS * 2) / img.naturalWidth, (RADIUS * 2) / img.naturalHeight)
+      setBaseScale(scale)
+      setZoom(1)
+      setOffset({ x: 0, y: 0 })
+      setImgLoaded(true)
+    }
+    img.src = src
+  }, [src])
+
+  useEffect(() => {
+    const img = imgRef.current
+    const canvas = canvasRef.current
+    if (!img || !canvas || !imgLoaded) return
+    const ctx = canvas.getContext('2d')!
+    const actualScale = baseScale * zoom
+    const iw = img.naturalWidth * actualScale
+    const ih = img.naturalHeight * actualScale
+    const ix = CX + offset.x - iw / 2
+    const iy = CY + offset.y - ih / 2
+
+    ctx.clearRect(0, 0, SIZE, SIZE)
+    ctx.fillStyle = '#2a2a2a'
+    ctx.fillRect(0, 0, SIZE, SIZE)
+    ctx.drawImage(img, ix, iy, iw, ih)
+
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'
+    ctx.beginPath()
+    ctx.rect(0, 0, SIZE, SIZE)
+    ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2, true)
+    ctx.fill('evenodd')
+
+    ctx.beginPath()
+    ctx.arc(CX, CY, RADIUS, 0, Math.PI * 2)
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)'
+    ctx.lineWidth = 2
+    ctx.stroke()
+  }, [imgLoaded, baseScale, zoom, offset])
+
+  useEffect(() => {
+    const img = imgRef.current
+    if (!img) return
+    const actualScale = baseScale * zoom
+    const maxX = Math.max(0, (img.naturalWidth * actualScale) / 2 - RADIUS)
+    const maxY = Math.max(0, (img.naturalHeight * actualScale) / 2 - RADIUS)
+    setOffset(prev => ({
+      x: Math.max(-maxX, Math.min(maxX, prev.x)),
+      y: Math.max(-maxY, Math.min(maxY, prev.y)),
+    }))
+  }, [zoom, baseScale])
+
+  const clampOffset = (nx: number, ny: number) => {
+    const img = imgRef.current
+    if (!img) return { x: nx, y: ny }
+    const actualScale = baseScale * zoom
+    const maxX = Math.max(0, (img.naturalWidth * actualScale) / 2 - RADIUS)
+    const maxY = Math.max(0, (img.naturalHeight * actualScale) / 2 - RADIUS)
+    return {
+      x: Math.max(-maxX, Math.min(maxX, nx)),
+      y: Math.max(-maxY, Math.min(maxY, ny)),
+    }
+  }
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    dragging.current = true
+    dragStart.current = { mx: e.clientX, my: e.clientY, ox: offset.x, oy: offset.y }
+    e.preventDefault()
+  }
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!dragging.current) return
+    const { mx, my, ox, oy } = dragStart.current
+    setOffset(clampOffset(ox + e.clientX - mx, oy + e.clientY - my))
+  }
+  const handleMouseUp = () => { dragging.current = false }
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    const t = e.touches[0]
+    dragging.current = true
+    dragStart.current = { mx: t.clientX, my: t.clientY, ox: offset.x, oy: offset.y }
+  }
+  const handleTouchMove = (e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (!dragging.current) return
+    const t = e.touches[0]
+    const { mx, my, ox, oy } = dragStart.current
+    setOffset(clampOffset(ox + t.clientX - mx, oy + t.clientY - my))
+  }
+
+  const handleConfirm = () => {
+    const img = imgRef.current
+    if (!img) return
+    const OUTPUT = 400
+    const crop = document.createElement('canvas')
+    crop.width = OUTPUT
+    crop.height = OUTPUT
+    const ctx = crop.getContext('2d')!
+    ctx.beginPath()
+    ctx.arc(OUTPUT / 2, OUTPUT / 2, OUTPUT / 2, 0, Math.PI * 2)
+    ctx.clip()
+    const actualScale = baseScale * zoom
+    const imgX = CX + offset.x - img.naturalWidth * actualScale / 2
+    const imgY = CY + offset.y - img.naturalHeight * actualScale / 2
+    const srcX = (CX - RADIUS - imgX) / actualScale
+    const srcY = (CY - RADIUS - imgY) / actualScale
+    const srcW = (RADIUS * 2) / actualScale
+    const srcH = (RADIUS * 2) / actualScale
+    ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, OUTPUT, OUTPUT)
+    crop.toBlob(blob => { if (blob) onConfirm(blob) }, 'image/jpeg', 0.92)
+  }
+
+  return (
+    <div className="pcc-backdrop" onClick={onCancel}>
+      <div className="pcc-dialog" onClick={e => e.stopPropagation()}>
+        <button className="pcc-close" onClick={onCancel} aria-label="Close">✕</button>
+        <h3 className="pcc-title">Adjust Profile Photo</h3>
+        <p className="pcc-hint">Drag to reposition &nbsp;·&nbsp; Slide to zoom</p>
+        <div className="pcc-canvas-wrap">
+          {!imgLoaded && (
+            <div className="pcc-canvas-loading">
+              <i className="fa-solid fa-spinner fa-spin" />
+            </div>
+          )}
+          <canvas
+            ref={canvasRef}
+            width={SIZE}
+            height={SIZE}
+            className="pcc-canvas"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={() => { dragging.current = false }}
+          />
+        </div>
+        <div className="pcc-zoom-row">
+          <i className="fa-solid fa-magnifying-glass-minus" />
+          <input
+            type="range"
+            className="pcc-zoom-slider"
+            min="1"
+            max="3"
+            step="0.01"
+            value={zoom}
+            onChange={e => setZoom(Number(e.target.value))}
+          />
+          <i className="fa-solid fa-magnifying-glass-plus" />
+        </div>
+        <div className="pcc-actions">
+          <button className="pcc-cancel-btn" onClick={onCancel}>Cancel</button>
+          <button className="pcc-confirm-btn" onClick={handleConfirm} disabled={!imgLoaded}>
+            <i className="fa-solid fa-check" /> Apply
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Main component ─────────────────────────────────────── */
 
 export default function DietitianMyProfile() {
-  const { user } = useAuth()
+  const { user, clearAuth } = useAuth()
   const { showToast } = useToast()
+  const navigate = useNavigate()
   const location = useLocation()
   // Allow other pages to deep-link to a specific tab (e.g. the onboarding
   // prompt sends the dietitian straight to "Preferences" for availability).
@@ -1448,15 +1680,64 @@ export default function DietitianMyProfile() {
 
   const completion = getCompletion(profile)
 
+  // Delete account modal state
+  const [deleteStep, setDeleteStep] = useState<'closed' | 'confirm' | 'password'>('closed')
+  const [deletePassword, setDeletePassword] = useState('')
+  const [showDeletePass, setShowDeletePass] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword.trim()) { setDeleteError('Please enter your password.'); return }
+    setDeleteLoading(true)
+    setDeleteError('')
+    try {
+      await dietitianApi.deleteAccount(deletePassword)
+      showToast('Your account has been deleted.', 'success')
+      clearAuth()
+      navigate('/', { replace: true })
+    } catch (err) {
+      setDeleteError(err instanceof ApiError ? err.message : 'Incorrect password or something went wrong.')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  const closeDeleteModal = () => {
+    setDeleteStep('closed')
+    setDeletePassword('')
+    setDeleteError('')
+    setShowDeletePass(false)
+  }
+
   const [photoUploading, setPhotoUploading] = useState(false)
-  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [cropSrc, setCropSrc] = useState<string | null>(null)
+  const cropObjectUrl = useRef<string | null>(null)
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    e.target.value = '' // allow re-selecting the same file later
+    e.target.value = ''
     if (!file) return
+    if (cropObjectUrl.current) URL.revokeObjectURL(cropObjectUrl.current)
+    const url = URL.createObjectURL(file)
+    cropObjectUrl.current = url
+    setCropSrc(url)
+  }
+
+  const handlePhotoCropCancel = () => {
+    setCropSrc(null)
+    if (cropObjectUrl.current) { URL.revokeObjectURL(cropObjectUrl.current); cropObjectUrl.current = null }
+  }
+
+  const handlePhotoCropConfirm = async (blob: Blob) => {
+    setCropSrc(null)
+    if (cropObjectUrl.current) { URL.revokeObjectURL(cropObjectUrl.current); cropObjectUrl.current = null }
     const oldUrl = profile?.documents.profile_photo ?? null
-    setPhotoSrc(URL.createObjectURL(file)) // instant local preview
+    const previewUrl = URL.createObjectURL(blob)
+    setPhotoSrc(previewUrl)
     setPhotoUploading(true)
     try {
+      const file = new File([blob], 'profile-photo.jpg', { type: 'image/jpeg' })
       const url = await uploadSingleDocument(file, 'profile-photos')
       const updated = await dietitianApi.updateProfile({
         documents: {
@@ -1468,11 +1749,13 @@ export default function DietitianMyProfile() {
         },
       })
       setProfile(updated)
+      URL.revokeObjectURL(previewUrl)
       setPhotoSrc(updated.documents.profile_photo)
       showToast('Profile photo updated.', 'success')
-      // Old photo is now orphaned — remove it from S3 (best-effort)
       if (oldUrl && oldUrl !== url) deleteDocument(oldUrl)
     } catch (err) {
+      URL.revokeObjectURL(previewUrl)
+      setPhotoSrc(profile?.documents.profile_photo ?? null)
       showToast(err instanceof ApiError ? err.message : 'Could not upload photo.', 'error')
     } finally {
       setPhotoUploading(false)
@@ -1504,9 +1787,9 @@ export default function DietitianMyProfile() {
               <p className="dmp-banner-title">{bannerProfile.title}</p>
               <p className="dmp-banner-degree">{bannerProfile.degree}</p>
               <div className="dmp-banner-meta">
-                <span><i className="fa-solid fa-clock" /> {bannerProfile.experience} Experience</span>
-                <span><i className="fa-solid fa-id-card" /> {bannerProfile.licenseNo}</span>
-                <span><i className="fa-solid fa-language" /> {bannerProfile.languages || 'Please select the language you are comfortable'}</span>
+                {bannerProfile.experience && <span><i className="fa-solid fa-clock" /> {bannerProfile.experience} Experience</span>}
+                {bannerProfile.licenseNo && <span><i className="fa-solid fa-id-card" /> {bannerProfile.licenseNo}</span>}
+                {bannerProfile.languages && <span><i className="fa-solid fa-language" /> {bannerProfile.languages}</span>}
               </div>
             </div>
           </div>
@@ -1570,7 +1853,7 @@ export default function DietitianMyProfile() {
 
               <FeeCard profile={profile} onSaved={setProfile} />
 
-              <div className="dmp-card">
+              {/* <div className="dmp-card">
                 <h3 className="dmp-card-title">Professional Summary</h3>
                 <div className="dmp-summary-list">
                   {[
@@ -1587,7 +1870,7 @@ export default function DietitianMyProfile() {
                   ))}
                 </div>
                 <button className="dmp-reports-link">View Reports &amp; Earnings →</button>
-              </div>
+              </div> */}
 
               <div className="dmp-card">
                 <h3 className="dmp-card-title">Account Details</h3>
@@ -1610,12 +1893,87 @@ export default function DietitianMyProfile() {
                       : <span className="dmp-account-val dmp-status-active">Active</span>}
                   </div>
                 </div>
-                <button className="dmp-deactivate-btn">🗑 Deactivate Account</button>
+                <button className="dmp-deactivate-btn" onClick={() => setDeleteStep('confirm')}>🗑 Deactivate Account</button>
               </div>
             </aside>
           )}
         </div>
         )}
+
+      {/* ── Photo crop modal ── */}
+      {cropSrc && (
+        <PhotoCropModal
+          src={cropSrc}
+          onConfirm={handlePhotoCropConfirm}
+          onCancel={handlePhotoCropCancel}
+        />
+      )}
+
+      {/* ── Delete account modal ── */}
+      {deleteStep !== 'closed' && (
+        <div className="dda-backdrop" onClick={closeDeleteModal}>
+          <div className="dda-dialog" role="dialog" aria-modal="true" onClick={e => e.stopPropagation()}>
+            <button className="dda-close" onClick={closeDeleteModal} aria-label="Close">✕</button>
+
+            {deleteStep === 'confirm' ? (
+              <>
+                <div className="dda-icon">⚠️</div>
+                <h3 className="dda-title">Deactivate Your Account?</h3>
+                <p className="dda-desc">
+                  This will permanently deactivate your account. You will no longer appear in
+                  search results and clients won't be able to book you. This action
+                  <strong> cannot be undone</strong>.
+                </p>
+                <ul className="dda-list">
+                  <li>Your profile will be removed from the platform</li>
+                  <li>All active sessions will be terminated</li>
+                  <li>Pending appointments may be affected</li>
+                </ul>
+                <button
+                  className="dda-confirm-btn"
+                  onClick={() => { setDeleteStep('password'); setDeleteError('') }}
+                >
+                  Yes, Deactivate My Account
+                </button>
+                <button className="dda-cancel-btn" onClick={closeDeleteModal}>Cancel</button>
+              </>
+            ) : (
+              <>
+                <div className="dda-icon dda-icon--lock">🔒</div>
+                <h3 className="dda-title">Confirm Your Password</h3>
+                <p className="dda-desc">
+                  Enter your current password to permanently delete your account.
+                </p>
+                <div className="dda-pw-wrap">
+                  <input
+                    type={showDeletePass ? 'text' : 'password'}
+                    className="dda-pw-input"
+                    placeholder="Enter your password"
+                    value={deletePassword}
+                    onChange={e => { setDeletePassword(e.target.value); setDeleteError('') }}
+                    onKeyDown={e => e.key === 'Enter' && handleDeleteAccount()}
+                    autoFocus
+                  />
+                  <button className="dda-pw-eye" onClick={() => setShowDeletePass(p => !p)}>
+                    <i className={`fa-regular ${showDeletePass ? 'fa-eye-slash' : 'fa-eye'}`} />
+                  </button>
+                </div>
+                {deleteError && <p className="dda-error">{deleteError}</p>}
+                <button
+                  className="dda-confirm-btn"
+                  disabled={deleteLoading}
+                  onClick={handleDeleteAccount}
+                >
+                  {deleteLoading
+                    ? <><i className="fa-solid fa-spinner fa-spin" /> Deleting…</>
+                    : 'Delete My Account'}
+                </button>
+                <button className="dda-cancel-btn" disabled={deleteLoading} onClick={closeDeleteModal}>Cancel</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </>
   )
 }

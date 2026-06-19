@@ -6,12 +6,11 @@ import dietitianDietPlanApi, {
 
 type Tab = 'all' | DietPlanStatus
 
-const STATUS_META: Record<DietPlanStatus, { label: string; color: string }> = {
-  completed:  { label: 'Active',      color: 'green'  },
-  draft:      { label: 'Draft',       color: 'orange' },
-  archived:   { label: 'Archived',    color: 'gray'   },
-  generating: { label: 'Generating',  color: 'blue'   },
-  failed:     { label: 'Failed',      color: 'red'    },
+const STATUS_META: Partial<Record<DietPlanStatus, { label: string; color: string }>> = {
+  completed:  { label: 'Active',     color: 'green'  },
+  draft:      { label: 'Draft',      color: 'orange' },
+  generating: { label: 'Generating', color: 'blue'   },
+  failed:     { label: 'Failed',     color: 'red'    },
 }
 
 const GOAL_LABEL: Record<string, string> = {
@@ -65,7 +64,6 @@ export default function DietitianDietPlans() {
   const [selected, setSelected]           = useState<DietPlanSummary | null>(null)
   const [detailPlan, setDetailPlan]       = useState<DietPlanDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
-  const [archiving, setArchiving]         = useState(false)
   const [generatingIds, setGeneratingIds] = useState<Set<number>>(new Set())
   const [openWeek, setOpenWeek]           = useState(0)
   const [openDay, setOpenDay]             = useState(0)
@@ -117,25 +115,11 @@ export default function DietitianDietPlans() {
     }
   }
 
-  async function handleArchive(plan: DietPlanSummary) {
-    setArchiving(true)
-    try {
-      const updated = await dietitianDietPlanApi.archive(plan.id)
-      setPlans(prev => prev.map(p => p.id === updated.id ? updated : p))
-      if (selected?.id === updated.id) {
-        setSelected(updated)
-        setDetailPlan(prev => prev ? { ...prev, ...updated } : null)
-      }
-    } catch { /* silent */ }
-    finally { setArchiving(false) }
-  }
-
   const counts = {
     all:        plans.length,
     completed:  plans.filter(p => p.status === 'completed').length,
     draft:      plans.filter(p => p.status === 'draft').length,
     generating: plans.filter(p => p.status === 'generating').length,
-    archived:   plans.filter(p => p.status === 'archived').length,
     failed:     plans.filter(p => p.status === 'failed').length,
   }
 
@@ -151,7 +135,6 @@ export default function DietitianDietPlans() {
     ['completed',  'Active',     counts.completed],
     ['draft',      'Draft',      counts.draft],
     ['generating', 'Generating', counts.generating],
-    ['archived',   'Archived',   counts.archived],
   ]
 
   const weeks       = detailPlan?.weeks ?? []
@@ -176,10 +159,6 @@ export default function DietitianDietPlans() {
             <div className="dp-hstat dp-hstat--orange">
               <span className="dp-hstat-val">{counts.draft}</span>
               <span className="dp-hstat-label">Draft</span>
-            </div>
-            <div className="dp-hstat dp-hstat--gray">
-              <span className="dp-hstat-val">{counts.archived}</span>
-              <span className="dp-hstat-label">Archived</span>
             </div>
           </div>
           <button className="dp-create-btn" onClick={() => navigate('/dietitian-diet-plans/new')}>
@@ -273,12 +252,6 @@ export default function DietitianDietPlans() {
                         className="dp-btn-view" onClick={e => e.stopPropagation()}>
                         <i className="fa-solid fa-file-pdf" /> PDF
                       </a>
-                    )}
-                    {p.status !== 'archived' && (
-                      <button className="dp-btn-icon" title="Archive" disabled={archiving}
-                        onClick={e => { e.stopPropagation(); handleArchive(p) }}>
-                        <i className="fa-solid fa-box-archive" />
-                      </button>
                     )}
                   </div>
                 </div>
@@ -505,45 +478,23 @@ export default function DietitianDietPlans() {
                 {/* Actions */}
                 <div className="dp-detail-btns">
                   {(selected.status === 'draft' || selected.status === 'failed') && (
-                    <>
-                      <button
-                        className="dp-btn-primary dp-btn-primary--full"
-                        onClick={() => navigate(`/dietitian-diet-plans/${selected.id}`)}
-                      >
-                        <i className="fa-solid fa-pen" /> Edit Draft
-                      </button>
-                      <button
-                        className="dp-btn-outline-g dp-btn-outline-g--full"
-                        disabled={archiving}
-                        onClick={() => handleArchive(selected)}
-                      >
-                        <i className="fa-solid fa-box-archive" />
-                        {archiving ? 'Archiving…' : 'Archive Plan'}
-                      </button>
-                    </>
+                    <button
+                      className="dp-btn-primary dp-btn-primary--full"
+                      onClick={() => navigate(`/dietitian-diet-plans/${selected.id}`)}
+                    >
+                      <i className="fa-solid fa-pen" /> Edit Draft
+                    </button>
                   )}
 
-                  {selected.status === 'completed' && (
-                    <>
-                      {selected.pdf_url && (
-                        <a
-                          href={selected.pdf_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="dp-btn-primary dp-btn-primary--full"
-                        >
-                          <i className="fa-solid fa-file-pdf" /> View PDF
-                        </a>
-                      )}
-                      <button
-                        className="dp-btn-outline-g dp-btn-outline-g--full"
-                        disabled={archiving}
-                        onClick={() => handleArchive(selected)}
-                      >
-                        <i className="fa-solid fa-box-archive" />
-                        {archiving ? 'Archiving…' : 'Archive Plan'}
-                      </button>
-                    </>
+                  {selected.status === 'completed' && selected.pdf_url && (
+                    <a
+                      href={selected.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="dp-btn-primary dp-btn-primary--full"
+                    >
+                      <i className="fa-solid fa-file-pdf" /> View PDF
+                    </a>
                   )}
 
                   {selected.status === 'generating' && (

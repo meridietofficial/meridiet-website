@@ -75,6 +75,14 @@ const apiClient = {
   apiDelete<T>(endpoint: string, headers?: HeadersInit) {
     return request<T>(endpoint, { method: 'DELETE', headers: getHeaders(headers) })
   },
+
+  apiDeleteWithBody<T>(endpoint: string, body: unknown, headers?: HeadersInit) {
+    return request<T>(endpoint, {
+      method: 'DELETE',
+      headers: getHeaders(headers),
+      body: JSON.stringify(body),
+    })
+  },
 }
 
 export default apiClient

@@ -107,6 +107,7 @@ export type DietitianAppointment = {
   dietitian_rating: number | null
   dietitian_review: string | null
   dietitian_reviewed_at: string | null
+  diet_plan: DietPlanRef | null
 }
 
 export type DietitianReviewItem = {
@@ -158,6 +159,11 @@ export type RescheduleSlots = {
   booked_slots: AppointmentSlot[]
 }
 
+export type FollowUpSlots = {
+  available_slots: { date: string; day: string; slots: string[] }[]
+  booked_slots:    { date: string; day: string; slots: string[] }[]
+}
+
 export type CreateFollowUpBody = {
   appointment_date: string
   slot: string
@@ -186,6 +192,51 @@ export type FollowUpAppointment = {
   dietitian_notes?: string | null
 }
 
+export type DietPlanRef = {
+  id: number
+  form_id: number | null
+  status: 'draft' | 'generating' | 'completed' | 'failed' | 'archived'
+  pdf_url?: string | null
+}
+
+export type AppointmentDietForm = {
+  id: number
+  user_id: number
+  plan_type: number | null
+  full_name: string
+  age: number | null
+  gender: string | null
+  dob: string | null
+  height_unit: 'cm' | 'ft_in'
+  height: string | null
+  weight_unit: 'kg' | 'lbs'
+  weight: number | null
+  goals: string[]
+  activity_level: string | null
+  work_type: string | null
+  workout_type: string | null
+  diet_type: string | null
+  cuisine_preference: string[]
+  food_allergies: string[]
+  foods_dislike: string | null
+  favorite_foods: string | null
+  medical_conditions: string[]
+  other_condition: string | null
+  on_medication: string | null
+  medications: string | null
+  digestive_health: string | null
+  smoke_alcohol: string | null
+  health_notes: string | null
+  contact_name: string | null
+  whatsapp: string | null
+  email: string | null
+  delivery_method: string | null
+  city: string | null
+  state: string | null
+  created_at: string
+  updated_at: string
+}
+
 export type DietitianSession = {
   id: number
   time: string
@@ -198,6 +249,7 @@ export type DietitianSession = {
   session_number: number
   is_follow_up: boolean
   parent_appointment_id: number | null
+  diet_plan: DietPlanRef | null
   client: {
     user_id: number
     name: string
@@ -437,6 +489,13 @@ const appointmentApi = {
     return res.data
   },
 
+  async getFollowUpSlots(id: number, days = 30): Promise<FollowUpSlots> {
+    const res = await apiClient.apiGet<{ success: boolean; data: FollowUpSlots }>(
+      `${ENDPOINTS.appointment.single}/${id}/follow-up-slots?days=${days}`
+    )
+    return res.data
+  },
+
   async getReviews(id: number): Promise<AppointmentReviews> {
     const res = await apiClient.apiGet<{ success: boolean; data: AppointmentReviews }>(
       `${ENDPOINTS.appointment.single}/${id}/reviews`
@@ -467,6 +526,13 @@ const appointmentApi = {
       `${ENDPOINTS.appointment.single}/${id}/review`,
       body
     )
+  },
+
+  async getDietFormForAppointment(appointmentId: number): Promise<AppointmentDietForm> {
+    const res = await apiClient.apiGet<{ success: boolean; data: AppointmentDietForm }>(
+      `${ENDPOINTS.appointment.single}/${appointmentId}/diet-form`
+    )
+    return res.data
   },
 
   async scheduleFollowUp(id: number, body: CreateFollowUpBody): Promise<FollowUpAppointment> {

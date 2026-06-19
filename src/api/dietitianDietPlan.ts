@@ -20,6 +20,7 @@ export type DietWeek = {
 }
 
 export type HealthFormData = {
+  dob?: string
   age?: number
   gender?: string
   height?: string
@@ -109,8 +110,14 @@ const dietitianDietPlanApi = {
   },
 
   async get(id: number): Promise<DietPlanDetail> {
-    const res = await apiClient.apiGet<SingleRes>(`${ENDPOINTS.dietitianDietPlan.single}/${id}`)
-    return res.data
+    const res = await apiClient.apiGet<any>(`${ENDPOINTS.dietitianDietPlan.single}/${id}`)
+    // Handle both { data: DietPlanDetail } and { data: { plan: DietPlanDetail } }
+    const detail: DietPlanDetail = res.data?.plan ?? res.data
+    // Normalize status to lowercase to handle API case variations (e.g. 'Draft' → 'draft')
+    if (detail && typeof detail.status === 'string') {
+      detail.status = detail.status.toLowerCase() as DietPlanStatus
+    }
+    return detail
   },
 
   async saveDraft(body: CreateDraftBody): Promise<CreateDraftResult> {
@@ -119,8 +126,12 @@ const dietitianDietPlanApi = {
   },
 
   async update(id: number, body: UpdateDraftBody): Promise<DietPlanDetail> {
-    const res = await apiClient.apiPut<SingleRes>(`${ENDPOINTS.dietitianDietPlan.single}/${id}`, body)
-    return res.data
+    const res = await apiClient.apiPut<any>(`${ENDPOINTS.dietitianDietPlan.single}/${id}`, body)
+    const detail: DietPlanDetail = res.data?.plan ?? res.data
+    if (detail && typeof detail.status === 'string') {
+      detail.status = detail.status.toLowerCase() as DietPlanStatus
+    }
+    return detail
   },
 
   async generatePlan(id: number): Promise<void> {
@@ -130,13 +141,6 @@ const dietitianDietPlanApi = {
     )
   },
 
-  async archive(id: number): Promise<DietPlanDetail> {
-    const res = await apiClient.apiPut<SingleRes>(
-      `${ENDPOINTS.dietitianDietPlan.single}/${id}/archive`,
-      {}
-    )
-    return res.data
-  },
 }
 
 export default dietitianDietPlanApi
