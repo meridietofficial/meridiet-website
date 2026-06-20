@@ -63,6 +63,15 @@ export default function DietitianShowcase() {
   const prev = () => setIndex(i => Math.max(0, i - 1))
   const next = () => setIndex(i => Math.min(max, i + 1))
 
+  const touchStartX = useRef<number | null>(null)
+  const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX }
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const delta = touchStartX.current - e.changedTouches[0].clientX
+    if (Math.abs(delta) > 40) delta > 0 ? next() : prev()
+    touchStartX.current = null
+  }
+
   // Exact translation per step: card-width + gap
   // card-width = (100% - (visibleCount-1)*GAP) / visibleCount
   // step = card-width + GAP = 100%/visibleCount + GAP/visibleCount
@@ -87,7 +96,7 @@ export default function DietitianShowcase() {
         </div>
 
         {/* Carousel */}
-        <div className="ds-carousel-wrap">
+        <div className="ds-carousel-wrap" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
           <div className="ds-track" ref={trackRef} style={{ transform: translate }}>
             {loading
               ? Array(6).fill(null).map((_, i) => <SkeletonCard key={i} />)

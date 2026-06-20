@@ -50,27 +50,26 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
         </div>
 
         {/* ── Right visual ── */}
+        {/* Old Hero Section
         <div className="hero-visual">
-          {/* soft background blob */}
           <div className="hv-blob" />
-
-          {/* food images behind phone */}
           <img src="/rainbow-buddha-bowl.png"   alt="" className="hv-food hv-food-left"   aria-hidden="true" />
           <img src="/fruit-plate-colorful.png" alt="" className="hv-food hv-food-right"  aria-hidden="true" />
           <img src="/indian-thali.png"         alt="" className="hv-food hv-food-bottom" aria-hidden="true" />
-
-          {/* leaf decoration */}
           <img src="/hero-leaf.png" alt="" className="hv-leaf" aria-hidden="true" />
-
-          {/* lime */}
           <span className="hv-lime" aria-hidden="true">🍋</span>
-
-          {/* phone mockup — real screenshot */}
           <img
             src="/meri%20diet%20mobile%20view.png"
             alt="MeriDiet App"
             className="hv-phone-img"
           />
+        </div>
+        */}
+        <div className="hero-visual">
+          <div className="hv-visual-stack">
+            <img src="/hero-blob-bg.png" alt="" className="hv-blob-bg" aria-hidden="true" />
+            <img src="/hero-food-overlay.png" alt="Healthy Indian food bowls" className="hv-food-overlay" />
+          </div>
         </div>
       </div>
 
@@ -79,31 +78,35 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
         <div className="container">
           <div className="hero-strip-grid">
             <div className="hero-strip-item">
-              <i className="fa-solid fa-bowl-food hero-strip-icon" />
-              <div className="hero-strip-text">
-                <h4>Personalized Meal Plans</h4>
-                <p>Tailored Indian nutrition plans</p>
+              <div className="hero-strip-item-inner">
+                <img src="/strip-meal-plans.png" alt="" className="hero-strip-icon-img" aria-hidden="true" />
+                <div className="hero-strip-text">
+                  <span>Personalized<br />Meal Plans</span>
+                </div>
               </div>
             </div>
             <div className="hero-strip-item">
-              <i className="fa-solid fa-location-dot hero-strip-icon" />
-              <div className="hero-strip-text">
-                <h4>Based On Region</h4>
-                <p>Food preference based planning</p>
+              <div className="hero-strip-item-inner">
+                <img src="/strip-region.png" alt="" className="hero-strip-icon-img" aria-hidden="true" />
+                <div className="hero-strip-text">
+                  <span>Based on Your Region<br />& Food Preferences</span>
+                </div>
               </div>
             </div>
             <div className="hero-strip-item">
-              <i className="fa-brands fa-whatsapp hero-strip-icon" />
-              <div className="hero-strip-text">
-                <h4>Delivered Instantly</h4>
-                <p>WhatsApp & Email delivery</p>
+              <div className="hero-strip-item-inner">
+                <img src="/strip-whatsapp.png" alt="" className="hero-strip-icon-img hero-strip-icon-img--lg" aria-hidden="true" />
+                <div className="hero-strip-text">
+                  <span>Delivered Instantly on<br />Whatsapp & Email</span>
+                </div>
               </div>
             </div>
             <div className="hero-strip-item">
-              <i className="fa-solid fa-brain hero-strip-icon" />
-              <div className="hero-strip-text">
-                <h4>Expert Dietitian</h4>
-                <p>Smart nutrition planning</p>
+              <div className="hero-strip-item-inner">
+                <img src="/strip-dietitian.png" alt="" className="hero-strip-icon-img" aria-hidden="true" />
+                <div className="hero-strip-text">
+                  <span>AI-Assisted<br />Nutrition Planning</span>
+                </div>
               </div>
             </div>
           </div>
