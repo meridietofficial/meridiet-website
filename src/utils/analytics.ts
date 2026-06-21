@@ -71,12 +71,18 @@ export function trackInitiateCheckout(value: number, currency: string) {
   }
 }
 
-export function trackPurchase(value: number, currency: string) {
+export function trackConsultationBooked(value: number, dietitian_name: string) {
+  if (window.fbq) {
+    window.fbq('trackCustom', 'ConsultationBooked', { value, currency: 'INR', dietitian_name })
+  }
+}
+
+export function trackPurchase(value: number, currency: string, plan_name?: string) {
   if (typeof gtag !== 'undefined') {
     gtag('event', 'purchase', { value, currency })
   }
   if (window.fbq) {
-    window.fbq('track', 'Purchase', { value, currency })
+    window.fbq('track', 'Purchase', { value, currency, ...(plan_name ? { plan_name } : {}) })
   }
 }
 

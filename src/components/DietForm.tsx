@@ -1292,7 +1292,7 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
             try {
               await paymentApi.verify(rzpResponse)
               // Track confirmed purchase then show success
-              trackPurchase(amount, currency ?? 'INR')
+              trackPurchase(amount, currency ?? 'INR', data.planType)
               navigate('/diet-plan/success', { replace: true })
               setSubmitted(true)
             } catch (err) {
