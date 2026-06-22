@@ -1,4 +1,5 @@
 import Hero from '../components/Hero'
+import StatsCounter from '../components/StatsCounter'
 import DietitianShowcase from '../components/DietitianShowcase'
 import HowItWorks from '../components/HowItWorks'
 import PlansFor from '../components/PlansFor'
@@ -44,12 +45,13 @@ const HomePage = ({ onOpenForm }: { onOpenForm: () => void }) => (
       jsonLd={[ORG_SCHEMA, SERVICE_SCHEMA]}
     />
     <Hero onOpenForm={onOpenForm} />
+    <StatsCounter />
     <DietitianShowcase />
     <HowItWorks />
     <PlansFor />
-    <SamplePlan />
-    <Pricing />
-    <WhyChoose />
+    <SamplePlan onOpenForm={onOpenForm} />
+    <Pricing onOpenForm={onOpenForm} />
+    <WhyChoose onOpenForm={onOpenForm} />
     <Testimonials />
     <CTA onOpenForm={onOpenForm} />
   </main>

@@ -49,7 +49,7 @@ const mealData = [
   },
 ]
 
-const SamplePlan = () => {
+const SamplePlan = ({ onOpenForm }: { onOpenForm: () => void }) => {
   return (
     <section className="sample-section" id="sample-diet">
 
@@ -192,9 +192,9 @@ const SamplePlan = () => {
                 <i className="fa-solid fa-circle-info" />
                 Plans are personalized based on your BMI, health goals, allergies, and food preferences.
               </p>
-              <a href="#get-plan" className="btn-primary">
+              <button className="btn-primary" onClick={onOpenForm}>
                 Get Your Full 7-Day Plan <i className="fa-solid fa-arrow-right" />
-              </a>
+              </button>
             </div>
           </div>
 

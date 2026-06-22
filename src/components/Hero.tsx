@@ -31,7 +31,7 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
             </button>
           </div>
 
-          <div className="hero-avatars">
+          {/* <div className="hero-avatars">
             <div className="avatar-stack">
               {['A', 'B', 'C', 'D'].map((l, i) => (
                 <div
@@ -46,7 +46,7 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
             <span className="hero-social-proof">
               Trusted by <strong>1,000+</strong> happy clients
             </span>
-          </div>
+          </div> */}
         </div>
 
         {/* ── Right visual ── */}

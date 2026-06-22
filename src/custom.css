@@ -308,7 +308,7 @@
    ============================================================ */
 .hero {
   background: var(--bg-main);
-  padding: 72px 0 0;
+  padding: 20px 0 0;
   overflow: hidden;
 }
 
@@ -645,10 +645,66 @@
 
   .hero-strip-grid {
     grid-template-columns: repeat(2, 1fr);
+    height: auto;
+    min-height: 0;
+    padding: 0;
+    gap: 0;
+    overflow: visible;
   }
 
   .hero-strip-item {
-    padding: 16px 16px;
+    padding: 18px 16px;
+    border-right: 1px solid #dde8bb;
+    border-bottom: 1px solid #dde8bb;
+  }
+
+  /* remove right border on even items (right column) */
+  .hero-strip-item:nth-child(2n) {
+    border-right: none;
+  }
+
+  /* remove bottom border on last two items */
+  .hero-strip-item:nth-last-child(-n+2) {
+    border-bottom: none;
+  }
+
+  .hero-strip-item-inner {
+    height: auto;
+  }
+
+  .hero-strip-text {
+    height: auto;
+    overflow: visible;
+  }
+}
+
+@media (max-width: 600px) {
+  .hero-strip {
+    padding-bottom: 36px;
+  }
+
+  .hero-strip-grid {
+    border-radius: 12px;
+    margin: 12px auto 0;
+  }
+
+  .hero-strip-item-inner {
+    gap: 10px;
+  }
+
+  .hero-strip-icon-img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .hero-strip-icon-img--lg {
+    width: 42px;
+    height: 42px;
+  }
+
+  .hero-strip-text span {
+    font-size: 13px;
+    line-height: 20px;
   }
 }
 
@@ -765,22 +821,26 @@
 @media (max-width: 900px) {
   .how-steps {
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
+  }
+
+  .how-card {
+    width: 100%;
+    max-width: 360px;
+    height: auto;
+    min-height: 0;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 28px 20px 20px;
   }
 
   .how-arrow {
     transform: rotate(90deg);
-    margin-top: 0;
-    margin-bottom: 4px;
+    margin: 4px 0;
     width: auto;
-    height: 32px;
+    height: 28px;
     align-self: center;
-  }
-}
-
-@media (max-width: 560px) {
-  .how-card {
-    padding: 32px 14px 20px;
   }
 }
 
@@ -9835,6 +9895,80 @@
   .profile-save-btn {
     width: 100%;
     text-align: center;
+  }
+}
+
+/* ============================================================
+   STATS COUNTER
+   ============================================================ */
+
+.sc-section {
+  padding: 48px 0;
+  background: linear-gradient(135deg, #f0faf4 0%, #e8f5ee 100%);
+  border-top: 1px solid #d4eddf;
+  border-bottom: 1px solid #d4eddf;
+}
+
+.sc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+}
+
+.sc-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px;
+  border-right: 1px solid #c8e6d4;
+}
+
+.sc-stat:last-child {
+  border-right: none;
+}
+
+.sc-number {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--green);
+  line-height: 1;
+  margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.sc-suffix {
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.sc-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-light);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 600px) {
+  .sc-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sc-stat {
+    border-right: 1px solid #c8e6d4;
+    border-bottom: 1px solid #c8e6d4;
+    padding: 20px 12px;
+  }
+  .sc-stat:nth-child(2n) {
+    border-right: none;
+  }
+  .sc-stat:nth-last-child(-n+2) {
+    border-bottom: none;
+  }
+  .sc-number {
+    font-size: 30px;
+  }
+  .sc-suffix {
+    font-size: 22px;
   }
 }
 

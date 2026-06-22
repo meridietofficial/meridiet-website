@@ -1,4 +1,7 @@
+import { useNavigate } from 'react-router-dom'
+
 const CTA = ({ onOpenForm }: { onOpenForm: () => void }) => {
+  const navigate = useNavigate()
   return (
     <section className="cta-section" id="get-plan">
       <div className="container">
@@ -10,7 +13,7 @@ const CTA = ({ onOpenForm }: { onOpenForm: () => void }) => {
               Get a customized Indian diet plan crafted by certified dietitians — tailored to your health goals and lifestyle.
             </p>
             <div className="cta-actions">
-              <button className="btn-primary cta-btn" onClick={onOpenForm}>
+              <button className="btn-primary cta-btn" onClick={() => navigate('/consult-dietitian')}>
                 Book a Consultation →
               </button>
             </div>

@@ -39,7 +39,7 @@ const data: boolean[][] = [
   [false, true,  false],
 ]
 
-const WhyChoose = () => {
+const WhyChoose = ({ onOpenForm }: { onOpenForm: () => void }) => {
   return (
     <section className="why-section" id="why">
 
@@ -144,7 +144,7 @@ const WhyChoose = () => {
               </div>
               <div className="compare-cell" />
               <div className="compare-cell highlighted">
-                <a href="#get-plan" className="compare-cta-btn">Get Plan →</a>
+                <button className="compare-cta-btn" onClick={onOpenForm}>Get Plan →</button>
               </div>
               <div className="compare-cell" />
             </div>

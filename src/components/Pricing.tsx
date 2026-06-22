@@ -63,7 +63,7 @@ const plans = [
   },
 ]
 
-const Pricing = () => {
+const Pricing = ({ onOpenForm }: { onOpenForm: () => void }) => {
   return (
     <section className="pricing-section" id="pricing">
       <div className="container">
@@ -117,12 +117,12 @@ const Pricing = () => {
                   ))}
                 </ul>
 
-                <a
-                  href="#get-plan"
+                <button
                   className={`pricing-cta ${plan.popular ? 'pricing-cta--primary' : 'pricing-cta--outline'}`}
+                  onClick={onOpenForm}
                 >
                   {plan.cta}
-                </a>
+                </button>
               </div>
             )
           })}
