@@ -95,6 +95,8 @@ export default function ConsultDietitian() {
   const [availableNow, setAvailableNow] = useState(false)
   const [feeMin, setFeeMin] = useState(FEE_RANGE_MIN)
   const [feeMax, setFeeMax] = useState(FEE_RANGE_MAX)
+  const [debouncedFeeMin, setDebouncedFeeMin] = useState(FEE_RANGE_MIN)
+  const [debouncedFeeMax, setDebouncedFeeMax] = useState(FEE_RANGE_MAX)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Cities for the selected state (local map, keyed by state code)
@@ -113,10 +115,16 @@ export default function ConsultDietitian() {
     return () => clearTimeout(t)
   }, [search])
 
+  // Debounce fee slider — wait until user stops dragging before firing API
+  useEffect(() => {
+    const t = setTimeout(() => { setDebouncedFeeMin(feeMin); setDebouncedFeeMax(feeMax) }, 600)
+    return () => clearTimeout(t)
+  }, [feeMin, feeMax])
+
   // Any filter change resets to page 1 (no-op re-render if already 1)
   useEffect(() => {
     setPage(1)
-  }, [debouncedSearch, activeCategory, sort, gender, stateName, city, specialization, experience, language, availableNow, feeMin, feeMax])
+  }, [debouncedSearch, activeCategory, sort, gender, stateName, city, specialization, experience, language, availableNow, debouncedFeeMin, debouncedFeeMax])
 
   // Fetch the dietitian list whenever the query changes (filters apply live)
   useEffect(() => {
@@ -127,8 +135,8 @@ export default function ConsultDietitian() {
       location:       city || stateName || undefined,
       language:       language || undefined,
       available_now:  availableNow || undefined,
-      min_fee: feeMin > FEE_RANGE_MIN ? feeMin : undefined,
-      max_fee: feeMax < FEE_RANGE_MAX ? feeMax : undefined,
+      min_fee: debouncedFeeMin > FEE_RANGE_MIN ? debouncedFeeMin : undefined,
+      max_fee: debouncedFeeMax < FEE_RANGE_MAX ? debouncedFeeMax : undefined,
       sort,
       page,
       limit: 12,
@@ -148,7 +156,7 @@ export default function ConsultDietitian() {
       .catch(err => { if (!cancelled) { setError(err?.message ?? 'Failed to load dietitians'); if (page === 1) setResults([]) } })
       .finally(() => { if (!cancelled) { setLoading(false); setLoadingMore(false) } })
     return () => { cancelled = true }
-  }, [debouncedSearch, activeCategory, sort, page, gender, stateName, city, specialization, experience, language, availableNow, feeMin, feeMax])
+  }, [debouncedSearch, activeCategory, sort, page, gender, stateName, city, specialization, experience, language, availableNow, debouncedFeeMin, debouncedFeeMax])
 
   // IntersectionObserver — load next page when sentinel enters view
   const loadMore = useCallback(() => {
@@ -308,7 +316,7 @@ export default function ConsultDietitian() {
                 className="cd-fee-slider cd-fee-slider--min"
                 min={FEE_RANGE_MIN}
                 max={FEE_RANGE_MAX}
-                step={1}
+                step={50}
                 value={feeMin}
                 onChange={e => setFeeMin(Math.min(Number(e.target.value), feeMax - 1))}
               />
@@ -317,7 +325,7 @@ export default function ConsultDietitian() {
                 className="cd-fee-slider cd-fee-slider--max"
                 min={FEE_RANGE_MIN}
                 max={FEE_RANGE_MAX}
-                step={1}
+                step={50}
                 value={feeMax}
                 onChange={e => setFeeMax(Math.max(Number(e.target.value), feeMin + 1))}
               />
