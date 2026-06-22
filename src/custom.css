@@ -10049,6 +10049,25 @@
   justify-content: center;
 }
 
+.ds-fee {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.ds-fee-label {
+  font-size: 11px;
+  color: #888;
+}
+
+.ds-fee-amount {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--green);
+}
+
 .ds-tags {
   display: flex;
   gap: 6px;
@@ -11252,6 +11271,85 @@
   .cm-total { flex-direction: row; justify-content: space-between; align-items: center; }
 }
 
+/* ── Phone modal: bottom-sheet, single scroll ── */
+@media (max-width: 480px) {
+  .cm-backdrop {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .cm-dialog {
+    max-width: 100%;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Single scroll container — everything flows in one column */
+  .cm-split {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Details panel: natural height, no inner scroll */
+  .cm-side {
+    width: auto;
+    border-right: none;
+    border-bottom: 1px solid #e6efe9;
+    padding: 16px;
+    flex-shrink: 0;
+    overflow: visible;
+    max-height: none;
+  }
+
+  .cm-avatar       { width: 56px; height: 56px; margin-bottom: 10px; }
+  .cm-initials     { font-size: 20px; }
+  .cm-name         { font-size: 16px; }
+  .cm-title        { font-size: 12px; }
+  .cm-meta         { font-size: 12px; }
+  .cm-side-plan    { margin-top: 14px; padding-top: 12px; }
+  .cm-side-price   { font-size: 20px; }
+
+  /* Booking body: natural height, no inner scroll */
+  .cm-main {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+  }
+
+  .cm-main-body {
+    padding: 14px 16px 8px;
+    overflow: visible;
+  }
+
+  /* Slot grid: 2 columns */
+  .cm-slots { grid-template-columns: repeat(2, 1fr); }
+  .cm-slot  { font-size: 12px; padding: 9px 6px; }
+
+  /* Footer: sticky to the bottom of the viewport as user scrolls */
+  .cm-foot {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    background: #fff;
+    border-top: 1px solid #eef2f0;
+    padding: 10px 16px 22px;
+  }
+
+  .cm-footer       { flex-direction: row; align-items: center; gap: 12px; }
+  .cm-total        { flex-direction: column; align-items: flex-start; flex-shrink: 0; }
+  .cm-total-amount { font-size: 18px; }
+  .cm-primary-btn  { font-size: 14px; padding: 13px 16px; }
+  .cm-close        { top: 10px; right: 12px; }
+}
+
 .cd-card {
   position: relative;
   overflow: hidden;
@@ -12101,6 +12199,12 @@
   align-items: start;
 }
 
+/* Grid children must have min-width: 0 or they overflow their track */
+.dp-left,
+.dp-right {
+  min-width: 0;
+}
+
 /* ── Profile header card ── */
 .dp-profile-card {
   background: #fff;
@@ -12590,7 +12694,7 @@
   color: #666;
 }
 
-/* ── Responsive ── */
+/* ── Responsive: single-column at 900px ── */
 @media (max-width: 900px) {
   .dp-layout {
     grid-template-columns: 1fr;
@@ -12598,7 +12702,7 @@
 
   .dp-right {
     position: static;
-    order: -1;
+    /* Profile shows first, booking card below — no order: -1 */
   }
 
   .dp-profile-card {
@@ -12611,16 +12715,58 @@
     justify-content: center;
   }
 
+  .dp-rating-row {
+    justify-content: center;
+  }
+
   .dp-quick-stats {
     width: 100%;
     justify-content: center;
+    flex-wrap: wrap;
   }
 }
 
+/* ── Phone: 600px ── */
 @media (max-width: 600px) {
+  /* prevent horizontal overflow */
+  .dp-page {
+    overflow-x: hidden;
+  }
+
+  /* ── Profile card ── */
+  .dp-profile-card {
+    padding: 16px;
+  }
+
+  .dp-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .dp-initials {
+    font-size: 26px;
+  }
+
+  .dp-name {
+    font-size: 1.15rem;
+  }
+
+  /* dp-header-info shrinks to content-width when parent uses align-items:center —
+     force full width so the stats grid can fill the card properly */
+  .dp-header-info {
+    width: 100%;
+  }
+
+  /* Stats: break the shared bar into individual mini-cards, 3-per-row */
   .dp-quick-stats {
-    flex-direction: column;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    gap: 8px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 0;
+    border-radius: 0;
   }
 
   .dp-stat-divider {
@@ -12628,7 +12774,167 @@
   }
 
   .dp-stat {
-    padding: 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 12px 8px;
+    gap: 4px;
+    background: #f4fdf7;
+    border: 1px solid #d4eddf;
+    border-radius: 10px;
+  }
+
+  .dp-stat:first-child,
+  .dp-stat:last-child {
+    padding: 12px 8px;
+  }
+
+  .dp-stat-icon {
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  .dp-stat-val {
+    white-space: normal;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.3;
+    margin: 0;
+  }
+
+  .dp-stat-label {
+    font-size: 10px;
+    text-align: center;
+    margin: 0;
+  }
+
+  /* ── Content sections ── */
+  .dp-section {
+    padding: 14px 16px;
+    overflow: hidden;
+  }
+
+  /* prevent About / edu text from overflowing the card edge */
+  .dp-about-text,
+  .dp-edu-degree,
+  .dp-edu-institute,
+  .dp-edu-year,
+  .dp-service-item {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* ── Booking card ── */
+  .dp-booking-card {
+    padding: 16px;
+    overflow: hidden;
+  }
+
+  /* fee row: wrap so validity pill drops to next line on very narrow screens */
+  .dp-fee-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .dp-fee-amount {
+    font-size: 22px;
+  }
+
+  /* next-available pill: clamp text to card width */
+  .dp-next-avail {
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .dp-next-avail span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+
+  /* date tabs: ensure horizontal scroll stays within card */
+  .dp-date-tabs {
+    overflow-x: auto;
+    padding-bottom: 6px;
+    /* prevent tab bar from punching through card edge */
+    margin-left: -2px;
+    margin-right: -2px;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  .dp-date-tab {
+    min-width: 50px;
+    padding: 7px 5px;
+  }
+
+  .dp-date-tab-num {
+    font-size: 17px;
+  }
+
+  /* slot grid: 2 columns — more readable than 3 on phone */
+  .dp-slots {
+    grid-template-columns: repeat(2, 1fr);
+    max-height: 220px;
+  }
+
+  .dp-slot {
+    font-size: 11px;
+    padding: 8px 4px;
+  }
+
+  /* Trust badges: horizontal pill row */
+  .dp-trust-mini {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .dp-trust-mini span {
+    font-size: 11px;
+    background: #f4fdf7;
+    border: 1px solid #d4eddf;
+    border-radius: 20px;
+    padding: 4px 10px;
+  }
+}
+
+/* ── Small phone: 480px ── */
+@media (max-width: 480px) {
+  .dp-profile-card {
+    padding: 14px;
+  }
+
+  .dp-section {
+    padding: 12px 14px;
+  }
+
+  .dp-booking-card {
+    padding: 14px;
+  }
+
+  .dp-name {
+    font-size: 1.05rem;
+  }
+
+  .dp-fee-amount {
+    font-size: 20px;
+  }
+
+  /* stack fee amount over validity pill on tiny screens */
+  .dp-fee-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .dp-date-tab {
+    min-width: 44px;
   }
 }
 

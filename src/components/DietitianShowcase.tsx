@@ -16,6 +16,12 @@ function getInitials(name: string) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 }
 
+function formatFee(fee: number | null | undefined, currency: string | null | undefined) {
+  if (!fee) return null
+  const symbol = currency === 'INR' ? '₹' : currency === 'USD' ? '$' : (currency ?? '')
+  return `${symbol}${fee.toLocaleString()}`
+}
+
 const SkeletonCard = () => (
   <div className="ds-card ds-card--skeleton">
     <div className="ds-sk ds-sk-avatar" />
@@ -129,6 +135,13 @@ export default function DietitianShowcase() {
                     <span>⏱ {d.experience}</span>
                     <span>📍 {d.location?.split(',')[0] ?? '—'}</span>
                   </div>
+
+                  {formatFee(d.appointment_fee, d.appointment_currency) && (
+                    <div className="ds-fee">
+                      <span className="ds-fee-label">Consultation Fee</span>
+                      <span className="ds-fee-amount">{formatFee(d.appointment_fee, d.appointment_currency)}</span>
+                    </div>
+                  )}
 
                   <div className="ds-tags">
                     {d.specialization.slice(0, 2).map(s => (
