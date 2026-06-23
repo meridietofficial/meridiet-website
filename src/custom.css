@@ -9635,59 +9635,125 @@
 /* ── Appointment History ── */
 .profile-section-icon--appointments { background: #e8f5e9; color: #1E8E3E; }
 
-.appt-list { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+.appt-list { display: flex; flex-direction: column; gap: 14px; margin-top: 4px; }
 
+/* ── Card shell ── */
 .appt-card {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
-  padding: 16px 18px; border: 1px solid #e8f0eb; border-radius: 12px;
-  background: #fafffe; transition: box-shadow .18s;
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 18px 20px; border: 1px solid #e3ede7; border-radius: 14px;
+  background: #fff; transition: box-shadow .2s, border-color .2s;
 }
-.appt-card:hover { box-shadow: 0 2px 12px rgba(30,142,62,.08); }
+.appt-card:hover { box-shadow: 0 4px 18px rgba(30,142,62,.08); border-color: #c5dece; }
 
-.appt-card-left { display: flex; align-items: flex-start; gap: 14px; flex: 1; min-width: 0; }
+/* ── Header row ── */
+.appt-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.appt-card-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
+.appt-card-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
 
 .appt-avatar {
-  width: 48px; height: 48px; border-radius: 50%; background: #d4edda; flex-shrink: 0;
+  width: 46px; height: 46px; border-radius: 50%; background: #e8f5e9; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px; font-weight: 700; color: #166C31; overflow: hidden;
+  font-size: 15px; font-weight: 700; color: #166C31; overflow: hidden;
+  border: 2px solid #c8e6c9;
 }
 .appt-avatar img { width: 100%; height: 100%; object-fit: cover; }
 
 .appt-info { flex: 1; min-width: 0; }
-.appt-name  { font-size: 15px; font-weight: 600; color: #1a2e1a; margin: 0 0 2px; }
-.appt-location { font-size: 12px; color: #6b7280; margin: 0 0 6px; }
+.appt-name { font-size: 15px; font-weight: 600; color: #1a2e1a; margin: 0 0 2px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.appt-followup-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: #ede9fe; color: #5b21b6; }
+.appt-location { font-size: 12px; color: #9ca3af; margin: 0; }
 
-.appt-meta-row { display: flex; flex-wrap: wrap; gap: 8px; }
-.appt-meta-item { font-size: 12px; color: #374151; background: #f3f4f6; border-radius: 6px; padding: 2px 8px; }
-
-.appt-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
-
-.appt-badge {
-  font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; text-transform: capitalize;
-}
-.appt-badge--confirmed { background: #d4edda; color: #155724; }
-.appt-badge--completed { background: #cce5ff; color: #004085; }
-.appt-badge--cancelled { background: #f8d7da; color: #721c24; }
-.appt-badge--pending   { background: #fff3cd; color: #856404; }
+/* ── Status badge ── */
+.appt-badge { font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px; text-transform: capitalize; }
+.appt-badge--confirmed { background: #dcfce7; color: #166C31; }
+.appt-badge--completed { background: #dbeafe; color: #1e40af; }
+.appt-badge--cancelled { background: #fee2e2; color: #991b1b; }
+.appt-badge--pending   { background: #fef9c3; color: #854d0e; }
 
 .appt-paid-label { font-size: 11px; color: #1E8E3E; font-weight: 600; }
 
+/* ── Meta chips ── */
+.appt-meta-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.appt-meta-item {
+  font-size: 12px; color: #4b5563; background: #f9fafb;
+  border: 1px solid #e5e7eb; border-radius: 6px; padding: 3px 10px;
+}
+
+/* ── Actions row (diet plan + join call) ── */
+.appt-actions-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding-top: 12px; border-top: 1px solid #f0f4f1;
+}
+.appt-plan-btn {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+  color: #166C31; background: #f0faf4; border: 1px solid #a7d7b8; border-radius: 8px;
+  padding: 6px 14px; text-decoration: none; transition: background .15s;
+}
+.appt-plan-btn:hover { background: #d8f3e3; }
+
 .appt-join-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  background: #1E8E3E;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.15s;
+  display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px;
+  background: #1E8E3E; color: #fff; border: none; border-radius: 8px;
+  font-size: 12px; font-weight: 600; cursor: pointer; transition: background .2s;
   white-space: nowrap;
 }
-.appt-join-btn:hover { background: #166C31; transform: scale(1.04); }
+.appt-join-btn:hover { background: #166C31; }
+
+/* ── Ratings block ── */
+.appt-ratings-block {
+  display: flex; flex-direction: column; gap: 8px;
+  padding-top: 12px; border-top: 1px solid #f0f4f1;
+}
+.appt-rating-done { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.appt-rating-done--with-review { align-items: flex-start; flex-direction: column; gap: 4px; }
+.appt-rating-done--with-review .appt-stars-display { order: 0; }
+.appt-rating-done--with-review .appt-rating-label { order: 1; }
+.appt-rating-done--with-review .appt-review-text { order: 2; }
+.appt-rating-done--dietitian .appt-rating-label { color: #9ca3af; }
+.appt-review-text {
+  font-size: 12px; color: #4b5563; font-style: italic; margin: 0;
+  line-height: 1.5; padding: 6px 10px; background: #f9fafb;
+  border-left: 3px solid #d1d5db; border-radius: 0 6px 6px 0;
+}
+.appt-review-text--dietitian { border-left-color: #bfdbfe; background: #f0f7ff; color: #374151; }
+.appt-stars-display { display: flex; gap: 1px; }
+.appt-star { font-size: 15px; color: #d1d5db; line-height: 1; }
+.appt-star--filled { color: #f59e0b; }
+.appt-rating-label { font-size: 12px; color: #6b7280; font-weight: 500; }
+
+.appt-rate-btn {
+  font-size: 12px; font-weight: 600; color: #d97706;
+  background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
+  padding: 6px 14px; cursor: pointer; transition: background .15s; width: fit-content;
+}
+.appt-rate-btn:hover { background: #fef3c7; }
+
+.appt-review-form { display: flex; flex-direction: column; gap: 10px; }
+.appt-review-prompt { font-size: 13px; font-weight: 600; color: #374151; margin: 0; }
+.appt-stars-row { display: flex; gap: 4px; }
+.appt-star-btn {
+  font-size: 26px; color: #d1d5db; background: none; border: none;
+  cursor: pointer; padding: 0; line-height: 1; transition: color .1s, transform .1s;
+}
+.appt-star-btn:hover, .appt-star-btn--active { color: #f59e0b; transform: scale(1.12); }
+.appt-review-textarea {
+  width: 100%; font-size: 13px; padding: 9px 12px; border: 1px solid #e5e7eb;
+  border-radius: 8px; resize: none; font-family: inherit; color: #374151;
+  outline: none; transition: border-color .15s, box-shadow .15s; box-sizing: border-box;
+}
+.appt-review-textarea:focus { border-color: #1E8E3E; box-shadow: 0 0 0 3px rgba(30,142,62,.08); }
+.appt-review-actions { display: flex; gap: 8px; }
+.appt-review-submit {
+  font-size: 13px; font-weight: 600; padding: 7px 18px; border-radius: 8px;
+  background: #1E8E3E; color: #fff; border: none; cursor: pointer; transition: background .15s;
+}
+.appt-review-submit:hover:not(:disabled) { background: #166C31; }
+.appt-review-submit:disabled { opacity: .55; cursor: not-allowed; }
+.appt-review-cancel {
+  font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 8px;
+  background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; cursor: pointer; transition: background .15s;
+}
+.appt-review-cancel:hover:not(:disabled) { background: #e5e7eb; }
 
 /* Empty state */
 .appt-empty { text-align: center; padding: 32px 16px; }
@@ -25644,3 +25710,329 @@
 }
 .ddp-generate-cta-btn:hover:not(:disabled) { background: #16a34a; }
 .ddp-generate-cta-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ============================================================
+   CALCULATORS PAGE
+   ============================================================ */
+
+.calcp-page {
+  background: #f8fdf9;
+  min-height: 100vh;
+}
+
+.calcp-hero {
+  background: linear-gradient(135deg, #e8f5ee 0%, #f0fdf4 100%);
+  border-bottom: 1px solid #d4eddf;
+  padding: 48px 0 40px;
+  text-align: center;
+}
+
+.calcp-hero-title {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 8px 0 12px;
+}
+
+.calcp-hero-sub {
+  font-size: 16px;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.calcp-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  padding: 40px 0 60px;
+}
+
+/* ── Calculator Card ── */
+.calc-card {
+  background: #fff;
+  border: 1px solid #e0f2e7;
+  border-radius: 20px;
+  padding: 32px 28px;
+  box-shadow: 0 4px 20px rgba(30,142,62,0.07);
+  display: flex;
+  flex-direction: column;
+}
+
+.calc-icon {
+  font-size: 36px;
+  margin-bottom: 12px;
+  line-height: 1;
+}
+
+.calc-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0 0 8px;
+}
+
+.calc-desc {
+  font-size: 13px;
+  color: var(--text-light);
+  margin: 0 0 20px;
+  line-height: 1.5;
+}
+
+/* Gender toggle */
+.calc-gender-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.calc-gender-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1.5px solid #d4eddf;
+  border-radius: 8px;
+  background: #f8fdf9;
+  color: var(--text-light);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.calc-gender-btn.active {
+  border-color: var(--green);
+  background: #e8f5ee;
+  color: var(--green);
+}
+
+/* Fields */
+.calc-fields {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.calc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.calc-field label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.calc-field input,
+.calc-field select {
+  padding: 10px 12px;
+  border: 1.5px solid #d4eddf;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--text-dark);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.calc-field input:focus,
+.calc-field select:focus {
+  border-color: var(--green);
+}
+
+/* Activity list */
+.calc-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.calc-activity-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 10px 12px;
+  border: 1.5px solid #d4eddf;
+  border-radius: 8px;
+  background: #f8fdf9;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+  gap: 2px;
+}
+
+.calc-activity-btn.active {
+  border-color: var(--green);
+  background: #e8f5ee;
+}
+
+.calc-activity-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.calc-activity-desc {
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+.calc-activity-btn.active .calc-activity-name { color: var(--green); }
+
+/* Button */
+.calc-btn {
+  width: 100%;
+  padding: 12px;
+  background: var(--green);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: auto;
+}
+
+.calc-btn:hover { background: #16a34a; }
+
+/* Result */
+.calc-result {
+  margin-top: 20px;
+  padding: 20px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.calc-result-number {
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--green);
+  line-height: 1;
+}
+
+.calc-result-unit {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+.calc-result-label {
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+
+.calc-result-note {
+  font-size: 12px;
+  color: var(--text-light);
+  margin: 10px 0 0;
+  line-height: 1.5;
+}
+
+/* BMI scale */
+.calc-bmi-scale {
+  margin-top: 16px;
+}
+
+.calc-bmi-bar {
+  display: flex;
+  border-radius: 6px;
+  overflow: hidden;
+  height: 10px;
+}
+
+.calc-bmi-segment {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calc-bmi-segment span { display: none; }
+
+.calc-bmi-labels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+/* TDEE goals */
+.calc-tdee-goals {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.calc-tdee-goal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 6px;
+  border-radius: 10px;
+  gap: 2px;
+}
+
+.calc-tdee-goal--loss     { background: #fef9ee; border: 1px solid #fde68a; }
+.calc-tdee-goal--maintain { background: #f0fdf4; border: 1px solid #bbf7d0; }
+.calc-tdee-goal--gain     { background: #fdf4ff; border: 1px solid #e9d5ff; }
+
+.calc-tdee-goal-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.calc-tdee-goal-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text-dark);
+}
+
+.calc-tdee-goal-hint {
+  font-size: 10px;
+  color: var(--text-light);
+}
+
+/* Water */
+.calc-water-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.calc-water-stat { display: flex; flex-direction: column; align-items: center; }
+
+.calc-water-divider {
+  width: 1px;
+  height: 48px;
+  background: #bbf7d0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .calcp-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .calcp-hero-title { font-size: 26px; }
+  .calc-card { padding: 24px 18px; }
+  .calc-result-number { font-size: 36px; }
+  .calc-tdee-goals { grid-template-columns: repeat(3, 1fr); }
+  .calc-tdee-goal-val { font-size: 12px; }
+}

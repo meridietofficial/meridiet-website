@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import earningsApi, { WalletTransaction, WalletOverview } from '../api/earnings'
+import earningsApi, { WalletTransaction, WalletOverview, PayoutData } from '../api/earnings'
 import accountsApi, { LinkedAccount } from '../api/accounts'
 
 type TxTab = 'all' | 'credits' | 'debits'
@@ -29,6 +29,9 @@ export default function DietitianWallet() {
   const [overview, setOverview]             = useState<WalletOverview | null>(null)
   const [overviewLoading, setOverviewLoading] = useState(true)
 
+  const [payout, setPayout]               = useState<PayoutData | null>(null)
+  const [payoutLoading, setPayoutLoading] = useState(true)
+
   // Linked accounts state
   const [accounts, setAccounts]               = useState<LinkedAccount[]>([])
   const [accountsLoading, setAccountsLoading] = useState(true)
@@ -54,6 +57,14 @@ export default function DietitianWallet() {
       .then(data => setOverview(data))
       .catch(() => {})
       .finally(() => setOverviewLoading(false))
+  }, [])
+
+  useEffect(() => {
+    setPayoutLoading(true)
+    earningsApi.getPayout()
+      .then(data => setPayout(data))
+      .catch(() => {})
+      .finally(() => setPayoutLoading(false))
   }, [])
 
   useEffect(() => {
@@ -391,35 +402,46 @@ export default function DietitianWallet() {
               <h2 className="wa-card-title">Payout Schedule</h2>
             </div>
             <div className="wa-schedule-list">
+              {/* Next Payout date — temporarily hidden
               <div className="wa-schedule-row">
                 <div className="wa-schedule-icon"><i className="fa-solid fa-calendar-check" /></div>
                 <div className="wa-schedule-info">
                   <p className="wa-schedule-label">Next Payout</p>
-                  <p className="wa-schedule-val">Jun 10, 2026</p>
+                  <p className="wa-schedule-val">
+                    {payoutLoading ? '—' : payout?.next_payout_date
+                      ? new Date(payout.next_payout_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                      : '—'}
+                  </p>
                 </div>
                 <span className="wa-schedule-badge wa-schedule-badge--green">Scheduled</span>
               </div>
+              */}
               <div className="wa-schedule-row">
                 <div className="wa-schedule-icon"><i className="fa-solid fa-sack-dollar" /></div>
                 <div className="wa-schedule-info">
-                  <p className="wa-schedule-label">Payout Amount</p>
-                  <p className="wa-schedule-val">₹12,840</p>
+                  <p className="wa-schedule-label">Pending Payout</p>
+                  <p className="wa-schedule-val">
+                    {payoutLoading ? '—' : formatINR(payout?.pending_booking_net ?? 0)}
+                  </p>
                 </div>
               </div>
               <div className="wa-schedule-row">
-                <div className="wa-schedule-icon"><i className="fa-solid fa-building-columns" /></div>
+                <div className="wa-schedule-icon"><i className="fa-solid fa-mobile-screen" /></div>
                 <div className="wa-schedule-info">
-                  <p className="wa-schedule-label">To Account</p>
-                  <p className="wa-schedule-val">HDFC ••••4521</p>
+                  <p className="wa-schedule-label">Payout UPI</p>
+                  <p className="wa-schedule-val">
+                    {payoutLoading ? '—' : payout?.payout_upi ?? 'No UPI linked'}
+                  </p>
                 </div>
               </div>
               <div className="wa-schedule-row">
-                <div className="wa-schedule-icon"><i className="fa-solid fa-rotate" /></div>
+                <div className="wa-schedule-icon"><i className="fa-solid fa-percent" /></div>
                 <div className="wa-schedule-info">
-                  <p className="wa-schedule-label">Frequency</p>
-                  <p className="wa-schedule-val">Bi-weekly</p>
+                  <p className="wa-schedule-label">Platform Fee</p>
+                  <p className="wa-schedule-val">
+                    {payoutLoading ? '—' : `${payout?.platform_commission_pct ?? 0}%`}
+                  </p>
                 </div>
-                <button className="wa-schedule-change">Change</button>
               </div>
             </div>
           </div>
@@ -427,22 +449,38 @@ export default function DietitianWallet() {
           {/* Mini summary */}
           <div className="wa-card wa-summary-card">
             <div className="wa-card-header">
-              <h2 className="wa-card-title">June Summary</h2>
+              <h2 className="wa-card-title">
+                {new Date().toLocaleString('en-IN', { month: 'long' })} Summary
+              </h2>
             </div>
             <div className="wa-summary-rows">
-              {[
-                { label: 'Gross Earnings',    val: '₹28,200',  color: '#16a34a' },
-                { label: 'Platform Fee (10%)',val: '−₹2,820',  color: '#f97316' },
-                { label: 'GST Deducted',      val: '−₹508',    color: '#f97316' },
-                { label: 'Net Payable',        val: '₹24,872', color: '#16a34a', bold: true },
-              ].map(r => (
-                <div key={r.label} className="wa-summary-row">
-                  <span className={`wa-summary-label${r.bold ? ' wa-summary-label--bold' : ''}`}>{r.label}</span>
-                  <span className="wa-summary-val" style={{ color: r.color, fontWeight: r.bold ? 800 : 600 }}>{r.val}</span>
-                </div>
-              ))}
+              {payoutLoading ? (
+                [1, 2, 3].map(n => (
+                  <div key={n} className="wa-summary-row">
+                    <span className="wa-summary-label"><span className="ea-kpi-skel" style={{ width: 120, height: 13, display: 'inline-block' }} /></span>
+                    <span className="wa-summary-val"><span className="ea-kpi-skel" style={{ width: 70, height: 13, display: 'inline-block' }} /></span>
+                  </div>
+                ))
+              ) : (
+                <>
+                  <div className="wa-summary-row">
+                    <span className="wa-summary-label">Gross Earnings</span>
+                    <span className="wa-summary-val" style={{ color: '#16a34a' }}>{formatINR(payout?.gross_paid_this_month ?? 0)}</span>
+                  </div>
+                  <div className="wa-summary-row">
+                    <span className="wa-summary-label">Platform Fee ({payout?.platform_commission_pct ?? 0}%)</span>
+                    <span className="wa-summary-val" style={{ color: '#f97316' }}>−{formatINR(payout?.platform_commission_this_month ?? 0)}</span>
+                  </div>
+                  <div className="wa-summary-row">
+                    <span className="wa-summary-label wa-summary-label--bold">Net Paid</span>
+                    <span className="wa-summary-val" style={{ color: '#16a34a', fontWeight: 800 }}>{formatINR(payout?.net_paid_this_month ?? 0)}</span>
+                  </div>
+                </>
+              )}
             </div>
+            {/* Download Statement — temporarily hidden
             <button className="wa-dl-summary-btn"><i className="fa-solid fa-download" /> Download Statement</button>
+            */}
           </div>
 
         </div>

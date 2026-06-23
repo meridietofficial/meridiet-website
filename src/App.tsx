@@ -41,6 +41,7 @@ const DietitianWallet         = lazy(() => import('./pages/DietitianWallet'))
 const DietitianReviews        = lazy(() => import('./pages/DietitianReviews'))
 const DietitianSettings       = lazy(() => import('./pages/DietitianSettings'))
 const ResetPassword           = lazy(() => import('./pages/ResetPassword'))
+const Calculators             = lazy(() => import('./pages/Calculators'))
 
 function PageLoader() {
   return (
@@ -107,6 +108,7 @@ function AppInner() {
           <Route path="/terms-conditions"     element={<main><TermsConditions /></main>} />
           <Route path="/refund-policy"        element={<main><RefundPolicy /></main>} />
           <Route path="/contact"              element={<main><ContactUs /></main>} />
+          <Route path="/calculators"              element={<Calculators />} />
           <Route path="/consult-dietitian"         element={<ConsultDietitian />} />
           <Route path="/consult-dietitian/success" element={<ConsultDietitian />} />
           <Route path="/dietitian/:id"        element={<DietitianProfile />} />

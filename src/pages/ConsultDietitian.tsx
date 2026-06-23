@@ -14,7 +14,7 @@ import SEO from '../components/SEO'
 
 const ALL_CATEGORY = 'All Dietitians'
 const CONSULT_FEE = 0
-const FEE_RANGE_MIN = 1499
+const FEE_RANGE_MIN = 999
 const FEE_RANGE_MAX = 4500
 
 const TRUST_ITEMS = [

@@ -122,9 +122,9 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
           </Link>
 
           <ul className={`navbar-links ${menuOpen ? 'open' : ''}`}>
-            <li><Link to={s('#how-it-works')} className={hash === '#how-it-works' ? 'active' : ''} onClick={() => setMenuOpen(false)}>How It Works</Link></li>
             <li><NavLink to="/consult-dietitian" onClick={() => setMenuOpen(false)}>Consult Dietitian</NavLink></li>
             <li><NavLink to="/for-dietitians" onClick={() => setMenuOpen(false)}>For Dietitians</NavLink></li>
+            <li><NavLink to="/calculators" onClick={() => setMenuOpen(false)}>Calculators</NavLink></li>
             <li><NavLink to="/about" onClick={() => setMenuOpen(false)}>About Us</NavLink></li>
             <li><NavLink to="/faq" onClick={() => setMenuOpen(false)}>FAQ</NavLink></li>
             <li><NavLink to="/contact" onClick={() => setMenuOpen(false)}>Contact Us</NavLink></li>

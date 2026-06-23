@@ -334,7 +334,7 @@ export default function DietitianDashboard() {
         {/* Right column */}
         <div className="dd-col">
 
-          {/* My Availability */}
+          {/* My Availability — temporarily hidden
           <div className="dd-card">
             <div className="dd-card-header">
               <h2 className="dd-card-title">My Availability</h2>
@@ -380,6 +380,7 @@ export default function DietitianDashboard() {
               onClick={() => navigate('/dietitian-profile', { state: { tab: 'Preferences' } })}
             >&#128197; Manage Availability</button>
           </div>
+          */}
 
           {/* Profile Strength */}
           <div className="dd-card">

@@ -81,6 +81,12 @@ const UserProfile = () => {
   const [apptTotalPages, setApptTotalPages] = useState(1)
   const { startCall } = useVideoCall()
 
+  const [reviewingId, setReviewingId] = useState<number | null>(null)
+  const [reviewRating, setReviewRating] = useState(0)
+  const [hoverRating, setHoverRating] = useState(0)
+  const [reviewText, setReviewText] = useState('')
+  const [reviewLoading, setReviewLoading] = useState(false)
+
   const [dietCharts, setDietCharts] = useState<MyDietChart[]>([])
   const [dietChartsLoading, setDietChartsLoading] = useState(false)
   const [dietChartsTotal, setDietChartsTotal] = useState(0)
@@ -277,6 +283,26 @@ const UserProfile = () => {
       showToast(err instanceof ApiError ? err.message : 'Failed to change password. Please try again.', 'error')
     } finally {
       setPassLoading(false)
+    }
+  }
+
+  const handleSubmitReview = async (apptId: number) => {
+    if (reviewRating === 0) return
+    setReviewLoading(true)
+    try {
+      await appointmentApi.submitReview(apptId, { rating: reviewRating, review: reviewText })
+      setAppointments(prev => prev.map(a =>
+        a.id === apptId ? { ...a, user_rating: reviewRating, user_review: reviewText || null } : a
+      ))
+      setReviewingId(null)
+      setReviewRating(0)
+      setHoverRating(0)
+      setReviewText('')
+      showToast('Review submitted successfully!', 'success')
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Failed to submit review. Please try again.', 'error')
+    } finally {
+      setReviewLoading(false)
     }
   }
 
@@ -645,7 +671,7 @@ const UserProfile = () => {
                         const dtInitials = dt.full_name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
                         const dateStr = new Date(appt.appointment_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
                         const [sh, sm] = appt.slot.split(':').map(Number)
-                        const endMins = sh * 60 + sm + 30
+                        const endMins = sh * 60 + sm + (appt.duration ?? 30)
                         const endStr = `${String(Math.floor(endMins / 60)).padStart(2, '0')}:${String(endMins % 60).padStart(2, '0')}`
                         const slotLabel = `${fmtSlotTime(appt.slot)} – ${fmtSlotTime(endStr)}`
                         const feeNum = Number(appt.fee)
@@ -657,35 +683,126 @@ const UserProfile = () => {
 
                         return (
                           <div key={appt.id} className="appt-card">
-                            <div className="appt-card-left">
-                              <div className="appt-avatar">
-                                {dt.avatar_url
-                                  ? <img src={dt.avatar_url} alt={dt.full_name} />
-                                  : <span>{dtInitials}</span>
-                                }
-                              </div>
-                              <div className="appt-info">
-                                <p className="appt-name">{dt.full_name}</p>
-                                <p className="appt-location">{[dt.city, dt.state].filter(Boolean).join(', ')}</p>
-                                <div className="appt-meta-row">
-                                  <span className="appt-meta-item">📅 {dateStr}</span>
-                                  <span className="appt-meta-item">⏱ {slotLabel}</span>
-                                  <span className="appt-meta-item">💰 ₹{feeNum.toLocaleString('en-IN')}</span>
+
+                            {/* ── Header: avatar + name vs badge ── */}
+                            <div className="appt-card-top">
+                              <div className="appt-card-left">
+                                <div className="appt-avatar">
+                                  {dt.avatar_url
+                                    ? <img src={dt.avatar_url} alt={dt.full_name} />
+                                    : <span>{dtInitials}</span>
+                                  }
+                                </div>
+                                <div className="appt-info">
+                                  <p className="appt-name">
+                                    {dt.full_name}
+                                    {appt.is_follow_up === 1 && (
+                                      <span className="appt-followup-badge">
+                                        {appt.follow_up_type === 'free' ? 'Free Follow-up' : 'Follow-up'}
+                                      </span>
+                                    )}
+                                  </p>
+                                  <p className="appt-location">{[dt.city, dt.state].filter(Boolean).join(', ')}</p>
                                 </div>
                               </div>
+                              <div className="appt-card-badges">
+                                <span className={`appt-badge ${statusCls}`}>{appt.status.charAt(0).toUpperCase() + appt.status.slice(1)}</span>
+                                {appt.payment_status === 'paid' && <span className="appt-paid-label">✓ Paid</span>}
+                              </div>
                             </div>
-                            <div className="appt-card-right">
-                              <span className={`appt-badge ${statusCls}`}>{appt.status.charAt(0).toUpperCase() + appt.status.slice(1)}</span>
-                              {appt.payment_status === 'paid' && <span className="appt-paid-label">✓ Paid</span>}
-                              {appt.status === 'confirmed' && (
-                                <button
-                                  className="appt-join-btn"
-                                  onClick={() => startCall(appt.id, appt.dietitian.full_name)}
-                                >
-                                  <i className="fa-solid fa-video" /> Join Call
-                                </button>
-                              )}
+
+                            {/* ── Meta chips ── */}
+                            <div className="appt-meta-row">
+                              <span className="appt-meta-item">📅 {dateStr}</span>
+                              <span className="appt-meta-item">⏱ {slotLabel}</span>
+                              <span className="appt-meta-item">💰 ₹{feeNum.toLocaleString('en-IN')}</span>
                             </div>
+
+                            {/* ── Action buttons ── */}
+                            {(appt.diet_plan?.pdf_url || appt.status === 'confirmed') && (
+                              <div className="appt-actions-row">
+                                {appt.diet_plan?.pdf_url && (
+                                  <a href={appt.diet_plan.pdf_url} target="_blank" rel="noopener noreferrer" className="appt-plan-btn">
+                                    <i className="fa-solid fa-download" /> View Diet Plan
+                                  </a>
+                                )}
+                                {appt.status === 'confirmed' && (
+                                  <button className="appt-join-btn" onClick={() => startCall(appt.id, appt.dietitian.full_name)}>
+                                    <i className="fa-solid fa-video" /> Join Call
+                                  </button>
+                                )}
+                              </div>
+                            )}
+
+                            {/* ── Ratings ── */}
+                            {appt.status === 'completed' && (
+                              <div className="appt-ratings-block">
+                                {appt.user_rating !== null ? (
+                                  <div className="appt-rating-done appt-rating-done--with-review">
+                                    <div className="appt-stars-display">
+                                      {[1,2,3,4,5].map(s => (
+                                        <span key={s} className={`appt-star${s <= appt.user_rating! ? ' appt-star--filled' : ''}`}>★</span>
+                                      ))}
+                                    </div>
+                                    <span className="appt-rating-label">Your rating</span>
+                                    {appt.user_review && (
+                                      <p className="appt-review-text">"{appt.user_review}"</p>
+                                    )}
+                                  </div>
+                                ) : reviewingId === appt.id ? (
+                                  <div className="appt-review-form">
+                                    <p className="appt-review-prompt">How was your session?</p>
+                                    <div className="appt-stars-row">
+                                      {[1,2,3,4,5].map(s => (
+                                        <button key={s} type="button"
+                                          className={`appt-star-btn${(hoverRating || reviewRating) >= s ? ' appt-star-btn--active' : ''}`}
+                                          onMouseEnter={() => setHoverRating(s)}
+                                          onMouseLeave={() => setHoverRating(0)}
+                                          onClick={() => setReviewRating(s)}
+                                        >★</button>
+                                      ))}
+                                    </div>
+                                    <textarea className="appt-review-textarea"
+                                      placeholder="Write a review (optional)"
+                                      value={reviewText}
+                                      onChange={e => setReviewText(e.target.value)}
+                                      rows={2}
+                                    />
+                                    <div className="appt-review-actions">
+                                      <button className="appt-review-submit"
+                                        onClick={() => handleSubmitReview(appt.id)}
+                                        disabled={reviewRating === 0 || reviewLoading}
+                                      >
+                                        {reviewLoading ? 'Submitting…' : 'Submit Review'}
+                                      </button>
+                                      <button className="appt-review-cancel"
+                                        onClick={() => { setReviewingId(null); setReviewRating(0); setHoverRating(0); setReviewText('') }}
+                                        disabled={reviewLoading}
+                                      >Cancel</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button className="appt-rate-btn"
+                                    onClick={() => { setReviewingId(appt.id); setReviewRating(0); setHoverRating(0); setReviewText('') }}
+                                  >★ Rate this session</button>
+                                )}
+
+                                {appt.dietitian_rating !== null && (
+                                  <div className="appt-rating-done appt-rating-done--dietitian appt-rating-done--with-review">
+                                    <div className="appt-stars-display">
+                                      {[1,2,3,4,5].map(s => (
+                                        <span key={s} className={`appt-star${s <= appt.dietitian_rating! ? ' appt-star--filled' : ''}`}>★</span>
+                                      ))}
+                                    </div>
+                                    <span className="appt-rating-label">Dietitian's rating for you</span>
+                                    {appt.dietitian_review && (
+                                      <p className="appt-review-text appt-review-text--dietitian">"{appt.dietitian_review}"</p>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
                           </div>
                         )
                       })}

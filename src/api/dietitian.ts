@@ -255,6 +255,7 @@ export type DietitianCard = {
   full_name: string
   title: string
   avatar_url: string | null
+  profile_photo: string | null
   rating: number
   reviews: number
   experience: string

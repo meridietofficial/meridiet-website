@@ -43,12 +43,30 @@ export type ConfirmedAppointment = {
 export type MyAppointment = {
   id: number
   appointment_date: string
-  slot: string            // "HH:MM" start time, e.g. "09:30"
+  slot: string
+  duration: number
+  session_type: string
   status: string
   payment_status: string
-  fee: string | number    // API returns string e.g. "1234.00"
+  fee: number
   currency: string
   notes: string | null
+  missed_reason: string | null
+  user_rating: number | null
+  user_review: string | null
+  user_reviewed_at: string | null
+  dietitian_rating: number | null
+  dietitian_review: string | null
+  dietitian_reviewed_at: string | null
+  is_follow_up: 0 | 1
+  parent_appointment_id: number | null
+  follow_up_type: 'paid' | 'free' | null
+  agora_channel_name: string | null
+  video_call_status: string | null
+  recording_url: string | null
+  call_started_at: string | null
+  call_ended_at: string | null
+  call_duration_seconds: number | null
   dietitian: {
     id: number
     full_name: string
@@ -56,6 +74,11 @@ export type MyAppointment = {
     city: string
     state: string
   }
+  diet_plan: {
+    id: number
+    status: string
+    pdf_url: string | null
+  } | null
 }
 
 export type MyAppointmentsMeta = {

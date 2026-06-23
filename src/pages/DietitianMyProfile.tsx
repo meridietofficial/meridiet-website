@@ -1330,7 +1330,7 @@ function TabBankInformation() {
   )
 }
 
-const FEE_MIN = 1499
+const FEE_MIN = 999
 const FEE_MAX = 4500
 
 function FeeCard({ profile, onSaved }: { profile: DietitianProfile | null; onSaved: (p: DietitianProfile) => void }) {

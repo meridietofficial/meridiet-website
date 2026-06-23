@@ -16,7 +16,7 @@ const faqs = [
       },
       {
         q: 'Do I need to create an account?',
-        a: "No account needed. Just fill the assessment form, make the payment, and your plan is sent directly to your WhatsApp or email — no app to download, no login required.",
+        a: "Yes, a quick account is required — it takes less than a minute to sign up. Once registered, fill the assessment form, make the payment, and your plan is sent directly to your WhatsApp or email. Your account also lets you track your orders and book dietitian appointments.",
       },
     ],
   },
