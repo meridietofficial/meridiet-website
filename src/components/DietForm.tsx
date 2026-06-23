@@ -539,13 +539,13 @@ const Step3 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
 
     {/* Cuisine Preference — multi-select */}
     <div className="df-card-field">
-      <label className="df-label">Cuisine Preference <span className="df-opt">(Select all that apply)</span></label>
+      <label className="df-label">Cuisine Preference</label>
       <div className="ls-pill-group">
         {CUISINES.map((c) => (
           <button
             key={c.v}
             className={`ls-pill fp-cuisine-pill${d.cuisinePreference.includes(c.v) ? ' sel' : ''}`}
-            onClick={() => tog('cuisinePreference', c.v)}
+            onClick={() => set('cuisinePreference', d.cuisinePreference.includes(c.v) ? [] : [c.v])}
           >
             <span>{c.icon}</span>
             <span>{c.v}</span>
@@ -1251,18 +1251,23 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
     setErrors((p) => { const n = { ...p }; delete n[k]; return n })
   }
   const tog: ToglFn = (k, v) => {
-    const arr = data[k] as string[]
-    if (k === 'cuisinePreference') {
-      if (v === 'No Preference') {
-        set(k, arr.includes(v) ? [] : ['No Preference'])
-        return
+    setData(prev => {
+      const arr = prev[k] as string[]
+      let next: string[]
+      if (k === 'cuisinePreference') {
+        if (v === 'No Preference') {
+          next = arr.includes(v) ? [] : ['No Preference']
+        } else {
+          next = arr.includes(v)
+            ? arr.filter(x => x !== v)
+            : [...arr.filter(x => x !== 'No Preference'), v]
+        }
+      } else {
+        next = arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v]
       }
-      set(k, arr.includes(v)
-        ? arr.filter((x) => x !== v)
-        : [...arr.filter((x) => x !== 'No Preference'), v])
-      return
-    }
-    set(k, arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v])
+      return { ...prev, [k]: next }
+    })
+    setErrors(p => { const n = { ...p }; delete n[k]; return n })
   }
 
   const openRazorpay = (currentFormId: number) => {
