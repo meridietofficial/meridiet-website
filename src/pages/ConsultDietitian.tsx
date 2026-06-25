@@ -253,7 +253,7 @@ export default function ConsultDietitian() {
               <p className="cd-hero-card-sub">Personalised consultation with a verified dietitian</p>
               <div className="cd-hero-card-price-wrap">
                 <span className="cd-hero-card-price-label">Starting from</span>
-                <span className="cd-hero-card-price">₹1,499</span>
+                <span className="cd-hero-card-price">₹999</span>
               </div>
               <p className="cd-hero-card-validity">Price set by each dietitian</p>
               <button
