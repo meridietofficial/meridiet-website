@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import appointmentApi, {
   DietitianReviewItem,
   DietitianReviewsSummary,
@@ -54,14 +54,19 @@ export default function DietitianReviews() {
     return () => clearTimeout(t)
   }, [search])
 
-  // Reset to page 1 when filter/search changes
-  useEffect(() => {
-    setPage(1)
-    setReviews([])
-  }, [filter, debouncedSearch])
+  const filtersRef = useRef('')
 
-  // Fetch
   useEffect(() => {
+    const filterKey = JSON.stringify([filter, debouncedSearch])
+    const filtersChanged = filterKey !== filtersRef.current
+    filtersRef.current = filterKey
+
+    if (filtersChanged && page !== 1) {
+      setPage(1)
+      setReviews([])
+      return
+    }
+
     let aborted = false
     if (page === 1) setLoading(true)
     else setLoadingMore(true)

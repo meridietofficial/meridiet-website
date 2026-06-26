@@ -47,6 +47,7 @@ export default function VideoCallModal({ appointmentId, clientName, onClose }: P
   const videoRef       = useRef<ICameraVideoTrack | null>(null)
   const remoteVideoRef = useRef<IRemoteVideoTrack | null>(null)
   const timerRef       = useRef<ReturnType<typeof setInterval> | null>(null)
+  const pollTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
   const startedAt      = useRef(0)
   const mountedRef     = useRef(true)
   const drag           = useRef({ active: false, startX: 0, startY: 0, startLeft: 0, startTop: 0 })
@@ -148,7 +149,8 @@ export default function VideoCallModal({ appointmentId, clientName, onClose }: P
 
   // ── Cleanup ─────────────────────────────────────────────────
   function doCleanup() {
-    if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+    if (timerRef.current)     { clearInterval(timerRef.current); timerRef.current = null }
+    if (pollTimerRef.current) { clearTimeout(pollTimerRef.current); pollTimerRef.current = null }
     audioRef.current?.stop(); audioRef.current?.close(); audioRef.current = null
     videoRef.current?.stop(); videoRef.current?.close(); videoRef.current = null
     clientRef.current?.leave(); clientRef.current = null
@@ -203,12 +205,12 @@ export default function VideoCallModal({ appointmentId, clientName, onClose }: P
         }
       } catch { /* recording not ready yet */ }
       if (attempts < 30 && mountedRef.current) {
-        setTimeout(tryFetch, 10_000)
+        pollTimerRef.current = setTimeout(tryFetch, 10_000)
       } else {
         setRecordingPending(false)
       }
     }
-    setTimeout(tryFetch, 10_000) // first poll after 10s
+    pollTimerRef.current = setTimeout(tryFetch, 10_000) // first poll after 10s
   }
 
   function toggleMic() { audioRef.current?.setEnabled(!micOn); setMicOn(v => !v) }

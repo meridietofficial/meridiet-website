@@ -7614,10 +7614,11 @@
 .auth-logo {
   display: flex;
   justify-content: center;
+  margin-bottom: 16px;
 }
 
 .auth-logo img {
-  height: 106px;
+  height: 60px;
   width: auto;
   object-fit: contain;
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import earningsApi, {
   EarningsSummary, MonthlyRevenueData, MonthlyRevenueItem,
   EarningsByPlanItem, PayoutData, TransactionItem, TxSummaryCount,
@@ -72,14 +72,20 @@ export default function DietitianEarnings() {
     return () => clearTimeout(t)
   }, [search])
 
-  // Reset to page 1 when tab or search changes
-  useEffect(() => {
-    setTxPage(1)
-    setTransactions([])
-  }, [txTab, debouncedSearch])
+  const txFiltersRef = useRef('')
 
-  // Fetch transactions
+  // Fetch transactions — resets to page 1 when tab/search changes (one call, not two)
   useEffect(() => {
+    const filterKey = JSON.stringify([txTab, debouncedSearch])
+    const filtersChanged = filterKey !== txFiltersRef.current
+    txFiltersRef.current = filterKey
+
+    if (filtersChanged && txPage !== 1) {
+      setTxPage(1)
+      setTransactions([])
+      return
+    }
+
     if (txPage === 1) setTxLoading(true)
     else setTxLoadingMore(true)
     earningsApi.getTransactions({ status: txTab, search: debouncedSearch || undefined, page: txPage, limit: 10 })

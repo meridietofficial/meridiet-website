@@ -121,13 +121,23 @@ export default function ConsultDietitian() {
     return () => clearTimeout(t)
   }, [feeMin, feeMax])
 
-  // Any filter change resets to page 1 (no-op re-render if already 1)
-  useEffect(() => {
-    setPage(1)
-  }, [debouncedSearch, activeCategory, sort, gender, stateName, city, specialization, experience, language, availableNow, debouncedFeeMin, debouncedFeeMax])
+  // Tracks the last filter fingerprint so we can distinguish a filter change
+  // from a page change — and avoid firing two API calls when both happen at once.
+  const filtersRef = useRef('')
 
-  // Fetch the dietitian list whenever the query changes (filters apply live)
+  // Fetch the dietitian list whenever the query or page changes.
+  // When filters change while past page 1, we reset page and bail out early;
+  // the resulting page state update re-triggers this effect with page=1.
   useEffect(() => {
+    const filterKey = JSON.stringify([debouncedSearch, activeCategory, sort, gender, stateName, city, specialization, experience, language, availableNow, debouncedFeeMin, debouncedFeeMax])
+    const filtersChanged = filterKey !== filtersRef.current
+    filtersRef.current = filterKey
+
+    if (filtersChanged && page !== 1) {
+      setPage(1)
+      return
+    }
+
     const params: DietitianListParams = {
       search:         debouncedSearch || undefined,
       specialization: activeCategory !== ALL_CATEGORY ? activeCategory : (specialization || undefined),

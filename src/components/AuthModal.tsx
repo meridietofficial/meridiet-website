@@ -234,7 +234,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
           </div>
         ) : (
           <div className="auth-logo">
-            <img src="/logo.png" alt="MeriDiet" />
+            <img src="/logo-header.png" alt="MeriDiet" />
           </div>
         )}
 

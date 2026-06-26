@@ -117,11 +117,13 @@ export default function DietitianProfile() {
       .catch(() => { setNotFound(true); setLoading(false) })
   }, [id])
 
+  // Only fetch the platform fallback fee when this dietitian has no fee of their own
   useEffect(() => {
+    if (!d || (d.appointment_fee != null && d.appointment_fee > 0)) return
     dietitianApi.getConsultationFee()
       .then(amount => { if (amount > 0) setFee(amount) })
       .catch(() => {})
-  }, [])
+  }, [d])
 
   const handleBook = async (currentD: DietitianCard, date: typeof currentD.available_dates[0], slot: string) => {
     if (!user) { setShowAuthGate(true); return }

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useOutletContext } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import dietitianApi, { uploadSingleDocument, deleteDocument, type DietitianProfile } from '../api/dietitian'
@@ -9,6 +9,7 @@ import banksApi, { Bank } from '../api/banks'
 import SearchableSelect from '../components/SearchableSelect'
 import SpecializationInput from '../components/SpecializationInput'
 import { IN_STATES } from '../data/indiaCities'
+import { type DietitianOutletContext } from '../components/DietitianLayout'
 
 /* ─── Helpers ────────────────────────────────────────────── */
 /* Normalize any backend date/datetime to a calendar date 'YYYY-MM-DD'.
@@ -1632,6 +1633,7 @@ export default function DietitianMyProfile() {
   const { showToast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
+  const { profile: layoutProfile, profileLoading: layoutProfileLoading, setLayoutProfile } = useOutletContext<DietitianOutletContext>()
   // Allow other pages to deep-link to a specific tab (e.g. the onboarding
   // prompt sends the dietitian straight to "Preferences" for availability).
   const requestedTab = (location.state as { tab?: string } | null)?.tab
@@ -1651,28 +1653,33 @@ export default function DietitianMyProfile() {
   })
   const fileRef = useRef<HTMLInputElement>(null)
 
+  // Keeps both local state and the layout's shared profile in sync after any save
+  const handleProfileSaved = (p: DietitianProfile) => {
+    setProfile(p)
+    setLayoutProfile(p)
+  }
+
+  // Seed from the layout's already-fetched profile — no extra API call needed
   useEffect(() => {
-    let active = true
-    dietitianApi.getProfile()
-      .then(p => {
-        if (!active) return
-        setProfile(p)
-        setBannerProfile({
-          name:       p.full_name || '',
-          title:      p.specialization[0] ?? 'Dietitian',
-          degree:     p.degrees[0]?.degree ?? '',
-          experience: p.experience ?? '',
-          licenseNo:  p.registration_number ?? '',
-          languages:  p.languages.join(', '),
-        })
-        if (p.documents.profile_photo) setPhotoSrc(p.documents.profile_photo)
-      })
-      .catch(err => {
-        if (active) showToast(err instanceof ApiError ? err.message : 'Could not load your profile.', 'error')
-      })
-      .finally(() => { if (active) setLoading(false) })
-    return () => { active = false }
-  }, [showToast])
+    if (layoutProfileLoading) return
+    if (!layoutProfile) {
+      showToast('Could not load your profile.', 'error')
+      setLoading(false)
+      return
+    }
+    const p = layoutProfile
+    setProfile(p)
+    setBannerProfile({
+      name:       p.full_name || '',
+      title:      p.specialization[0] ?? 'Dietitian',
+      degree:     p.degrees[0]?.degree ?? '',
+      experience: p.experience ?? '',
+      licenseNo:  p.registration_number ?? '',
+      languages:  p.languages.join(', '),
+    })
+    if (p.documents.profile_photo) setPhotoSrc(p.documents.profile_photo)
+    setLoading(false)
+  }, [layoutProfile, layoutProfileLoading, showToast])
 
   const initials = bannerProfile.name
     ? bannerProfile.name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -1748,7 +1755,7 @@ export default function DietitianMyProfile() {
           experienceCertificate:   profile?.documents.experience_certificate ?? null,
         },
       })
-      setProfile(updated)
+      handleProfileSaved(updated)
       URL.revokeObjectURL(previewUrl)
       setPhotoSrc(updated.documents.profile_photo)
       showToast('Profile photo updated.', 'success')
@@ -1815,10 +1822,10 @@ export default function DietitianMyProfile() {
         <div className={`dmp-body${activeTab === 'Documents' ? ' dmp-body--docs' : ''}`}>
 
           {/* Main area — changes by tab */}
-          {activeTab === 'Personal Information'     && <TabPersonal profile={profile} photoSrc={photoSrc} fileRef={fileRef} onPhotoChange={handlePhotoChange} onSaved={setProfile} photoUploading={photoUploading} />}
-          {activeTab === 'Professional Information' && <TabProfessional profile={profile} onSaved={setProfile} />}
-          {activeTab === 'Documents'                && <TabDocuments profile={profile} onSaved={setProfile} />}
-          {activeTab === 'Preferences'              && <TabPreferences profile={profile} onSaved={setProfile} />}
+          {activeTab === 'Personal Information'     && <TabPersonal profile={profile} photoSrc={photoSrc} fileRef={fileRef} onPhotoChange={handlePhotoChange} onSaved={handleProfileSaved} photoUploading={photoUploading} />}
+          {activeTab === 'Professional Information' && <TabProfessional profile={profile} onSaved={handleProfileSaved} />}
+          {activeTab === 'Documents'                && <TabDocuments profile={profile} onSaved={handleProfileSaved} />}
+          {activeTab === 'Preferences'              && <TabPreferences profile={profile} onSaved={handleProfileSaved} />}
           {activeTab === 'Bank Information'         && <TabBankInformation />}
           {activeTab === 'Security'                 && <TabSecurity />}
 
@@ -1851,7 +1858,7 @@ export default function DietitianMyProfile() {
                 )}
               </div>
 
-              <FeeCard profile={profile} onSaved={setProfile} />
+              <FeeCard profile={profile} onSaved={handleProfileSaved} />
 
               {/* <div className="dmp-card">
                 <h3 className="dmp-card-title">Professional Summary</h3>

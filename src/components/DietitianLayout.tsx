@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom'
 import DietitianTopbar from './DietitianTopbar'
-import dietitianApi from '../api/dietitian'
+import dietitianApi, { type DietitianProfile } from '../api/dietitian'
 import { ApiError } from '../api/client'
 import { useConsultationCount } from '../context/ConsultationCountContext'
 
 export type DietitianOutletContext = {
   online: boolean
   toggleOnline: () => void
+  profile: DietitianProfile | null
+  profileLoading: boolean
+  setLayoutProfile: (p: DietitianProfile) => void
 }
 
 const NAV_ITEMS: { icon: string; label: string; route?: string; badge?: number }[] = [
@@ -32,13 +35,20 @@ export default function DietitianLayout() {
   const [online, setOnline] = useState(false)
   const toggling = useRef(false)
   const [onlineError, setOnlineError] = useState<string | null>(null)
+  const [profile, setProfile] = useState<DietitianProfile | null>(null)
+  const [profileLoading, setProfileLoading] = useState(true)
 
-  // Load initial online status from the profile
+  // Fetch profile once for the whole layout — child pages reuse this via outlet context
   useEffect(() => {
     let active = true
     dietitianApi.getProfile()
-      .then(p => { if (active) setOnline(p.is_online === 1) })
+      .then(p => {
+        if (!active) return
+        setOnline(p.is_online === 1)
+        setProfile(p)
+      })
       .catch(() => {})
+      .finally(() => { if (active) setProfileLoading(false) })
     return () => { active = false }
   }, [])
 
@@ -140,7 +150,7 @@ export default function DietitianLayout() {
       {/* Main */}
       <div className="dd-main">
         <DietitianTopbar online={online} onToggleOnline={toggleOnline} />
-        <Outlet context={{ online, toggleOnline } satisfies DietitianOutletContext} />
+        <Outlet context={{ online, toggleOnline, profile, profileLoading, setLayoutProfile: setProfile } satisfies DietitianOutletContext} />
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useOutletContext } from 'react-router-dom'
-import dietitianApi, { type DietitianProfile } from '../api/dietitian'
+import { type DietitianProfile } from '../api/dietitian'
 import appointmentApi, { type DietitianAppointment, type DashboardStats } from '../api/appointment'
 import { useVideoCall } from '../context/VideoCallContext'
 import ProfileSetupModal, { type SetupItem } from '../components/ProfileSetupModal'
@@ -94,39 +94,39 @@ function groupSlots(slots: string[]): string[] {
 }
 
 export default function DietitianDashboard() {
-  const navigate              = useNavigate()
-  const { online, toggleOnline } = useOutletContext<DietitianOutletContext>()
-  const { startCall }         = useVideoCall()
+  const navigate                              = useNavigate()
+  const { online, toggleOnline, profile, profileLoading } = useOutletContext<DietitianOutletContext>()
+  const { startCall }                         = useVideoCall()
 
   const [setupItems, setSetupItems] = useState<SetupItem[] | null>(null)
-  const [profile, setProfile]       = useState<DietitianProfile | null>(null)
   const [stats, setStats]           = useState<DashboardStats | null>(null)
   const [upcoming, setUpcoming]     = useState<DietitianAppointment[]>([])
   const [pending, setPending]       = useState<DietitianAppointment[]>([])
-  const [loading, setLoading]       = useState(true)
+  const [apptLoading, setApptLoading] = useState(true)
   const [actionId, setActionId]     = useState<number | null>(null)
+
+  const loading = profileLoading || apptLoading
+
+  // Show setup prompt once profile arrives
+  useEffect(() => {
+    if (!profile || sessionStorage.getItem(SETUP_SKIPPED_KEY)) return
+    const items = buildSetupItems(profile)
+    if (items.some(i => !i.done)) setSetupItems(items)
+  }, [profile])
 
   useEffect(() => {
     let active = true
 
     async function fetchDashboard() {
       try {
-        const [profileData, statsData, pendingRes, confirmedRes] = await Promise.all([
-          dietitianApi.getProfile(),
+        const [statsData, pendingRes, confirmedRes] = await Promise.all([
           appointmentApi.getDashboardStats(),
           appointmentApi.getDietitianAppointments({ status: 'pending',   limit: 5  }),
           appointmentApi.getDietitianAppointments({ status: 'confirmed', limit: 20 }),
         ])
         if (!active) return
 
-        setProfile(profileData)
         setStats(statsData)
-
-        if (!sessionStorage.getItem(SETUP_SKIPPED_KEY)) {
-          const items = buildSetupItems(profileData)
-          if (items.some(i => !i.done)) setSetupItems(items)
-        }
-
         setPending(pendingRes.data)
 
         const todayStr = new Date().toISOString().slice(0, 10)
@@ -140,7 +140,7 @@ export default function DietitianDashboard() {
       } catch {
         // silent
       } finally {
-        if (active) setLoading(false)
+        if (active) setApptLoading(false)
       }
     }
 

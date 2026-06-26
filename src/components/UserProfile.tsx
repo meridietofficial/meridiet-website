@@ -91,8 +91,8 @@ const UserProfile = () => {
   const [dietChartsLoading, setDietChartsLoading] = useState(false)
   const [dietChartsTotal, setDietChartsTotal] = useState(0)
 
-  // Wallet tab state
-  const [walletBalance, setWalletBalance] = useState<number | null>(null)
+  // Wallet tab state — seed from cached auth so the chip shows immediately
+  const [walletBalance, setWalletBalance] = useState<number | null>(user?.wallet_balance ?? null)
   const [walletBalanceLoading, setWalletBalanceLoading] = useState(false)
   const [walletTxs, setWalletTxs] = useState<WalletTransaction[]>([])
   const [walletTxsLoading, setWalletTxsLoading] = useState(false)
@@ -134,21 +134,6 @@ const UserProfile = () => {
       .catch(() => {})
       .finally(() => { if (active) setDietChartsLoading(false) })
     return () => { active = false }
-  }, [])
-
-  // Fetch fresh wallet balance on mount and keep navbar chip in sync
-  useEffect(() => {
-    if (!user) return
-    let active = true
-    walletApi.balance()
-      .then(res => {
-        if (!active) return
-        setWalletBalance(res.data.wallet_balance)
-        updateUser({ ...user, wallet_balance: res.data.wallet_balance })
-      })
-      .catch(() => {})
-    return () => { active = false }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Fetch wallet balance + transactions when wallet tab is active
