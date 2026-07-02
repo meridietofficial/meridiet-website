@@ -5,6 +5,9 @@ const ENDPOINTS = {
     google:         '/auth/google',
     forgotPassword: '/auth/forgot-password',
     resetPassword:  '/auth/reset-password',
+    sendOtp:        '/auth/send-otp',
+    verifyOtp:      '/auth/verify-otp',
+    resendOtp:      '/auth/resend-otp',
   },
   dietForm: {
     create:  '/diet-form',            // POST   → create draft, returns form_id

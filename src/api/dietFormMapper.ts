@@ -111,6 +111,12 @@ const DELIVERY_METHOD: Record<string, string> = {
   'email':    'email',
 }
 
+const WHEY_PROTEIN: Record<string, string> = {
+  'Yes, I already use it': 'yes_using',
+  'Open to trying it':     'open_to_trying',
+  'No, prefer food-only':  'no_food_only',
+}
+
 const PLAN_TYPE: Record<string, number> = {
   '1 Week':   1,
   '1 Month':  2,
@@ -160,9 +166,13 @@ export function mapStep2ToPayload(d: FormData) {
   const p: Record<string, unknown> = {}
   const s = (k: string, v: unknown) => { const val = omitEmpty(v); if (val !== undefined) p[k] = val }
 
-  s('activity_level', lookup(ACTIVITY,     String(d.activityLevel ?? '')))
-  s('work_type',      lookup(WORK_TYPE,    String(d.workType      ?? '')))
-  s('workout_type',   lookup(WORKOUT_TYPE, String(d.workoutType   ?? '')))
+  s('activity_level',    lookup(ACTIVITY,     String(d.activityLevel ?? '')))
+  s('work_type',         lookup(WORK_TYPE,    String(d.workType      ?? '')))
+  s('workout_type',      lookup(WORKOUT_TYPE, String(d.workoutType   ?? '')))
+  s('breakfast_time',    d.breakfastTime)
+  s('lunch_time',        d.lunchTime)
+  s('evening_snack_time',d.eveningSnackTime)
+  s('dinner_time',       d.dinnerTime)
   return p
 }
 
@@ -179,6 +189,7 @@ export function mapStep3ToPayload(d: FormData) {
     : undefined)
   s('foods_dislike',   d.foodsDislike)
   s('favorite_foods',  d.favoriteFoods)
+  s('whey_protein',    d.wheyProtein ? lookup(WHEY_PROTEIN, String(d.wheyProtein)) : undefined)
   return p
 }
 
@@ -237,9 +248,13 @@ export function mapFormToPayload(d: FormData) {
   set('goals',       lookupArr(GOALS, (d.goals as string[]) ?? []))
 
   // ── Step 2: Lifestyle ──
-  set('activity_level', lookup(ACTIVITY,     String(d.activityLevel ?? '')))
-  set('work_type',      lookup(WORK_TYPE,    String(d.workType      ?? '')))
-  set('workout_type',   lookup(WORKOUT_TYPE, String(d.workoutType   ?? '')))
+  set('activity_level',    lookup(ACTIVITY,     String(d.activityLevel ?? '')))
+  set('work_type',         lookup(WORK_TYPE,    String(d.workType      ?? '')))
+  set('workout_type',      lookup(WORKOUT_TYPE, String(d.workoutType   ?? '')))
+  set('breakfast_time',    d.breakfastTime)
+  set('lunch_time',        d.lunchTime)
+  set('evening_snack_time',d.eveningSnackTime)
+  set('dinner_time',       d.dinnerTime)
 
   // ── Step 3: Food Preferences ──
   set('diet_type',          lookup(DIET_TYPE, String(d.dietType ?? '')))
@@ -251,6 +266,7 @@ export function mapFormToPayload(d: FormData) {
     : undefined)
   set('foods_dislike',   d.foodsDislike)
   set('favorite_foods',  d.favoriteFoods)
+  set('whey_protein',    d.wheyProtein ? lookup(WHEY_PROTEIN, String(d.wheyProtein)) : undefined)
 
   // ── Step 4: Health & Medical ──
   set('medical_conditions', (d.medicalConditions as string[] ?? [])

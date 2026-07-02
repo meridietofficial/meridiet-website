@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
-import { X, Eye, EyeOff, Mail, Lock, User, Phone, ChevronDown, Check, Stethoscope } from 'lucide-react'
+import { X, Eye, EyeOff, Mail, Lock, User, Phone, ChevronDown, Check, Stethoscope, ArrowLeft } from 'lucide-react'
 import { useGoogleLogin } from '@react-oauth/google'
 import authApi from '../api/auth'
 import { ApiError } from '../api/client'
@@ -10,8 +10,6 @@ import { useToast } from '../context/ToastContext'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
 
-// Isolated so useGoogleLogin only runs when a valid clientId is present.
-// If it were called in the parent, an undefined clientId crashes the whole app.
 function GoogleBtn({ onSuccess, onError }: {
   onSuccess: (tokenResponse: { access_token: string }) => void
   onError: () => void
@@ -25,7 +23,7 @@ function GoogleBtn({ onSuccess, onError }: {
   )
 }
 
-type Tab = 'login' | 'signup' | 'forgot'
+type Tab = 'login' | 'signup' | 'forgot' | 'verify'
 export type UserType = 'user' | 'dietitian'
 
 type Props = {
@@ -77,6 +75,18 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
   const [signupPhone, setSignupPhone] = useState(prefillPhone)
   const [signupPassword, setSignupPassword] = useState('')
 
+  // OTP verify (signup phone verification)
+  const [otpDigits, setOtpDigits] = useState(['', '', '', ''])
+  const [otpTimer, setOtpTimer] = useState(0)
+  const [pendingSignupData, setPendingSignupData] = useState<Record<string, unknown> | null>(null)
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  useEffect(() => {
+    if (otpTimer <= 0) return
+    const id = window.setInterval(() => setOtpTimer(t => t - 1), 1000)
+    return () => clearInterval(id)
+  }, [otpTimer])
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)
@@ -125,7 +135,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
   }
 
   const goToForgot = () => {
-    setForgotEmail(loginEmail)   // carry over whatever they already typed
+    setForgotEmail(loginEmail)
     setForgotSent(false)
     setTab('forgot')
   }
@@ -137,19 +147,42 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!signupEmail && !signupPhone) {
-      showToast('Please enter your email address or phone number.', 'error')
+    if (!signupPhone) {
+      showToast('Phone number is required to create an account.', 'error')
       return
     }
+
+    const signupBody: Record<string, unknown> = {
+      full_name: signupName,
+      ...(signupEmail ? { email: signupEmail } : {}),
+      ...(signupPhone ? { phone_code: signupPhoneCode, phone_number: signupPhone } : {}),
+      password: signupPassword,
+      role: 'user',
+    }
+
+    // Phone provided — verify it via OTP before registering
+    if (signupPhone) {
+      setLoading(true)
+      try {
+        await authApi.sendOtp({ phone_code: signupPhoneCode, phone_number: signupPhone })
+        setPendingSignupData(signupBody)
+        setOtpDigits(['', '', '', ''])
+        setOtpTimer(60)
+        setTab('verify')
+        showToast('OTP sent to your phone number.', 'success')
+        setTimeout(() => otpRefs.current[0]?.focus(), 100)
+      } catch (err) {
+        showToast(err instanceof ApiError ? err.message : 'Failed to send OTP. Please try again.', 'error')
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
+    // No phone — register directly with email
     setLoading(true)
     try {
-      const res = await authApi.register({
-        full_name: signupName,
-        ...(signupEmail ? { email: signupEmail } : {}),
-        ...(signupPhone ? { phone_code: signupPhoneCode, phone_number: signupPhone } : {}),
-        password: signupPassword,
-        role: 'user',
-      })
+      const res = await authApi.register(signupBody)
       saveAuth(res.data.user, res.data.token)
       showToast('Account created successfully! Welcome to MeriDiet.', 'success')
       onAuthSuccess?.()
@@ -160,6 +193,90 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
       setLoading(false)
     }
   }
+
+  const handleVerifyOtp = async () => {
+    const otp = otpDigits.join('')
+    if (otp.length < 4) {
+      showToast('Please enter the complete 4-digit OTP.', 'error')
+      return
+    }
+    if (!pendingSignupData) return
+    setLoading(true)
+    try {
+      const phoneCode = pendingSignupData.phone_code as string
+      const phoneNumber = pendingSignupData.phone_number as string
+      await authApi.verifyOtp({ phone_code: phoneCode, phone_number: phoneNumber, otp })
+      const res = await authApi.register(pendingSignupData)
+      saveAuth(res.data.user, res.data.token)
+      showToast('Account created successfully! Welcome to MeriDiet.', 'success')
+      onAuthSuccess?.()
+      onClose()
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Invalid OTP. Please try again.', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendOtp = async () => {
+    if (!pendingSignupData) return
+    setLoading(true)
+    try {
+      const phoneCode = pendingSignupData.phone_code as string
+      const phoneNumber = pendingSignupData.phone_number as string
+      await authApi.resendOtp({ phone_code: phoneCode, phone_number: phoneNumber })
+      setOtpTimer(60)
+      setOtpDigits(['', '', '', ''])
+      showToast('OTP resent to your phone number.', 'success')
+      setTimeout(() => otpRefs.current[0]?.focus(), 100)
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Failed to resend OTP. Please try again.', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const val = e.target.value.replace(/\D/g, '')
+    const newDigits = [...otpDigits]
+    newDigits[index] = val.slice(-1)
+    setOtpDigits(newDigits)
+    if (val && index < 3) {
+      otpRefs.current[index + 1]?.focus()
+    }
+  }
+
+  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus()
+    }
+  }
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4)
+    if (!pasted) return
+    const newDigits = ['', '', '', '']
+    pasted.split('').forEach((ch, i) => { newDigits[i] = ch })
+    setOtpDigits(newDigits)
+    const nextFocus = Math.min(pasted.length, 3)
+    otpRefs.current[nextFocus]?.focus()
+  }
+
+  const selectedCountry = PHONE_CODES.find(c => c.code === signupPhoneCode) ?? PHONE_CODES[0]
+  const [codeOpen, setCodeOpen] = useState(false)
+  const codeRef = useRef<HTMLDivElement>(null)
+
+  const closeCode = useCallback(() => setCodeOpen(false), [])
+
+  useEffect(() => {
+    if (!codeOpen) return
+    const handler = (e: MouseEvent) => {
+      if (codeRef.current && !codeRef.current.contains(e.target as Node)) closeCode()
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [codeOpen, closeCode])
 
   const goToDietitianSignup = () => {
     onClose()
@@ -193,20 +310,8 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
   }
   const handleGoogleError = () => showToast('Google sign-in was cancelled or failed.', 'error')
 
-  const selectedCountry = PHONE_CODES.find(c => c.code === signupPhoneCode) ?? PHONE_CODES[0]
-  const [codeOpen, setCodeOpen] = useState(false)
-  const codeRef = useRef<HTMLDivElement>(null)
-
-  const closeCode = useCallback(() => setCodeOpen(false), [])
-
-  useEffect(() => {
-    if (!codeOpen) return
-    const handler = (e: MouseEvent) => {
-      if (codeRef.current && !codeRef.current.contains(e.target as Node)) closeCode()
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [codeOpen, closeCode])
+  const otpPhone = pendingSignupData?.phone_number as string | undefined
+  const otpPhoneCode = pendingSignupData?.phone_code as string | undefined
 
   return createPortal(
     <div className="auth-overlay" ref={overlayRef} onClick={handleOverlayClick}>
@@ -239,7 +344,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
         )}
 
         {/* ── User / Dietitian slider ── */}
-        {tab !== 'forgot' && !formGateMode && (
+        {tab !== 'forgot' && tab !== 'verify' && !formGateMode && (
           <div className="auth-type-toggle">
             <button
               className={`auth-type-btn${userType === 'user' ? ' auth-type-btn--active' : ''}`}
@@ -258,7 +363,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
           </div>
         )}
 
-        {/* ── LOGIN (same for both user types) ── */}
+        {/* ── LOGIN ── */}
         {tab === 'login' && (
           <form className="auth-form" onSubmit={handleLogin}>
             <div className="auth-field">
@@ -326,10 +431,10 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
               <div className="auth-forgot-icon"><Mail size={26} /></div>
               <h3 className="auth-forgot-title">Check your email</h3>
               <p className="auth-forgot-text">
-                If an account exists for <strong>{forgotEmail}</strong>, we’ve sent a link to
+                If an account exists for <strong>{forgotEmail}</strong>, we've sent a link to
                 reset your password. The link expires in 1 hour.
               </p>
-              <p className="auth-forgot-hint">Didn’t get it? Check spam, or try again in a minute.</p>
+              <p className="auth-forgot-hint">Didn't get it? Check spam, or try again in a minute.</p>
               <button type="button" className="btn-primary auth-submit" onClick={backToLogin}>
                 Back to Login
               </button>
@@ -338,7 +443,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
             <form className="auth-form" onSubmit={handleForgot}>
               <h3 className="auth-forgot-title">Forgot your password?</h3>
               <p className="auth-forgot-text">
-                Enter the email linked to your account and we’ll send you a link to reset it.
+                Enter the email linked to your account and we'll send you a link to reset it.
               </p>
 
               <div className="auth-field">
@@ -365,7 +470,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
           )
         )}
 
-        {/* ── SIGN UP (user only) ── */}
+        {/* ── SIGN UP ── */}
         {tab === 'signup' && userType === 'user' && (
           <form className="auth-form" onSubmit={handleSignup}>
 
@@ -381,24 +486,6 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
               />
             </div>
 
-            <div className="auth-field">
-              <Mail size={16} className="auth-field-icon" />
-              <input
-                type="email"
-                placeholder="Email address"
-                autoComplete="email"
-                value={signupEmail}
-                onChange={e => setSignupEmail(e.target.value)}
-              />
-            </div>
-
-            <div className="auth-or-row">
-              <span />
-              <p>or</p>
-              <span />
-            </div>
-
-            {/* Phone with code picker */}
             <div className="auth-phone-wrap">
               <div
                 className={`auth-phone-picker${codeOpen ? ' open' : ''}`}
@@ -446,6 +533,23 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
               </div>
             </div>
 
+            <div className="auth-or-row">
+              <span />
+              <p>or</p>
+              <span />
+            </div>
+
+            <div className="auth-field">
+              <Mail size={16} className="auth-field-icon" />
+              <input
+                type="email"
+                placeholder="Email address"
+                autoComplete="email"
+                value={signupEmail}
+                onChange={e => setSignupEmail(e.target.value)}
+              />
+            </div>
+
             <div className="auth-field">
               <Lock size={16} className="auth-field-icon" />
               <input
@@ -462,7 +566,9 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
             </div>
 
             <button type="submit" className="btn-primary auth-submit" disabled={loading}>
-              {loading ? 'Creating account…' : 'Create Free Account'}
+              {loading
+                ? (signupPhone ? 'Sending OTP…' : 'Creating account…')
+                : 'Create Free Account'}
             </button>
 
             {GOOGLE_CLIENT_ID && (
@@ -474,7 +580,9 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
 
             <p className="auth-terms">
               By signing up you agree to our{' '}
-              <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+              <a href="/terms-conditions" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+              {' '}and{' '}
+              <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
             </p>
 
             <p className="auth-switch">
@@ -482,6 +590,70 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
               <button type="button" onClick={() => setTab('login')}>Login</button>
             </p>
           </form>
+        )}
+
+        {/* ── PHONE OTP VERIFICATION (signup step) ── */}
+        {tab === 'verify' && (
+          <div className="auth-form">
+            <button
+              type="button"
+              className="auth-otp-back"
+              onClick={() => { setPendingSignupData(null); setTab('signup') }}
+            >
+              <ArrowLeft size={15} />
+              Back
+            </button>
+
+            <div className="auth-otp-header">
+              <div className="auth-otp-icon-wrap">
+                <Phone size={26} strokeWidth={1.5} />
+              </div>
+              <h3 className="auth-otp-title">Verify your number</h3>
+              <p className="auth-otp-subtitle">
+                Enter the 4-digit code sent to{' '}
+                <strong>{otpPhoneCode} {otpPhone}</strong>
+              </p>
+            </div>
+
+            <div className="auth-otp-digits">
+              {[0, 1, 2, 3].map(i => (
+                <input
+                  key={i}
+                  ref={el => { otpRefs.current[i] = el }}
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={1}
+                  className={`auth-otp-digit${otpDigits[i] ? ' filled' : ''}`}
+                  value={otpDigits[i]}
+                  onChange={e => handleOtpChange(e, i)}
+                  onKeyDown={e => handleOtpKeyDown(e, i)}
+                  onPaste={i === 0 ? handleOtpPaste : undefined}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              className="btn-primary auth-submit"
+              onClick={handleVerifyOtp}
+              disabled={loading}
+            >
+              {loading ? 'Verifying…' : 'Verify & Create Account'}
+            </button>
+
+            <div className="auth-otp-resend">
+              {otpTimer > 0 ? (
+                <span className="auth-otp-timer">Resend OTP in <strong>{otpTimer}s</strong></span>
+              ) : (
+                <>
+                  <span>Didn't receive it?</span>
+                  <button type="button" onClick={handleResendOtp} disabled={loading}>
+                    Resend OTP
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
         )}
 
       </div>

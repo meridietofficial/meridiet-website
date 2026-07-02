@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import dietitianApi, { uploadDocuments } from '../api/dietitian'
+import authApi from '../api/auth'
 import { ApiError } from '../api/client'
 import { useToast } from '../context/ToastContext'
 import AuthModal from '../components/AuthModal'
@@ -8,6 +9,7 @@ import { IN_STATES } from '../data/indiaCities'
 import SearchableSelect from '../components/SearchableSelect'
 import type { SelectOption } from '../components/SearchableSelect'
 import SpecializationInput from '../components/SpecializationInput'
+import { Phone, ArrowLeft } from 'lucide-react'
 
 const STEPS = [
   { num: 1, label: 'Basic Information' },
@@ -139,6 +141,19 @@ const JoinDietitian = () => {
   const [cities, setCities]       = useState<string[]>([])
   const [citiesLoading, setCitiesLoading] = useState(false)
 
+  // OTP verification (Step 1 → Step 2)
+  const [otpMode, setOtpMode]     = useState(false)
+  const [otpDigits, setOtpDigits] = useState(['', '', '', ''])
+  const [otpTimer, setOtpTimer]   = useState(0)
+  const [otpLoading, setOtpLoading] = useState(false)
+  const otpRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  useEffect(() => {
+    if (otpTimer <= 0) return
+    const id = window.setInterval(() => setOtpTimer(t => t - 1), 1000)
+    return () => clearInterval(id)
+  }, [otpTimer])
+
   useEffect(() => {
     if (!data.state) { setCities([]); return }
     setCitiesLoading(true)
@@ -170,6 +185,83 @@ const JoinDietitian = () => {
   const tog = (k: keyof Form, v: string) => {
     const arr = data[k] as string[]
     set(k, arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v])
+  }
+
+  const handleOtpChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const val = e.target.value.replace(/\D/g, '')
+    const newDigits = [...otpDigits]
+    newDigits[index] = val.slice(-1)
+    setOtpDigits(newDigits)
+    if (val && index < 3) otpRefs.current[index + 1]?.focus()
+  }
+
+  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus()
+    }
+  }
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault()
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4)
+    if (!pasted) return
+    const newDigits = ['', '', '', '']
+    pasted.split('').forEach((ch, i) => { newDigits[i] = ch })
+    setOtpDigits(newDigits)
+    otpRefs.current[Math.min(pasted.length, 3)]?.focus()
+  }
+
+  const handleSendOtp = async () => {
+    const e = validate(1)
+    if (Object.keys(e).length > 0) { setErrors(e); return }
+    setOtpLoading(true)
+    try {
+      await authApi.sendOtp({ phone_code: '+91', phone_number: data.phone })
+      setOtpDigits(['', '', '', ''])
+      setOtpTimer(60)
+      setOtpMode(true)
+      showToast('OTP sent to your mobile number.', 'success')
+      setTimeout(() => otpRefs.current[0]?.focus(), 100)
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Failed to send OTP. Please try again.', 'error')
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
+  const handleVerifyOtp = async () => {
+    const otp = otpDigits.join('')
+    if (otp.length < 4) {
+      showToast('Please enter the complete 4-digit OTP.', 'error')
+      return
+    }
+    setOtpLoading(true)
+    try {
+      await authApi.verifyOtp({ phone_code: '+91', phone_number: data.phone, otp })
+      setOtpMode(false)
+      setErrors({})
+      setStep(2)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Invalid OTP. Please try again.', 'error')
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
+  const handleResendOtp = async () => {
+    setOtpLoading(true)
+    try {
+      await authApi.resendOtp({ phone_code: '+91', phone_number: data.phone })
+      setOtpTimer(60)
+      setOtpDigits(['', '', '', ''])
+      showToast('OTP resent to your mobile number.', 'success')
+      setTimeout(() => otpRefs.current[0]?.focus(), 100)
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Failed to resend OTP. Please try again.', 'error')
+    } finally {
+      setOtpLoading(false)
+    }
   }
 
   const validate = (s: number) => {
@@ -284,7 +376,7 @@ const JoinDietitian = () => {
         <div className="jd2-card">
 
           {/* Step header */}
-          {step < 3 && <div className="jd2-card-hd">
+          {step < 3 && !otpMode && <div className="jd2-card-hd">
             <div className="jd2-card-icon">
               {step === 1
                 ? <img src="/jd-step1-icon.png" alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} />
@@ -304,8 +396,53 @@ const JoinDietitian = () => {
             </div>
           </div>}
 
+          {/* ── OTP Verification ── */}
+          {otpMode && (
+            <div className="jd2-otp-wrap">
+              <div className="auth-otp-header">
+                <div className="auth-otp-icon-wrap">
+                  <Phone size={26} strokeWidth={1.5} />
+                </div>
+                <h3 className="auth-otp-title">Verify your number</h3>
+                <p className="auth-otp-subtitle">
+                  Enter the 4-digit code sent to <strong>+91 {data.phone}</strong>
+                </p>
+              </div>
+
+              <div className="auth-otp-digits">
+                {[0, 1, 2, 3].map(i => (
+                  <input
+                    key={i}
+                    ref={el => { otpRefs.current[i] = el }}
+                    type="tel"
+                    inputMode="numeric"
+                    maxLength={1}
+                    className={`auth-otp-digit${otpDigits[i] ? ' filled' : ''}`}
+                    value={otpDigits[i]}
+                    onChange={e => handleOtpChange(e, i)}
+                    onKeyDown={e => handleOtpKeyDown(e, i)}
+                    onPaste={i === 0 ? handleOtpPaste : undefined}
+                  />
+                ))}
+              </div>
+
+              <div className="auth-otp-resend">
+                {otpTimer > 0 ? (
+                  <span className="auth-otp-timer">Resend OTP in <strong>{otpTimer}s</strong></span>
+                ) : (
+                  <>
+                    <span>Didn't receive it?</span>
+                    <button type="button" onClick={handleResendOtp} disabled={otpLoading}>
+                      Resend OTP
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* ── Step 1 ── */}
-          {step === 1 && (
+          {!otpMode && step === 1 && (
             <div className="jd2-fields">
               <div className="jd2-row">
                 <div className="jd2-field">
@@ -389,7 +526,7 @@ const JoinDietitian = () => {
           )}
 
           {/* ── Step 2 ── */}
-          {step === 2 && (
+          {!otpMode && step === 2 && (
             <div className="jd2-fields">
               <div className="jd2-row">
                 <div className="jd2-field">
@@ -489,7 +626,7 @@ const JoinDietitian = () => {
           )}
 
           {/* ── Step 3 – Review ── */}
-          {step === 3 && (
+          {!otpMode && step === 3 && (
             <div className="jd2-review">
               <p className="jd2-review-almost">You are almost done</p>
               <p className="jd2-review-sub">We'll review all your documents</p>
@@ -505,17 +642,31 @@ const JoinDietitian = () => {
 
           {/* ── Footer nav ── */}
           <div className="jd2-nav">
-            <button className="jd2-back-btn" onClick={() => step === 1 ? navigate('/') : go(step - 1)}>
-              ← {step === 1 ? 'Home' : 'Back'}
-            </button>
-            {step < 3 ? (
-              <button className="jd2-next-btn" disabled={uploading} onClick={() => go(step + 1)}>
-                {uploading ? 'Uploading…' : 'Next →'}
-              </button>
+            {otpMode ? (
+              <>
+                <button className="jd2-back-btn" onClick={() => setOtpMode(false)}>
+                  <ArrowLeft size={15} style={{ marginRight: 4 }} />
+                  Back
+                </button>
+                <button className="jd2-next-btn" disabled={otpLoading} onClick={handleVerifyOtp}>
+                  {otpLoading ? 'Verifying…' : 'Verify & Continue →'}
+                </button>
+              </>
             ) : (
-              <button className="jd2-next-btn" onClick={() => setSubmitted(true)}>
-                Done →
-              </button>
+              <>
+                <button className="jd2-back-btn" onClick={() => step === 1 ? navigate('/') : go(step - 1)}>
+                  ← {step === 1 ? 'Home' : 'Back'}
+                </button>
+                {step < 3 ? (
+                  <button className="jd2-next-btn" disabled={uploading || otpLoading} onClick={() => step === 1 ? handleSendOtp() : go(step + 1)}>
+                    {step === 1 ? (otpLoading ? 'Sending OTP…' : 'Next →') : (uploading ? 'Uploading…' : 'Next →')}
+                  </button>
+                ) : (
+                  <button className="jd2-next-btn" onClick={() => setSubmitted(true)}>
+                    Done →
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>

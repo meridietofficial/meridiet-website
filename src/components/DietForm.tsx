@@ -46,7 +46,6 @@ const INIT: FormData = {
   foodsDislike: '',
   favoriteFoods: '',
   breakfastTime: '8:00 AM',
-  midMorningTime: '11:00 AM',
   lunchTime: '1:30 PM',
   eveningSnackTime: '5:00 PM',
   dinnerTime: '8:30 PM',
@@ -74,6 +73,7 @@ const INIT: FormData = {
   stateCode: '',
   finalNotes: '',
   planType: '1 Month',
+  wheyProtein: '',
 }
 
 type FormData = {
@@ -102,7 +102,6 @@ type FormData = {
   foodsDislike: string
   favoriteFoods: string
   breakfastTime: string
-  midMorningTime: string
   lunchTime: string
   eveningSnackTime: string
   dinnerTime: string
@@ -130,6 +129,7 @@ type FormData = {
   stateCode: string
   finalNotes: string
   planType: string
+  wheyProtein: string
 }
 
 type SetFn = (k: keyof FormData, v: FormData[keyof FormData]) => void
@@ -218,7 +218,7 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
     <div className="df-grid-2">
       <div className="df-field">
         <label className="df-label">
-          Mobile Number <span className="df-opt">(Optional)</span>
+          Mobile Number <span className="df-req">*</span>
         </label>
         <div className="df-phone-row">
           <select className="df-phone-code"><option>+91</option></select>
@@ -464,6 +464,31 @@ const Step2 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => (
       <FieldErr msg={err.workoutType} />
     </div>
 
+    {/* Meal Timings */}
+    <div className="df-card-field">
+      <label className="df-label">Your Meal Schedule</label>
+      <p className="df-field-sub">When do you usually have your meals? This helps us time your nutrients correctly.</p>
+      <div className="fp-timings-grid">
+        {MEAL_TIMES.map((t) => (
+          <div key={t.key} className="fp-timing-card">
+            <div className="fp-timing-header">
+              <span className="fp-timing-icon">{t.icon}</span>
+              <span className="fp-timing-lbl">
+                {t.lbl}{t.opt && <span className="df-opt"> (Opt)</span>}
+              </span>
+            </div>
+            <select
+              className="fp-timing-select"
+              value={(d as unknown as Record<string, string>)[t.key]}
+              onChange={(e) => set(t.key as keyof FormData, e.target.value)}
+            >
+              {TIMES.map((tt) => <option key={tt}>{tt}</option>)}
+            </select>
+          </div>
+        ))}
+      </div>
+    </div>
+
     <div className="df-tip-box">💡 Tip: Be honest! The more accurate your answers, the better your plan will be.</div>
   </div>
 )
@@ -500,10 +525,15 @@ const ALLERGIES = [
 ]
 const MEAL_TIMES = [
   { lbl: 'Breakfast',     icon: '☀️',  key: 'breakfastTime',   opt: false },
-  { lbl: 'Mid-morning',   icon: '☕',  key: 'midMorningTime',  opt: true  },
   { lbl: 'Lunch',         icon: '🌤️', key: 'lunchTime',       opt: false },
-  { lbl: 'Evening Snack', icon: '🌅',  key: 'eveningSnackTime',opt: true  },
+  { lbl: 'Evening Snack', icon: '🌅',  key: 'eveningSnackTime',opt: false },
   { lbl: 'Dinner',        icon: '🌙',  key: 'dinnerTime',      opt: false },
+]
+
+const WHEY_PROTEIN_OPTS = [
+  { v: 'Yes, I already use it', icon: '💪', desc: 'Include shakes in my plan' },
+  { v: 'Open to trying it',     icon: '🤔', desc: 'Willing if recommended' },
+  { v: 'No, prefer food-only',  icon: '🥗', desc: 'Whole foods only' },
 ]
 
 const Step3 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err: Errors }) => (
@@ -593,29 +623,25 @@ const Step3 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
       </div>
     </div>
 
-    {/* Meal Timings */}
-    <div className="df-card-field" style={{ display: 'none' }}>
-      <label className="df-label">Meal Timings</label>
-      <p className="df-field-sub">What is your usual meal schedule?</p>
-      <div className="fp-timings-grid">
-        {MEAL_TIMES.map((t) => (
-          <div key={t.key} className="fp-timing-card">
-            <div className="fp-timing-header">
-              <span className="fp-timing-icon">{t.icon}</span>
-              <span className="fp-timing-lbl">
-                {t.lbl}{t.opt && <span className="df-opt"> (Opt)</span>}
-              </span>
-            </div>
-            <select
-              className="fp-timing-select"
-              value={(d as unknown as Record<string, string>)[t.key]}
-              onChange={(e) => set(t.key as keyof FormData, e.target.value)}
-            >
-              {TIMES.map((tt) => <option key={tt}>{tt}</option>)}
-            </select>
-          </div>
+    {/* Whey Protein */}
+    <div className="df-card-field">
+      <label className="df-label">Whey Protein / Supplements <span className="df-req">*</span></label>
+      <p className="df-field-sub">Should we include protein shakes or supplements in your plan?</p>
+      <div className="fp-diet-grid">
+        {WHEY_PROTEIN_OPTS.map((o) => (
+          <button
+            key={o.v}
+            className={`fp-diet-card${d.wheyProtein === o.v ? ' sel' : ''}`}
+            onClick={() => set('wheyProtein', o.v)}
+          >
+            {d.wheyProtein === o.v && <span className="fp-diet-check">✓</span>}
+            <span className="fp-diet-icon">{o.icon}</span>
+            <strong className="fp-diet-name">{o.v}</strong>
+            <span className="fp-diet-desc">{o.desc}</span>
+          </button>
         ))}
       </div>
+      <FieldErr msg={err.wheyProtein} />
     </div>
 
     <div className="df-tip-box">
@@ -804,13 +830,12 @@ const PLAN_OPTS = [
 ]
 
 const DELIVERY_OPTS = [
-  // { k: 'whatsapp', icon: '💬', lbl: 'WhatsApp', sub: 'Instant delivery on WhatsApp', badge: '⚡ Recommended' },
-  { k: 'email',   icon: '📧', lbl: 'Email',     sub: 'Delivered to your inbox',      badge: null },
+  { k: 'whatsapp', icon: '💬', lbl: 'WhatsApp', sub: 'Instant delivery on WhatsApp', badge: null },
+  { k: 'email',    icon: '📧', lbl: 'Email',     sub: 'Delivered to your inbox',      badge: '⚡ Recommended' },
 ]
 
 const Step5 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
   const { user } = useAuth()
-  const { showToast } = useToast()
   const [cities, setCities] = useState<string[]>([])
   const [citiesLoading, setCitiesLoading] = useState(false)
 
@@ -896,7 +921,7 @@ const Step5 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
 
         <div className="df-field">
           <label className="df-label">
-            Phone / WhatsApp Number <span className="df-optional">(Optional)</span>
+            Phone / WhatsApp Number <span className="df-req">*</span>
           </label>
           <div className="df-phone-row">
             <select className="df-phone-code"><option>+91</option></select>
@@ -904,18 +929,7 @@ const Step5 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
               <span className="df-icon">📱</span>
               <input className="df-input" type="tel" placeholder="10-digit number"
                 value={d.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} />
-              {phoneFromUser
-                ? <span className="df-verified-badge">✓ Verified</span>
-                : d.whatsapp.trim().length >= 10 && (
-                  <button
-                    type="button"
-                    className="df-verify-btn"
-                    onClick={() => showToast('OTP sent to your number!', 'success')}
-                  >
-                    Verify
-                  </button>
-                )
-              }
+              {phoneFromUser && <span className="df-verified-badge">✓ Verified</span>}
             </div>
           </div>
           <FieldErr msg={err.whatsapp} />
@@ -939,7 +953,7 @@ const Step5 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
       {/* Delivery method */}
       <div className="df-card-field">
         <label className="df-label">Where should we send your plan?</label>
-        <p className="df-field-sub">Your plan will be delivered to your email</p>
+        <p className="df-field-sub">Select one or both — you can choose Email and WhatsApp</p>
         <div className="ct-delivery-grid">
           {DELIVERY_OPTS.map((m) => (
             <button
@@ -1176,7 +1190,9 @@ function validateStep(s: number, d: FormData): Errors {
     if (d.goals.length === 0)   e.goals = 'Please select at least one goal'
     if (!d.email.trim())        e.email = 'Email address is required'
     else if (!/\S+@\S+\.\S+/.test(d.email)) e.email = 'Please enter a valid email address'
-    if (d.whatsapp.trim() && !/^\d{10}$/.test(d.whatsapp.replace(/\s|-/g, '')))
+    if (!d.whatsapp.trim())
+      e.whatsapp = 'Mobile number is required'
+    else if (!/^\d{10}$/.test(d.whatsapp.replace(/\s|-/g, '')))
       e.whatsapp = 'Enter a valid 10-digit number'
   }
   if (s === 2) {
@@ -1185,7 +1201,8 @@ function validateStep(s: number, d: FormData): Errors {
     if (!d.workoutType)   e.workoutType   = 'Please select your workout type'
   }
   if (s === 3) {
-    if (!d.dietType) e.dietType = 'Please select your diet type'
+    if (!d.dietType)     e.dietType     = 'Please select your diet type'
+    if (!d.wheyProtein) e.wheyProtein  = 'Please select an option'
   }
   if (s === 4) {
     if (d.medicalConditions.length === 0) e.medicalConditions = 'Please select at least one option'

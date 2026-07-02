@@ -48,6 +48,15 @@ const authApi = {
   // Sets a new password using the single-use token from the reset email link.
   resetPassword: (body: { token: string; password: string; confirm_password: string }) =>
     apiClient.apiPost<MessageResponse>(ENDPOINTS.auth.resetPassword, body),
+
+  sendOtp: (body: { phone_code: string; phone_number: string }) =>
+    apiClient.apiPost<MessageResponse>(ENDPOINTS.auth.sendOtp, body),
+
+  verifyOtp: (body: { phone_code: string; phone_number: string; otp: string }) =>
+    apiClient.apiPost<AuthResponse>(ENDPOINTS.auth.verifyOtp, body),
+
+  resendOtp: (body: { phone_code: string; phone_number: string }) =>
+    apiClient.apiPost<MessageResponse>(ENDPOINTS.auth.resendOtp, body),
 }
 
 export default authApi
