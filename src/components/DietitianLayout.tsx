@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom'
+import { Link, useNavigate, useLocation, Outlet, Navigate } from 'react-router-dom'
 import DietitianTopbar from './DietitianTopbar'
 import dietitianApi, { type DietitianProfile } from '../api/dietitian'
 import { ApiError } from '../api/client'
 import { useConsultationCount } from '../context/ConsultationCountContext'
+import { useAuth } from '../context/AuthContext'
 
 export type DietitianOutletContext = {
   online: boolean
@@ -30,6 +31,7 @@ const NAV_ITEMS: { icon: string; label: string; route?: string; badge?: number }
 ]
 
 export default function DietitianLayout() {
+  const { user, token } = useAuth()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [online, setOnline] = useState(false)
@@ -80,6 +82,10 @@ export default function DietitianLayout() {
   const errorLines = onlineError ? onlineError.split('\n').filter(Boolean) : []
   const errorTitle = errorLines[0] ?? ''
   const errorBullets = errorLines.slice(1).map(l => l.replace(/^[•\-]\s*/, '').trim()).filter(Boolean)
+
+  if (!token || !user || user.role !== 'dietitian') {
+    return <Navigate to="/" replace />
+  }
 
   return (
     <div className="dd-root">
