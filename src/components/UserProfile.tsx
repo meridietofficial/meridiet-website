@@ -57,11 +57,30 @@ const UserProfile = () => {
     if (!user) navigate('/', { replace: true })
   }, [user, navigate])
 
+  useEffect(() => {
+    let active = true
+    userApi.getProfile()
+      .then(res => {
+        if (!active) return
+        const p = res.data
+        setName(p.full_name)
+        setEmail(p.email)
+        setPhoneCode(p.phone_code ?? '+91')
+        setPhone(p.phone_number ?? '')
+        setAvatarPreview(p.avatar_url ?? null)
+        updateUser(p)
+      })
+      .catch(() => {})
+      .finally(() => { if (active) setProfileFetching(false) })
+    return () => { active = false }
+  }, [])
+
   const [name, setName] = useState(user?.full_name ?? '')
   const [email, setEmail] = useState(user?.email ?? '')
   const [phoneCode, setPhoneCode] = useState(user?.phone_code ?? '+91')
   const [phone, setPhone] = useState(user?.phone_number ?? '')
   const [profileLoading, setProfileLoading] = useState(false)
+  const [profileFetching, setProfileFetching] = useState(true)
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(user?.avatar_url ?? null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -242,11 +261,11 @@ const UserProfile = () => {
         const fd = new FormData()
         fd.append('avatar', avatarFile)
         const avatarRes = await userApi.updateAvatar(fd)
-        updateUser(avatarRes.data.user)
+        updateUser(avatarRes.data)
         setAvatarFile(null)
       }
       const res = await userApi.updateProfile({ full_name: name, email, phone_code: phoneCode, phone_number: phone })
-      updateUser(res.data.user)
+      updateUser(res.data)
       showToast('Profile updated successfully!', 'success')
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : 'Failed to update profile. Please try again.', 'error')
@@ -402,6 +421,11 @@ const UserProfile = () => {
                   </div>
                 </div>
 
+                {profileFetching ? (
+                  <div className="appt-skeleton-list">
+                    {[1, 2, 3].map(n => <div key={n} className="appt-skeleton-row"><div className="appt-sk appt-sk-name" style={{ height: 40, borderRadius: 8 }} /></div>)}
+                  </div>
+                ) : (
                 <form className="profile-form" onSubmit={handleSaveProfile}>
                   <div className="profile-form-row">
                     <div className="profile-form-group">
@@ -456,6 +480,7 @@ const UserProfile = () => {
                     </button>
                   </div>
                 </form>
+                )}
               </div>
             )}
 

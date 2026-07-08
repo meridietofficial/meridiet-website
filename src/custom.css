@@ -9766,10 +9766,169 @@
   .up-panel { padding: 20px; }
 }
 
-@media (max-width: 500px) {
-  .up-nav-item { min-width: 100px; }
+@media (max-width: 640px) {
+
+  /* ── Sidebar — horizontal profile strip (avatar left, info right) ──
+     HTML order inside <aside class="up-sidebar">:
+       1 div.up-avatar-wrap
+       2 div.up-sidebar-info
+       3 div.up-sidebar-divider  (first)
+       4 nav.up-nav
+       5 div.up-sidebar-divider  (second)
+       6 div.up-sidebar-meta
+  ── */
+  .up-sidebar {
+    display: grid;
+    grid-template-columns: auto 1fr;
+  }
+  .up-sidebar > :nth-child(1) { grid-column: 1; padding: 16px 10px 16px 16px; background: none; align-items: flex-start; }
+  .up-sidebar > :nth-child(2) { grid-column: 2; text-align: left; padding: 16px 16px 16px 4px; align-self: center; }
+  .up-sidebar > :nth-child(3) { grid-column: 1 / -1; }
+  .up-sidebar > :nth-child(4) { grid-column: 1 / -1; }
+  .up-sidebar > :nth-child(5) { display: none; }
+  .up-sidebar > :nth-child(6) { display: none; }
+
+  .up-avatar { width: 60px; height: 60px; }
+  .up-avatar-initials { font-size: 20px; }
+  .up-avatar-hint { display: none; }
+
+  .up-sidebar-info { padding: 0; }
+  .up-sidebar-name  { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+  .up-sidebar-email { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px; }
+  .up-sidebar-role  { font-size: 10px; padding: 2px 10px; }
+
+  /* ── Nav — vertical settings-style list ── */
+  .up-nav {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    overflow-x: unset;
+    padding: 4px 0 8px;
+    gap: 0;
+    scrollbar-width: unset;
+  }
+  .up-nav::-webkit-scrollbar { display: unset; }
+
+  .up-nav-item {
+    flex: unset;
+    min-width: unset;
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    border-radius: 0;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+    position: relative;
+  }
+  .up-nav-item:last-child { border-bottom: none; }
+
+  /* Re-enable the green left bar on active */
+  .up-nav-item--active::before {
+    display: block;
+    width: 3px; top: 0; bottom: 0; left: 0;
+    border-radius: 0 2px 2px 0;
+  }
+  .up-nav-item--active { background: #f6fef8; }
+
+  /* Chevron arrow on every item via ::after */
+  .up-nav-item::after {
+    content: '›';
+    font-size: 20px;
+    color: #d1d5db;
+    margin-left: auto;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .up-nav-item--active::after { color: #1E8E3E; }
+
+  .up-nav-icon { width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0; }
+  .up-nav-text { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+  .up-nav-label { font-size: 13px; font-weight: 600; color: #1a2e1a; white-space: normal; }
+  .up-nav-sub   { display: block; font-size: 11px; color: #9ca3af; margin-top: 1px; }
+  .up-nav-item--active .up-nav-label { color: #1E8E3E; }
+  .up-nav-dot { display: none; }
+
+  /* ── Panel ── */
   .up-panel { padding: 16px; }
+  .up-panel-header { gap: 10px; margin-bottom: 18px; padding-bottom: 14px; }
+  .up-panel-title { font-size: 16px; }
+  .up-panel-sub { font-size: 12px; }
+  .up-panel-icon { width: 38px; height: 38px; border-radius: 10px; }
+
+  /* ── Hero ── */
   .up-hero-title { font-size: 22px; }
+  .up-hero { margin-bottom: 16px; padding: 28px 0 24px; }
+
+  /* ── Appointment & Diet Chart cards ── */
+  .appt-list { gap: 10px; }
+  .appt-card {
+    padding: 14px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+
+  /* Smaller avatar */
+  .appt-avatar { width: 38px; height: 38px; font-size: 13px; }
+
+  /* Tighter name / location */
+  .appt-name { font-size: 13px; }
+  .appt-location { font-size: 11px; }
+
+  /* Badge row — show side by side instead of column */
+  .appt-card-badges { flex-direction: row; align-items: center; gap: 6px; }
+
+  /* Diet chart right col (was unstyled — badge just floated) */
+  .appt-card-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* Meta chips */
+  .appt-meta-row { gap: 4px; }
+  .appt-meta-item { font-size: 11px; padding: 3px 8px; }
+
+  /* Action buttons — full width, taller tap target */
+  .appt-actions-row { flex-direction: column; gap: 8px; }
+  .appt-plan-btn {
+    width: 100%; justify-content: center;
+    padding: 10px 14px; font-size: 13px; border-radius: 10px;
+  }
+  .appt-join-btn {
+    width: 100%; justify-content: center;
+    padding: 10px 14px; font-size: 13px; border-radius: 10px;
+  }
+
+  /* Diet chart download button — full width */
+  .dc-download-btn {
+    width: 100%; justify-content: center;
+    padding: 10px 14px; font-size: 13px; border-radius: 10px; margin-top: 6px;
+  }
+
+  /* Rate button — full width */
+  .appt-rate-btn { width: 100%; text-align: center; }
+
+  /* Review form — stack confirm/cancel */
+  .appt-review-actions { flex-direction: column; gap: 6px; }
+  .appt-review-submit { width: 100%; text-align: center; padding: 10px; }
+  .appt-review-cancel { width: 100%; text-align: center; padding: 10px; }
+  .appt-star-btn { font-size: 30px; }
+
+  /* Wallet balance */
+  .uw-balance-card { padding: 16px 18px; }
+  .uw-balance-amount { font-size: 22px; }
+
+  /* Subscription wallet row — stack vertically */
+  .usub-wallet-row { flex-direction: column; }
+  .usub-wallet-sep { width: 100%; height: 1px; align-self: unset; }
+  .usub-wallet-item { padding: 12px 16px; }
+  .usub-wallet-val { font-size: 15px; }
+
+  /* Form save button full-width */
+  .profile-form-actions { justify-content: stretch; }
+  .profile-save-btn { width: 100%; text-align: center; }
 }
 
 /* ── Appointment History ── */
@@ -9789,6 +9948,7 @@
 .appt-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .appt-card-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .appt-card-badges { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
+.appt-card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
 
 .appt-avatar {
   width: 46px; height: 46px; border-radius: 50%; background: #e8f5e9; flex-shrink: 0;

@@ -133,7 +133,7 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
                 Get My Diet Plan
               </button>
               {user ? (
-                <button className="navbar-login" onClick={() => { setMenuOpen(false); setDropdownOpen(p => !p) }}>
+                <button className="navbar-login" onClick={() => { setMenuOpen(false); navigate(user.role === 'dietitian' ? '/dietitian-dashboard' : '/profile') }}>
                   {initials} · My Profile
                 </button>
               ) : (
