@@ -139,19 +139,25 @@ function DietPlanButton({
     )
   }
 
-  if (dp.status === 'completed') {
+  if (dp.status === 'completed' || dp.status === 'sent') {
     const handleView = () => {
-      if (dp.pdf_url && onViewPdf) onViewPdf(dp.pdf_url)
+      if (dp.pdf_url && onViewPdf) {
+        onViewPdf(dp.pdf_url)
+      } else {
+        navigate(`/dietitian-diet-plans/${dp.id}`, { state: { returnTo, appointmentId: apptId } })
+      }
     }
+    const icon  = dp.status === 'sent' ? 'fa-solid fa-paper-plane' : 'fa-solid fa-file-pdf'
+    const label = dp.status === 'sent' ? 'View Sent Plan' : 'View Plan'
     if (variant === 'hero') return (
       <button className="apd-hero-btn apd-hero-btn--green" onClick={handleView}>
-        <i className="fa-solid fa-file-pdf" /> View Plan
+        <i className={icon} /> {label}
       </button>
     )
     return (
       <button className="apd-action-row" onClick={handleView}>
-        <span className="apd-action-icon"><i className="fa-solid fa-file-pdf" /></span>
-        <span className="apd-action-label">View Diet Plan</span>
+        <span className="apd-action-icon"><i className={icon} /></span>
+        <span className="apd-action-label">{label}</span>
         <i className="fa-solid fa-chevron-right apd-action-arrow" />
       </button>
     )

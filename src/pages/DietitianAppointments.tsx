@@ -32,10 +32,11 @@ const SESSION_TYPE_META: Record<string, { label: string; icon: string }> = {
   chat:       { label: 'Chat',       icon: 'fa-solid fa-comment'      },
 }
 
-const DIET_PLAN_META: Record<DietPlanRef['status'], { label: string; icon: string; pill: string }> = {
+const DIET_PLAN_META: Record<string, { label: string; icon: string; pill: string }> = {
   draft:      { label: 'Draft',       icon: 'fa-solid fa-pen-to-square',  pill: 'ap-meta-pill--dp-draft'      },
   generating: { label: 'Generating…', icon: 'fa-solid fa-circle-notch',   pill: 'ap-meta-pill--dp-generating' },
-  completed:  { label: 'Plan Sent',   icon: 'fa-solid fa-circle-check',   pill: 'ap-meta-pill--dp-completed'  },
+  completed:  { label: 'Ready',       icon: 'fa-solid fa-circle-check',   pill: 'ap-meta-pill--dp-completed'  },
+  sent:       { label: 'Plan Sent',   icon: 'fa-solid fa-paper-plane',    pill: 'ap-meta-pill--dp-sent'       },
   failed:     { label: 'Plan Failed', icon: 'fa-solid fa-circle-xmark',   pill: 'ap-meta-pill--dp-failed'     },
   archived:   { label: 'Archived',    icon: 'fa-solid fa-box-archive',    pill: 'ap-meta-pill--dp-archived'   },
 }
@@ -415,7 +416,7 @@ export default function DietitianAppointments() {
                               {/* Diet plan status pill */}
                               {s.diet_plan
                                 ? (() => {
-                                    const dp = DIET_PLAN_META[s.diet_plan.status]
+                                    const dp = DIET_PLAN_META[s.diet_plan.status] ?? { label: s.diet_plan.status, icon: 'fa-solid fa-circle', pill: '' }
                                     return (
                                       <span className={`ap-meta-pill ${dp.pill}`}>
                                         <i className={`${dp.icon}${s.diet_plan.status === 'generating' ? ' fa-spin' : ''}`} />

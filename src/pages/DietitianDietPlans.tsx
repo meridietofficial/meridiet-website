@@ -7,10 +7,12 @@ import dietitianDietPlanApi, {
 type Tab = 'all' | DietPlanStatus
 
 const STATUS_META: Partial<Record<DietPlanStatus, { label: string; color: string }>> = {
-  completed:  { label: 'Active',     color: 'green'  },
-  draft:      { label: 'Draft',      color: 'orange' },
-  generating: { label: 'Generating', color: 'blue'   },
-  failed:     { label: 'Failed',     color: 'red'    },
+  completed:  { label: 'Ready to Send',      color: 'green'  },
+  sent:       { label: 'Sent ✓',             color: 'teal'   },
+  draft:      { label: 'Draft',              color: 'orange' },
+  generating: { label: 'Generating…',        color: 'blue'   },
+  failed:     { label: 'Generation Failed',  color: 'red'    },
+  archived:   { label: 'Archived',           color: 'gray'   },
 }
 
 const GOAL_LABEL: Record<string, string> = {
@@ -65,6 +67,7 @@ export default function DietitianDietPlans() {
   const [detailPlan, setDetailPlan]       = useState<DietPlanDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [generatingIds, setGeneratingIds] = useState<Set<number>>(new Set())
+  const [sendingIds, setSendingIds]       = useState<Set<number>>(new Set())
   const [openWeek, setOpenWeek]           = useState(0)
   const [openDay, setOpenDay]             = useState(0)
   const [openMeal, setOpenMeal]           = useState<number | null>(null)
@@ -115,9 +118,22 @@ export default function DietitianDietPlans() {
     }
   }
 
+  async function handleSend(plan: DietPlanSummary) {
+    setSendingIds(prev => new Set(prev).add(plan.id))
+    try {
+      await dietitianDietPlanApi.sendPlan(plan.id)
+      setPlans(prev => prev.map(p => p.id === plan.id ? { ...p, status: 'sent' } : p))
+      if (selected?.id === plan.id) setSelected(s => s ? { ...s, status: 'sent' } : s)
+    } catch { /* silent */ }
+    finally {
+      setSendingIds(prev => { const s = new Set(prev); s.delete(plan.id); return s })
+    }
+  }
+
   const counts = {
     all:        plans.length,
     completed:  plans.filter(p => p.status === 'completed').length,
+    sent:       plans.filter(p => p.status === 'sent').length,
     draft:      plans.filter(p => p.status === 'draft').length,
     generating: plans.filter(p => p.status === 'generating').length,
     failed:     plans.filter(p => p.status === 'failed').length,
@@ -131,10 +147,11 @@ export default function DietitianDietPlans() {
   })
 
   const TABS: [Tab, string, number][] = [
-    ['all',        'All',        counts.all],
-    ['completed',  'Active',     counts.completed],
-    ['draft',      'Draft',      counts.draft],
-    ['generating', 'Generating', counts.generating],
+    ['all',        'All',          counts.all],
+    ['completed',  'Ready to Send',counts.completed],
+    ['sent',       'Sent',         counts.sent],
+    ['draft',      'Draft',        counts.draft],
+    ['generating', 'Generating',   counts.generating],
   ]
 
   const weeks       = detailPlan?.weeks ?? []
@@ -152,9 +169,13 @@ export default function DietitianDietPlans() {
         </div>
         <div className="dp-header-right">
           <div className="dp-header-stats">
+            <div className="dp-hstat dp-hstat--teal">
+              <span className="dp-hstat-val">{counts.sent}</span>
+              <span className="dp-hstat-label">Sent</span>
+            </div>
             <div className="dp-hstat dp-hstat--green">
               <span className="dp-hstat-val">{counts.completed}</span>
-              <span className="dp-hstat-label">Active</span>
+              <span className="dp-hstat-label">Ready</span>
             </div>
             <div className="dp-hstat dp-hstat--orange">
               <span className="dp-hstat-val">{counts.draft}</span>
@@ -224,6 +245,7 @@ export default function DietitianDietPlans() {
             const sm = STATUS_META[p.status] ?? { label: p.status, color: 'gray' }
             const isDraft = p.status === 'draft' || p.status === 'failed'
             const isTriggering = generatingIds.has(p.id)
+            const isSending = sendingIds.has(p.id)
             const goals = p.form_goals ?? []
 
             return (
@@ -247,7 +269,41 @@ export default function DietitianDietPlans() {
                         <i className="fa-solid fa-pen" /> Edit
                       </button>
                     )}
-                    {p.status === 'completed' && p.pdf_url && (
+                    {p.status === 'completed' && (
+                      <>
+                        <button className="dp-btn-view" onClick={() => navigate(`/dietitian-diet-plans/${p.id}`)}>
+                          <i className="fa-solid fa-eye" /> Preview
+                        </button>
+                        <button
+                          className="dp-btn-send"
+                          disabled={isSending}
+                          onClick={() => handleSend(p)}
+                        >
+                          {isSending
+                            ? <><i className="fa-solid fa-spinner fa-spin" /> Sending…</>
+                            : <><i className="fa-solid fa-paper-plane" /> Send</>
+                          }
+                        </button>
+                      </>
+                    )}
+                    {p.status === 'sent' && (
+                      <>
+                        <button className="dp-btn-view" onClick={() => navigate(`/dietitian-diet-plans/${p.id}`)}>
+                          <i className="fa-solid fa-eye" /> Preview
+                        </button>
+                        <button
+                          className="dp-btn-view"
+                          disabled={isSending}
+                          onClick={() => handleSend(p)}
+                        >
+                          {isSending
+                            ? <><i className="fa-solid fa-spinner fa-spin" /> Sending…</>
+                            : <><i className="fa-solid fa-rotate-right" /> Resend</>
+                          }
+                        </button>
+                      </>
+                    )}
+                    {p.pdf_url && (
                       <a href={p.pdf_url} target="_blank" rel="noopener noreferrer"
                         className="dp-btn-view" onClick={e => e.stopPropagation()}>
                         <i className="fa-solid fa-file-pdf" /> PDF
@@ -322,7 +378,7 @@ export default function DietitianDietPlans() {
                   </div>
                 )}
 
-                {/* Generate button for draft plans */}
+                {/* Generate / Retry button for draft or failed plans */}
                 {isDraft && (
                   <div className="dp-card-generate" onClick={e => e.stopPropagation()}>
                     <button
@@ -332,7 +388,25 @@ export default function DietitianDietPlans() {
                     >
                       {isTriggering
                         ? <><i className="fa-solid fa-spinner fa-spin" /> Starting…</>
-                        : <><i className="fa-solid fa-wand-magic-sparkles" /> Generate Diet Plan</>
+                        : p.status === 'failed'
+                          ? <><i className="fa-solid fa-rotate-right" /> Retry Generate</>
+                          : <><i className="fa-solid fa-wand-magic-sparkles" /> Generate Diet Plan</>
+                      }
+                    </button>
+                  </div>
+                )}
+
+                {/* Send to Patient button for completed plans */}
+                {p.status === 'completed' && (
+                  <div className="dp-card-generate" onClick={e => e.stopPropagation()}>
+                    <button
+                      className="dp-btn-send-plan"
+                      disabled={isSending}
+                      onClick={() => handleSend(p)}
+                    >
+                      {isSending
+                        ? <><i className="fa-solid fa-spinner fa-spin" /> Sending…</>
+                        : <><i className="fa-solid fa-paper-plane" /> Send to Patient</>
                       }
                     </button>
                   </div>
@@ -416,7 +490,7 @@ export default function DietitianDietPlans() {
                     <p className="dp-detail-section-title">
                       Meal Schedule
                       {currentWeek && ` · Week ${currentWeek.week}`}
-                      {currentDay  && ` · ${currentDay.day}`}
+                      {currentDay  && ` · Day ${currentDay.day}`}
                     </p>
 
                     {weeks.length > 1 && (
@@ -441,37 +515,45 @@ export default function DietitianDietPlans() {
                             className={`dp-week-tab${openDay === i ? ' dp-week-tab--active' : ''}`}
                             onClick={() => { setOpenDay(i); setOpenMeal(null) }}
                           >
-                            {d.day.slice(0, 3)}
+                            Day {d.day}
                           </button>
                         ))}
                       </div>
                     )}
 
-                    <div className="dp-meals" style={{ marginTop: 10 }}>
-                      {(currentDay?.meals ?? []).map((meal, idx) => (
-                        <div key={idx} className="dp-meal">
-                          <button
-                            className={`dp-meal-header${openMeal === idx ? ' dp-meal-header--open' : ''}`}
-                            onClick={() => setOpenMeal(openMeal === idx ? null : idx)}
-                          >
-                            <span className="dp-meal-label">{meal.label}</span>
-                            {meal.calories != null && (
-                              <span className="dp-meal-cals">{meal.calories} kcal</span>
-                            )}
-                            <i className={`fa-solid fa-chevron-${openMeal === idx ? 'up' : 'down'} dp-meal-chevron`} />
-                          </button>
-                          {openMeal === idx && (
-                            <ul className="dp-meal-items">
-                              {meal.items.map((item, i) => (
-                                <li key={i} className="dp-meal-item">
-                                  <span className="dp-meal-dot" /> {item}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                    {currentDay && (
+                      <div className="dp-meals" style={{ marginTop: 10 }}>
+                        {(['breakfast', 'lunch', 'snack', 'dinner'] as const).map((mealKey, idx) => {
+                          const items = currentDay[mealKey]
+                          if (!items?.length) return null
+                          const totalKcal = items.reduce((s, f) => s + (f.kcal ?? 0), 0)
+                          return (
+                            <div key={mealKey} className="dp-meal">
+                              <button
+                                className={`dp-meal-header${openMeal === idx ? ' dp-meal-header--open' : ''}`}
+                                onClick={() => setOpenMeal(openMeal === idx ? null : idx)}
+                              >
+                                <span className="dp-meal-label" style={{ textTransform: 'capitalize' }}>{mealKey}</span>
+                                {totalKcal > 0 && (
+                                  <span className="dp-meal-cals">{totalKcal} kcal</span>
+                                )}
+                                <i className={`fa-solid fa-chevron-${openMeal === idx ? 'up' : 'down'} dp-meal-chevron`} />
+                              </button>
+                              {openMeal === idx && (
+                                <ul className="dp-meal-items">
+                                  {items.map((f, i) => (
+                                    <li key={i} className="dp-meal-item">
+                                      <span className="dp-meal-dot" />
+                                      {f.food}{f.quantity ? ` — ${f.quantity}` : ''}{f.kcal != null ? ` (${f.kcal} kcal)` : ''}
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -482,11 +564,54 @@ export default function DietitianDietPlans() {
                       className="dp-btn-primary dp-btn-primary--full"
                       onClick={() => navigate(`/dietitian-diet-plans/${selected.id}`)}
                     >
-                      <i className="fa-solid fa-pen" /> Edit Draft
+                      <i className="fa-solid fa-pen" />
+                      {selected.status === 'failed' ? 'Edit & Retry' : 'Edit Draft'}
                     </button>
                   )}
 
-                  {selected.status === 'completed' && selected.pdf_url && (
+                  {selected.status === 'completed' && (
+                    <>
+                      <button
+                        className="dp-btn-primary dp-btn-primary--full"
+                        onClick={() => navigate(`/dietitian-diet-plans/${selected.id}`)}
+                      >
+                        <i className="fa-solid fa-eye" /> Preview & Edit
+                      </button>
+                      <button
+                        className="dp-btn-send dp-btn-send--full"
+                        disabled={sendingIds.has(selected.id)}
+                        onClick={() => handleSend(selected)}
+                      >
+                        {sendingIds.has(selected.id)
+                          ? <><i className="fa-solid fa-spinner fa-spin" /> Sending…</>
+                          : <><i className="fa-solid fa-paper-plane" /> Send to Patient</>
+                        }
+                      </button>
+                    </>
+                  )}
+
+                  {selected.status === 'sent' && (
+                    <>
+                      <button
+                        className="dp-btn-primary dp-btn-primary--full"
+                        onClick={() => navigate(`/dietitian-diet-plans/${selected.id}`)}
+                      >
+                        <i className="fa-solid fa-eye" /> Preview Plan
+                      </button>
+                      <button
+                        className="dp-btn-view"
+                        disabled={sendingIds.has(selected.id)}
+                        onClick={() => handleSend(selected)}
+                      >
+                        {sendingIds.has(selected.id)
+                          ? <><i className="fa-solid fa-spinner fa-spin" /> Sending…</>
+                          : <><i className="fa-solid fa-rotate-right" /> Resend</>
+                        }
+                      </button>
+                    </>
+                  )}
+
+                  {selected.pdf_url && (
                     <a
                       href={selected.pdf_url}
                       target="_blank"

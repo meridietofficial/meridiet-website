@@ -214,7 +214,7 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
 
         {/* Gender */}
         <div className="cdp-field">
-          <label className="cdp-label">Gender</label>
+          <label className="cdp-label">Gender <span className="cdp-req">*</span></label>
           <div className="dpf-pill-row">
             {[
               { value: 'male',   label: 'Male',   emoji: '👨' },
@@ -239,7 +239,7 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
         <div className="cdp-row" style={{ marginTop: 14 }}>
           <div className="cdp-field">
             <div className="dpf-label-row">
-              <label className="cdp-label">Height</label>
+              <label className="cdp-label">Height <span className="cdp-req">*</span></label>
               <div className="dpf-unit-tog">
                 {(['cm', 'ft_in'] as const).map(u => (
                   <button
@@ -263,7 +263,7 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
           </div>
           <div className="cdp-field">
             <div className="dpf-label-row">
-              <label className="cdp-label">Weight</label>
+              <label className="cdp-label">Weight <span className="cdp-req">*</span></label>
               <div className="dpf-unit-tog">
                 {(['kg', 'lbs'] as const).map(u => (
                   <button
@@ -291,9 +291,9 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
       {/* ─── Fitness Goals ─── */}
       <div className="cdp-section">
         <h3 className="cdp-section-title">
-          <span>🎯</span> Fitness Goals
+          <span>🎯</span> Fitness Goals <span className="cdp-req">*</span>
         </h3>
-        <p className="cdp-section-sub">Select all that apply for this client.</p>
+        <p className="cdp-section-sub">Select the primary goal for this client.</p>
         <div className="dpf-goals-grid">
           {GOALS_OPTIONS.map(g => {
             const active = form.goals.includes(g.value)
@@ -303,9 +303,7 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
                 type="button"
                 disabled={disabled}
                 className={`dpf-goal-card${active ? ' active' : ''}`}
-                onClick={() => onChange('goals',
-                  active ? form.goals.filter(v => v !== g.value) : [...form.goals, g.value]
-                )}
+                onClick={() => onChange('goals', active ? [] : [g.value])}
               >
                 {active && <span className="dpf-goal-check">✓</span>}
                 <span className="dpf-goal-icon">{g.emoji}</span>
@@ -334,7 +332,7 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
         </h3>
 
         <div className="cdp-field">
-          <label className="cdp-label">Activity Level</label>
+          <label className="cdp-label">Activity Level <span className="cdp-req">*</span></label>
           <p className="cdp-section-sub" style={{ marginTop: 0, marginBottom: 6 }}>How active is the client daily?</p>
           <div className="dpf-activity-grid">
             {ACTIVITY_OPTIONS.map(a => {
@@ -358,7 +356,7 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
         </div>
 
         <div className="cdp-field" style={{ marginTop: 16 }}>
-          <label className="cdp-label">Work Type</label>
+          <label className="cdp-label">Work Type <span className="cdp-req">*</span></label>
           <div className="dpf-pill-row">
             {WORK_OPTIONS.map(w => (
               <button
@@ -375,7 +373,7 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
         </div>
 
         <div className="cdp-field" style={{ marginTop: 16 }}>
-          <label className="cdp-label">Workout Type</label>
+          <label className="cdp-label">Workout Type <span className="cdp-req">*</span></label>
           <div className="dpf-workout-grid">
             {WORKOUT_OPTIONS.map(w => {
               const active = form.workout_type === w.value
@@ -404,7 +402,7 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
         </h3>
 
         <div className="cdp-field">
-          <label className="cdp-label">Diet Type</label>
+          <label className="cdp-label">Diet Type <span className="cdp-req">*</span></label>
           <div className="dpf-diet-grid">
             {DIET_OPTIONS.map(d => {
               const active = form.diet_type === d.value
@@ -499,8 +497,8 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
         </h3>
 
         <div className="cdp-field">
-          <label className="cdp-label">Medical Conditions</label>
-          <p className="cdp-section-sub" style={{ marginTop: 0, marginBottom: 6 }}>Select all that apply</p>
+          <label className="cdp-label">Medical Conditions <span className="cdp-req">*</span></label>
+          <p className="cdp-section-sub" style={{ marginTop: 0, marginBottom: 6 }}>Select at least one (choose "None" if no conditions)</p>
           <div className="dpf-chip-group">
             {MEDICAL_OPTIONS.map(m => {
               const active = form.medical_conditions.includes(m.value)
@@ -539,7 +537,7 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
         </div>
 
         <div className="cdp-field" style={{ marginTop: 16 }}>
-          <label className="cdp-label">On Medication?</label>
+          <label className="cdp-label">On Medication? <span className="cdp-req">*</span></label>
           <div className="dpf-answer-row">
             {MEDICATION_OPTIONS.map(m => {
               const active = form.on_medication === m.value
@@ -576,7 +574,7 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
 
         <div className="cdp-row" style={{ marginTop: 16 }}>
           <div className="cdp-field">
-            <label className="cdp-label">Digestive Health</label>
+            <label className="cdp-label">Digestive Health <span className="cdp-req">*</span></label>
             <div className="dpf-digest-row">
               {DIGESTION_OPTIONS.map(o => {
                 const active = form.digestive_health === o.value
@@ -598,7 +596,7 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
           </div>
 
           <div className="cdp-field">
-            <label className="cdp-label">Smoke / Alcohol</label>
+            <label className="cdp-label">Smoke / Alcohol <span className="cdp-req">*</span></label>
             <div className="dpf-chip-group" style={{ marginTop: 8 }}>
               {SMOKE_OPTIONS.map(o => {
                 const active = form.smoke_alcohol === o.value

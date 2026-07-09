@@ -1,22 +1,91 @@
 import apiClient from './client'
 import ENDPOINTS from './endpoints'
 
-export type DietPlanStatus = 'draft' | 'generating' | 'completed' | 'failed' | 'archived'
+export type DietPlanStatus = 'draft' | 'generating' | 'completed' | 'sent' | 'failed' | 'archived'
 
-export type DietMealItem = {
-  label: string
-  items: string[]
-  calories?: number
+/* ── Actual API types (matching the real response shape) ── */
+
+export type DietFoodItem = {
+  food: string
+  quantity?: string
+  kcal?: number
+  protein_g?: number
 }
 
-export type DietWeekDay = {
-  day: string
-  meals: DietMealItem[]
+export type MealTiming = {
+  breakfast?: string
+  lunch?: string
+  snack?: string
+  dinner?: string
+}
+
+export type SmartSwap = {
+  instead_of: string
+  choose: string
+}
+
+export type DietDay = {
+  day: number                  // 1–7 (number, not a string)
+  breakfast?: DietFoodItem[]
+  lunch?: DietFoodItem[]
+  snack?: DietFoodItem[]
+  dinner?: DietFoodItem[]
+  meal_timing?: MealTiming
+  total_kcal?: number
+  total_protein_g?: number
+  total_fiber_g?: number
+  water_liters?: number
 }
 
 export type DietWeek = {
   week: number
-  days: DietWeekDay[]
+  title?: string
+  description?: string
+  focus?: string[]
+  what_to_expect?: string
+  days: DietDay[]
+  weekly_notes?: string[]
+  smart_swaps?: SmartSwap[]
+}
+
+export type RecipeMacros = {
+  carbs_g?: number
+  protein_g?: number
+  fat_g?: number
+  fiber_g?: number
+}
+
+export type FeaturedRecipe = {
+  name: string
+  cook_time?: string
+  servings?: number
+  calories?: number
+  ingredients?: string[]
+  steps?: string[]
+  macros?: RecipeMacros
+}
+
+export type PlanContent = {
+  weeks?: DietWeek[]
+  general_tips?: string[]
+  featured_recipes?: FeaturedRecipe[]
+  notes?: string
+  client_name?: string
+  calorie_range?: string
+  protein_target_g?: number
+  carbs_target_g?: number
+  fat_target_g?: number
+  primary_goal?: string
+  hydration_guide?: string
+  plan_duration?: string
+  diet_type?: string
+}
+
+export type SendPlanResult = {
+  plan_id: number
+  sent_email: boolean
+  sent_whatsapp: boolean
+  delivery_to: { email?: string; whatsapp?: string }
 }
 
 export type HealthFormData = {
@@ -37,9 +106,9 @@ export type HealthFormData = {
   foods_dislike?: string
   favorite_foods?: string
   medical_conditions?: string[]
-  other_condition?: string
+  other_condition?: string | null
   on_medication?: string
-  medications?: string
+  medications?: string | null
   digestive_health?: string
   smoke_alcohol?: string
   health_notes?: string
@@ -47,7 +116,6 @@ export type HealthFormData = {
 }
 
 export type CreateDraftBody = HealthFormData & { appointment_id: number }
-
 export type UpdateDraftBody = HealthFormData
 
 export type DietPlanSummary = {
@@ -59,6 +127,7 @@ export type DietPlanSummary = {
   slot?: string
   status: DietPlanStatus
   pdf_url?: string | null
+  sent_at?: string | null
   created_at?: string
   updated_at?: string
   // Flat form snapshot fields (prefixed form_)
@@ -76,8 +145,26 @@ export type DietPlanSummary = {
 }
 
 export type DietPlanDetail = DietPlanSummary & {
-  form_data?: HealthFormData
-  weeks?: DietWeek[]
+  // AI-generated content (null when draft/generating/failed)
+  weeks?: DietWeek[] | null
+  general_tips?: string[] | null
+  featured_recipes?: FeaturedRecipe[] | null
+  notes?: string | null
+  calorie_range?: string | null
+  protein_target_g?: number | null
+  carbs_target_g?: number | null
+  fat_target_g?: number | null
+  primary_goal?: string | null
+  hydration_guide?: string | null
+  diet_type?: string | null
+  plan_duration?: string | null
+  bmi?: number | null
+  bmi_category?: string | null
+  bmr?: number | null
+  tdee?: number | null
+  // The health form — API returns this as 'form', kept here for use
+  form?: HealthFormData
+  form_data?: HealthFormData  // alias for backward compat
 }
 
 export type ListPlansParams = {
@@ -93,7 +180,6 @@ export type CreateDraftResult = {
 }
 
 type ListRes        = { success: boolean; data: { plans: DietPlanSummary[] } }
-type SingleRes      = { success: boolean; data: DietPlanDetail }
 type CreateDraftRes = { success: boolean; message?: string; data: CreateDraftResult }
 
 const dietitianDietPlanApi = {
@@ -111,11 +197,13 @@ const dietitianDietPlanApi = {
 
   async get(id: number): Promise<DietPlanDetail> {
     const res = await apiClient.apiGet<any>(`${ENDPOINTS.dietitianDietPlan.single}/${id}`)
-    // Handle both { data: DietPlanDetail } and { data: { plan: DietPlanDetail } }
     const detail: DietPlanDetail = res.data?.plan ?? res.data
-    // Normalize status to lowercase to handle API case variations (e.g. 'Draft' → 'draft')
     if (detail && typeof detail.status === 'string') {
       detail.status = detail.status.toLowerCase() as DietPlanStatus
+    }
+    // API returns 'form' field; alias it to form_data for components that read form_data
+    if (detail && !detail.form_data && detail.form) {
+      detail.form_data = detail.form
     }
     return detail
   },
@@ -131,6 +219,9 @@ const dietitianDietPlanApi = {
     if (detail && typeof detail.status === 'string') {
       detail.status = detail.status.toLowerCase() as DietPlanStatus
     }
+    if (detail && !detail.form_data && detail.form) {
+      detail.form_data = detail.form
+    }
     return detail
   },
 
@@ -141,6 +232,20 @@ const dietitianDietPlanApi = {
     )
   },
 
+  async updateContent(id: number, body: PlanContent): Promise<void> {
+    await apiClient.apiPut<{ message: string }>(
+      `${ENDPOINTS.dietitianDietPlan.single}/${id}/content`,
+      body
+    )
+  },
+
+  async sendPlan(id: number): Promise<SendPlanResult> {
+    const res = await apiClient.apiPost<any>(
+      `${ENDPOINTS.dietitianDietPlan.single}/${id}/send`,
+      {}
+    )
+    return res.data ?? res
+  },
 }
 
 export default dietitianDietPlanApi

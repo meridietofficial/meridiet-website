@@ -218,7 +218,7 @@ export type FollowUpAppointment = {
 export type DietPlanRef = {
   id: number
   form_id: number | null
-  status: 'draft' | 'generating' | 'completed' | 'failed' | 'archived'
+  status: 'draft' | 'generating' | 'completed' | 'sent' | 'failed' | 'archived'
   pdf_url?: string | null
 }
 
