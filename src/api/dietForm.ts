@@ -24,7 +24,7 @@ export type MyDietChart = {
   payment_status?: string
   created_at: string
   plan_id: number | null
-  plan_status: 'generating' | 'completed' | 'failed' | null
+  plan_status: 'generating' | 'completed' | 'sent' | 'failed' | null
   plan_pdf_url: string | null
   plan_generated: boolean
   [key: string]: unknown

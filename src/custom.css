@@ -4474,6 +4474,89 @@
   margin-top: 6px;
 }
 
+/* ── Coupon code ── */
+.ct-coupon-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.ct-coupon-apply-btn {
+  flex-shrink: 0;
+  padding: 0 20px;
+  height: 44px;
+  border-radius: 10px;
+  border: 2px solid #006B28;
+  background: transparent;
+  color: #006B28;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.ct-coupon-apply-btn:hover:not(:disabled) {
+  background: #006B28;
+  color: #fff;
+}
+
+.ct-coupon-apply-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.ct-coupon-success {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #f0fdf4;
+  border: 1.5px solid #22c55e;
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+
+.ct-coupon-success-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ct-coupon-success-icon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.ct-coupon-success-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #166534;
+  margin: 0 0 2px;
+}
+
+.ct-coupon-success-sub {
+  font-size: 13px;
+  color: #15803d;
+  margin: 0;
+}
+
+.ct-coupon-remove {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+
+.ct-coupon-remove:hover {
+  background: #fee2e2;
+}
+
 /* ── Trust strip ── */
 .ct-trust-strip {
   display: grid;
@@ -10083,13 +10166,30 @@
 .appt-sk-badge  { height: 24px; width: 72px; border-radius: 20px; flex-shrink: 0; }
 
 /* ── Diet chart plan-status row (dc-) ── */
-.dc-download-btn {
+.dc-action-row {
+  display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+}
+.dc-view-btn {
   display: inline-flex; align-items: center; gap: 6px;
-  margin-top: 8px; padding: 6px 14px; border-radius: 8px;
+  padding: 6px 14px; border-radius: 8px;
   background: #1E8E3E; color: #fff; font-size: 12px; font-weight: 600;
   text-decoration: none; transition: background .15s;
 }
-.dc-download-btn:hover { background: #166C31; }
+.dc-view-btn:hover { background: #166C31; }
+.dc-download-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: 8px;
+  border: 1.5px solid #1E8E3E; color: #1E8E3E; font-size: 12px; font-weight: 600;
+  text-decoration: none; transition: background .15s, color .15s; background: transparent;
+}
+.dc-download-btn:hover { background: #1E8E3E; color: #fff; }
+.dc-resume-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 8px; padding: 6px 14px; border-radius: 8px;
+  background: #f59e0b; color: #fff; font-size: 12px; font-weight: 600;
+  border: none; cursor: pointer; transition: background .15s;
+}
+.dc-resume-btn:hover { background: #d97706; }
 .dc-status {
   display: inline-flex; align-items: center; gap: 6px;
   margin-top: 8px; font-size: 12px; font-weight: 600;

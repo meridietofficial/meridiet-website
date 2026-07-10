@@ -55,6 +55,8 @@ const SEO = lazy(() => import('./components/SEO'))
 
 function FormPage() {
   const navigate = useNavigate()
+  const { state } = useLocation()
+  const locState = state as { resumeFormId?: number; resumeData?: Record<string, unknown> } | null
   return (
     <>
       <Suspense fallback={null}>
@@ -65,7 +67,11 @@ function FormPage() {
           canonical="/diet-plan"
         />
       </Suspense>
-      <DietForm onClose={() => navigate('/')} />
+      <DietForm
+        onClose={() => navigate('/')}
+        resumeFormId={locState?.resumeFormId}
+        resumeData={locState?.resumeData}
+      />
     </>
   )
 }

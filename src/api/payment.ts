@@ -7,13 +7,38 @@ const PLAN_SLUG: Record<string, string> = {
   '3 Months': '3_months',
 }
 
+const PLAN_PRICE: Record<string, number> = {
+  '1 Week':   199,
+  '1 Month':  499,
+  '3 Months': 999,
+}
+
+export type CouponData = {
+  coupon_id: number
+  code: string
+  discount_type: string
+  discount_value: number
+  original_amount: number
+  discount_applied: number
+  final_amount: number
+}
+
+export type ValidateCouponResponse = {
+  success: true
+  message: string
+  data: CouponData
+}
+
 export type CreateOrderResponse = {
   success: true
   data: {
     order_id: string
     key_id: string
     amount: number
+    final_amount: number
+    discount_applied: number
     currency: string
+    plan: string
   }
 }
 
@@ -28,10 +53,19 @@ export type FailedResponse = {
 }
 
 const paymentApi = {
-  createOrder: (planType: string, formId: number) =>
+  validateCoupon: (code: string, planType: string) =>
+    apiClient.apiPost<ValidateCouponResponse>(ENDPOINTS.coupons.validate, {
+      code,
+      applicable_type: 'diet_plan',
+      amount: PLAN_PRICE[planType] ?? 499,
+      plan:   PLAN_SLUG[planType]  ?? '1_month',
+    }),
+
+  createOrder: (planType: string, formId: number, couponCode?: string) =>
     apiClient.apiPost<CreateOrderResponse>(ENDPOINTS.payment.createOrder, {
       plan:         PLAN_SLUG[planType] ?? '1_month',
       diet_form_id: formId,
+      ...(couponCode ? { coupon_code: couponCode } : {}),
     }),
 
   verify: (razorpayData: {

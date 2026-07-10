@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext'
 import userApi from '../api/user'
 import appointmentApi, { type MyAppointment } from '../api/appointment'
 import dietFormApi, { type MyDietChart } from '../api/dietForm'
+import { mapApiToFormData } from '../api/dietFormMapper'
 import walletApi, { type WalletTransaction } from '../api/wallet'
 import dietPlanApi, { type SubscriptionStatus } from '../api/dietPlan'
 import { ApiError } from '../api/client'
@@ -540,15 +541,32 @@ const UserProfile = () => {
                               </div>
 
                               {/* Plan status row */}
-                              {plan_generated && plan_pdf_url ? (
-                                <a
-                                  href={plan_pdf_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="dc-download-btn"
-                                >
-                                  <i className="fa-solid fa-download" /> Download PDF
-                                </a>
+                              {(plan_generated || plan_status === 'completed' || plan_status === 'sent') ? (
+                                plan_pdf_url ? (
+                                  <div className="dc-action-row">
+                                    <a
+                                      href={plan_pdf_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="dc-view-btn"
+                                    >
+                                      👁 View Plan
+                                    </a>
+                                    <a
+                                      href={plan_pdf_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      download
+                                      className="dc-download-btn"
+                                    >
+                                      <i className="fa-solid fa-download" /> Download
+                                    </a>
+                                  </div>
+                                ) : (
+                                  <span className="dc-status" style={{ color: '#1E8E3E' }}>
+                                    ✓ Plan ready — check your email / WhatsApp
+                                  </span>
+                                )
                               ) : plan_status === 'generating' ? (
                                 <span className="dc-status dc-status--generating">
                                   <span className="dc-spinner" /> Plan is being prepared…
@@ -557,6 +575,16 @@ const UserProfile = () => {
                                 <span className="dc-status dc-status--failed">
                                   ⚠ Something went wrong. Please contact support.
                                 </span>
+                              ) : plan_status === null ? (
+                                <button
+                                  className="dc-resume-btn"
+                                  onClick={() => {
+                                    const resumeData = mapApiToFormData(chart as Record<string, unknown>)
+                                    navigate('/diet-plan', { state: { resumeFormId: chart.id, resumeData } })
+                                  }}
+                                >
+                                  Complete Payment →
+                                </button>
                               ) : null}
                             </div>
                           </div>
@@ -564,12 +592,14 @@ const UserProfile = () => {
                             <span className={`appt-badge ${isPaid ? 'appt-badge--confirmed' : 'appt-badge--pending'}`}>
                               {isPaid ? 'Paid' : 'Pending'}
                             </span>
-                            {plan_generated ? (
+                            {(plan_generated || plan_status === 'completed' || plan_status === 'sent') ? (
                               <span className="appt-paid-label">✓ Plan Generated</span>
                             ) : plan_status === 'generating' ? (
                               <span className="appt-paid-label" style={{ color: '#92400e' }}>⏳ Generating…</span>
                             ) : plan_status === 'failed' ? (
                               <span className="appt-paid-label" style={{ color: '#dc2626' }}>✗ Plan Failed</span>
+                            ) : plan_status === null ? (
+                              <span className="appt-paid-label" style={{ color: '#6b7280' }}>⏸ Awaiting Payment</span>
                             ) : null}
                           </div>
                         </div>

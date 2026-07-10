@@ -33,6 +33,9 @@ const ENDPOINTS = {
   consultation: {
     fee: '/consultation-fee',
   },
+  coupons: {
+    validate: '/coupons/validate',
+  },
   payment: {
     createOrder: '/payment/create-order',
     verify:      '/payment/verify',

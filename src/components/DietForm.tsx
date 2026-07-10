@@ -4,7 +4,7 @@ import { IN_STATES } from '../data/indiaCities'
 import DatePicker from './DatePicker'
 import SearchableSelect from './SearchableSelect'
 import { ApiError } from '../api/client'
-import paymentApi from '../api/payment'
+import paymentApi, { type CouponData } from '../api/payment'
 import dietFormApi from '../api/dietForm'
 import { mapStep1ToPayload, mapStep2ToPayload, mapStep3ToPayload, mapStep4ToPayload, mapStep5ToPayload } from '../api/dietFormMapper'
 import { useToast } from '../context/ToastContext'
@@ -834,7 +834,17 @@ const DELIVERY_OPTS = [
   { k: 'email',    icon: '📧', lbl: 'Email',     sub: 'Delivered to your inbox',      badge: '⚡ Recommended' },
 ]
 
-const Step5 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
+type CouponProps = {
+  couponCode: string
+  onCouponCodeChange: (v: string) => void
+  couponLoading: boolean
+  couponError: string | null
+  couponData: CouponData | null
+  onApplyCoupon: () => void
+  onRemoveCoupon: () => void
+}
+
+const Step5 = ({ d, set, err, coupon }: { d: FormData; set: SetFn; err: Errors; coupon: CouponProps }) => {
   const { user } = useAuth()
   const [cities, setCities] = useState<string[]>([])
   const [citiesLoading, setCitiesLoading] = useState(false)
@@ -893,6 +903,50 @@ const Step5 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => {
         ))}
       </div>
       <FieldErr msg={err.planType} />
+    </div>
+
+    {/* Coupon Code */}
+    <div className="df-card-field">
+      <label className="df-label">Have a coupon code? <span className="df-opt">(Optional)</span></label>
+      {coupon.couponData ? (
+        <div className="ct-coupon-success">
+          <div className="ct-coupon-success-left">
+            <span className="ct-coupon-success-icon">🎉</span>
+            <div>
+              <p className="ct-coupon-success-title">"{coupon.couponData.code}" applied!</p>
+              <p className="ct-coupon-success-sub">
+                You save ₹{coupon.couponData.discount_applied.toFixed(2)} — Final price:{' '}
+                <strong>₹{coupon.couponData.final_amount.toFixed(2)}</strong>
+              </p>
+            </div>
+          </div>
+          <button className="ct-coupon-remove" onClick={coupon.onRemoveCoupon}>✕ Remove</button>
+        </div>
+      ) : (
+        <>
+          <div className="ct-coupon-row">
+            <div className="df-input-wrap" style={{ flex: 1 }}>
+              <span className="df-icon">🏷️</span>
+              <input
+                className="df-input"
+                type="text"
+                placeholder="Enter coupon code"
+                value={coupon.couponCode}
+                onChange={(e) => coupon.onCouponCodeChange(e.target.value.toUpperCase())}
+                onKeyDown={(e) => { if (e.key === 'Enter') coupon.onApplyCoupon() }}
+              />
+            </div>
+            <button
+              className="ct-coupon-apply-btn"
+              onClick={coupon.onApplyCoupon}
+              disabled={coupon.couponLoading || !coupon.couponCode.trim()}
+            >
+              {coupon.couponLoading ? '…' : 'Apply'}
+            </button>
+          </div>
+          {coupon.couponError && <p className="df-err-msg">⚠ {coupon.couponError}</p>}
+        </>
+      )}
     </div>
 
     {/* Contact + Delivery */}
@@ -1219,18 +1273,28 @@ function validateStep(s: number, d: FormData): Errors {
   return e
 }
 
-const DietForm = ({ onClose }: { onClose: () => void }) => {
+const DietForm = ({ onClose, resumeFormId, resumeData }: {
+  onClose: () => void
+  resumeFormId?: number
+  resumeData?: Record<string, unknown>
+}) => {
   const { showToast } = useToast()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
   const [direction, setDirection] = useState<'forward' | 'backward'>('forward')
-  const [data, setData] = useState<FormData>(INIT)
+  const [data, setData] = useState<FormData>(() =>
+    resumeData ? { ...INIT, ...(resumeData as FormData) } : INIT
+  )
   const [errors, setErrors] = useState<Errors>({})
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [showAuthGate, setShowAuthGate] = useState(false)
-  const [formId, setFormId] = useState<number | null>(null)
+  const [formId, setFormId] = useState<number | null>(resumeFormId ?? null)
+  const [couponCode, setCouponCode] = useState('')
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [couponError, setCouponError] = useState<string | null>(null)
+  const [couponData, setCouponData] = useState<CouponData | null>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -1250,6 +1314,13 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
       setData(p => ({ ...p, contactName: data.fullName }))
     }
   }, [data.fullName])
+
+  // Reset coupon when the plan changes (coupon may be plan-specific)
+  useEffect(() => {
+    setCouponCode('')
+    setCouponError(null)
+    setCouponData(null)
+  }, [data.planType])
 
   // Pre-fill name, phone & email from logged-in user on mount
   useEffect(() => {
@@ -1287,18 +1358,34 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
     setErrors(p => { const n = { ...p }; delete n[k]; return n })
   }
 
-  const openRazorpay = (currentFormId: number) => {
-    paymentApi.createOrder(data.planType, currentFormId)
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return
+    setCouponLoading(true)
+    setCouponError(null)
+    setCouponData(null)
+    try {
+      const res = await paymentApi.validateCoupon(couponCode.trim(), data.planType)
+      setCouponData(res.data)
+    } catch (err) {
+      setCouponError(err instanceof ApiError ? err.message : 'Invalid or expired coupon code.')
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const openRazorpay = (currentFormId: number, appliedCoupon?: string) => {
+    paymentApi.createOrder(data.planType, currentFormId, appliedCoupon)
       .then(orderRes => {
-        const { order_id, key_id, amount, currency } = orderRes.data
+        const { order_id, key_id, amount, final_amount, currency } = orderRes.data
+        const chargedAmount = final_amount ?? amount
 
         // Track checkout intent before Razorpay opens
         navigate('/diet-plan/checkout', { replace: true })
-        trackInitiateCheckout(amount, currency ?? 'INR')
+        trackInitiateCheckout(chargedAmount, currency ?? 'INR')
 
         const rzp = new window.Razorpay({
           key:         key_id,
-          amount:      amount * 100,
+          amount:      chargedAmount * 100,
           currency:    currency ?? 'INR',
           order_id,
           name:        'MeriDiet',
@@ -1314,7 +1401,7 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
             try {
               await paymentApi.verify(rzpResponse)
               // Track confirmed purchase then show success
-              trackPurchase(amount, currency ?? 'INR', data.planType)
+              trackPurchase(chargedAmount, currency ?? 'INR', data.planType)
               navigate('/diet-plan/success', { replace: true })
               setSubmitted(true)
             } catch (err) {
@@ -1351,8 +1438,8 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
     try {
       // Save step 5 data
       await dietFormApi.update(currentFormId, mapStep5ToPayload(data as unknown as Record<string, unknown>))
-      // Open Razorpay — plan generation triggers automatically after payment/verify on the backend
-      openRazorpay(currentFormId)
+      // Open Razorpay — pass coupon code if one was validated
+      openRazorpay(currentFormId, couponData ? couponData.code : undefined)
     } catch (err) {
       showToast(
         err instanceof ApiError ? err.message : 'Could not submit form. Please try again.',
@@ -1468,7 +1555,22 @@ const DietForm = ({ onClose }: { onClose: () => void }) => {
                 {step === 2 && <Step2 d={data} set={set} err={errors} />}
                 {step === 3 && <Step3 d={data} set={set} tog={tog} err={errors} />}
                 {step === 4 && <Step4 d={data} set={set} tog={tog} err={errors} />}
-                {step === 5 && <Step5 d={data} set={set} err={errors} />}
+                {step === 5 && (
+                  <Step5
+                    d={data}
+                    set={set}
+                    err={errors}
+                    coupon={{
+                      couponCode,
+                      onCouponCodeChange: setCouponCode,
+                      couponLoading,
+                      couponError,
+                      couponData,
+                      onApplyCoupon: applyCoupon,
+                      onRemoveCoupon: () => { setCouponCode(''); setCouponData(null); setCouponError(null) },
+                    }}
+                  />
+                )}
               </div>
             </div>
 

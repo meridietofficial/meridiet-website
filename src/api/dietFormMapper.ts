@@ -223,6 +223,120 @@ export function mapStep5ToPayload(d: FormData) {
   return p
 }
 
+// ── Reverse mapper: API response → FormData ──────────────────
+
+function reverseMap(map: Record<string, string>): Record<string, string> {
+  return Object.fromEntries(Object.entries(map).map(([k, v]) => [v, k]))
+}
+
+const GENDER_REV        = reverseMap(GENDER)
+const HEIGHT_UNIT_REV   = reverseMap(HEIGHT_UNIT)
+const WEIGHT_UNIT_REV   = reverseMap(WEIGHT_UNIT)
+const GOALS_REV         = reverseMap(GOALS)
+const ACTIVITY_REV      = reverseMap(ACTIVITY)
+const WORK_TYPE_REV     = reverseMap(WORK_TYPE)
+const WORKOUT_TYPE_REV  = reverseMap(WORKOUT_TYPE)
+const DIET_TYPE_REV     = reverseMap(DIET_TYPE)
+const CUISINE_REV       = reverseMap(CUISINE)
+const ALLERGIES_REV     = reverseMap(ALLERGIES)
+const ON_MEDICATION_REV = reverseMap(ON_MEDICATION)
+const DIGESTIVE_REV     = reverseMap(DIGESTIVE)
+const SMOKE_ALCOHOL_REV = reverseMap(SMOKE_ALCOHOL)
+const DELIVERY_REV      = reverseMap(DELIVERY_METHOD)
+const WHEY_PROTEIN_REV  = reverseMap(WHEY_PROTEIN)
+
+const PLAN_TYPE_REV: Record<number, string> = { 1: '1 Week', 2: '1 Month', 3: '3 Months' }
+
+const MEDICAL_REV: Record<string, string> = {
+  'diabetes':        'Diabetes',
+  'thyroid':         'Thyroid',
+  'pcos_pcod':       'PCOS / PCOD',
+  'high_bp':         'High BP',
+  'cholesterol':     'Cholesterol',
+  'heart_condition': 'Heart Condition',
+  'none':            'None',
+}
+
+function to12h(time: string | null | undefined): string {
+  if (!time) return ''
+  const [h, m] = time.split(':').map(Number)
+  const period = h >= 12 ? 'PM' : 'AM'
+  const hour = h % 12 || 12
+  return `${hour}:${String(m).padStart(2, '0')} ${period}`
+}
+
+export function mapApiToFormData(chart: Record<string, unknown>): Record<string, unknown> {
+  const str = (v: unknown) => (v != null ? String(v) : '')
+  const arr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : [])
+
+  return {
+    // Step 1
+    fullName:    str(chart.full_name),
+    age:         chart.age != null ? String(chart.age) : '',
+    gender:      GENDER_REV[str(chart.gender)]           ?? '',
+    dob:         str(chart.dob),
+    heightUnit:  HEIGHT_UNIT_REV[str(chart.height_unit)] ?? 'cm',
+    height:      chart.height != null ? String(chart.height) : '',
+    weightUnit:  WEIGHT_UNIT_REV[str(chart.weight_unit)] ?? 'kg',
+    weight:      chart.weight != null ? String(chart.weight) : '',
+    bodyType:    '',
+    basicNotes:  '',
+    goals:       arr(chart.goals).map(g => GOALS_REV[g] ?? g),
+    email:       str(chart.email),
+    whatsapp:    str(chart.whatsapp).replace(/^\+91/, ''),
+
+    // Step 2
+    activityLevel:    ACTIVITY_REV[str(chart.activity_level)]  ?? '',
+    workType:         WORK_TYPE_REV[str(chart.work_type)]      ?? '',
+    workoutType:      WORKOUT_TYPE_REV[str(chart.workout_type)]?? '',
+    workoutFrequency: '',
+    dailySteps:       '',
+    sleepDuration:    '',
+    waterIntake:      '',
+    breakfastTime:    to12h(str(chart.breakfast_time))    || '8:00 AM',
+    lunchTime:        to12h(str(chart.lunch_time))        || '1:30 PM',
+    eveningSnackTime: to12h(str(chart.evening_snack_time))|| '5:00 PM',
+    dinnerTime:       to12h(str(chart.dinner_time))       || '8:30 PM',
+
+    // Step 3
+    dietType:         DIET_TYPE_REV[str(chart.diet_type)] ?? '',
+    cuisinePreference:arr(chart.cuisine_preference).map(c => CUISINE_REV[c] ?? c),
+    foodAllergies:    arr(chart.food_allergies).length
+      ? (ALLERGIES_REV[str(arr(chart.food_allergies)[0])] ?? '')
+      : '',
+    foodsDislike:     str(chart.foods_dislike),
+    favoriteFoods:    str(chart.favorite_foods),
+    wheyProtein:      WHEY_PROTEIN_REV[str(chart.whey_protein)] ?? '',
+    preferredMeals:   [],
+    budget:           '',
+    mealPreference:   [],
+    prepTime:         '',
+    groceryShopping:  '',
+    cookingSupport:   '',
+    otherPreferences: '',
+    foodIntolerances: [],
+    otherIntolerance: '',
+
+    // Step 4
+    medicalConditions: arr(chart.medical_conditions).map(c => MEDICAL_REV[c] ?? c),
+    otherCondition:    str(chart.other_condition),
+    onMedication:      ON_MEDICATION_REV[str(chart.on_medication)]  ?? '',
+    medications:       str(chart.medications),
+    digestiveHealth:   DIGESTIVE_REV[str(chart.digestive_health)]   ?? '',
+    smokeAlcohol:      SMOKE_ALCOHOL_REV[str(chart.smoke_alcohol)]  ?? '',
+    healthNotes:       str(chart.health_notes),
+
+    // Step 5
+    planType:       PLAN_TYPE_REV[chart.plan_type as number] ?? '1 Month',
+    contactName:    str(chart.contact_name),
+    deliveryMethod: arr(chart.delivery_method).map(m => DELIVERY_REV[m] ?? m),
+    city:           str(chart.city),
+    state:          str(chart.state),
+    stateCode:      str(chart.state_code),
+    finalNotes:     str(chart.final_notes),
+  }
+}
+
 // ── Main mapper (kept for backward compatibility) ─────────────
 
 export function mapFormToPayload(d: FormData) {
