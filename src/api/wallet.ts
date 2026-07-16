@@ -28,6 +28,22 @@ export type WalletTransactionsResponse = {
   }
 }
 
+export type TopupOrderResponse = {
+  success: true
+  data: {
+    order_id: string
+    key_id: string
+    amount: number
+    currency: string
+  }
+}
+
+export type TopupVerifyResponse = {
+  success: true
+  message: string
+  data: { new_balance: number }
+}
+
 const walletApi = {
   balance: () =>
     apiClient.apiGet<WalletBalanceResponse>(ENDPOINTS.wallet.balance),
@@ -36,6 +52,20 @@ const walletApi = {
     apiClient.apiGet<WalletTransactionsResponse>(
       `${ENDPOINTS.wallet.transactions}?page=${page}&limit=${limit}`,
     ),
+
+  topupCreateOrder: (amount: number) =>
+    apiClient.apiPost<TopupOrderResponse>(ENDPOINTS.walletTopup.createOrder, { amount }),
+
+  topupVerify: (data: {
+    razorpay_order_id: string
+    razorpay_payment_id: string
+    razorpay_signature: string
+  }) => apiClient.apiPost<TopupVerifyResponse>(ENDPOINTS.walletTopup.verify, data),
+
+  topupFailed: (orderId: string) =>
+    apiClient.apiPost<{ success: boolean }>(ENDPOINTS.walletTopup.failed, {
+      razorpay_order_id: orderId,
+    }),
 }
 
 export default walletApi

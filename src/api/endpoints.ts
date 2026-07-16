@@ -73,6 +73,14 @@ const ENDPOINTS = {
   contact: {
     submit: '/contact',
   },
+  course: {
+    sendOtp:        '/course/send-otp',
+    enquiry:        '/course/enquiry',
+    enroll:         '/course/enroll',
+    createOrder:    '/course/payment/create-order',
+    verifyPayment:  '/course/payment/verify',
+    failedPayment:  '/course/payment/failed',
+  },
   accounts: {
     list: '/dietitian/accounts',
   },
@@ -91,6 +99,16 @@ const ENDPOINTS = {
   dietitianDietPlan: {
     list:   '/dietitian/diet-forms',
     single: '/dietitian/diet-forms',  // used as /:id, /:id/generate, /:id/archive
+  },
+  manualDietPlan: {
+    create: '/dietitian/diet-plans/manual',
+    list:   '/dietitian/diet-plans/manual',
+    // detail/update/generate/content reuse dietitianDietPlan.single (/dietitian/diet-forms/:id)
+  },
+  walletTopup: {
+    createOrder: '/wallet/topup/create-order',
+    verify:      '/wallet/topup/verify',
+    failed:      '/wallet/topup/failed',
   },
 } as const
 

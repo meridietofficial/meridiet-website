@@ -286,10 +286,10 @@ const ProfilePage = ({ plan, page }: { plan: any; page: number }) => {
         <div style={{ marginTop: 6 }}>Plan / Client ID: <b>QN-MD-{String(plan?.form_id || "0000").padStart(4, "0")}</b></div>
       </div>
 
-      <div style={{ width: 60, height: 3, background: C.brand, borderRadius: 3, margin: "14px 0 16px" }} />
+      <div style={{ width: 60, height: 3, background: C.brand, borderRadius: 3, margin: "8px 0 10px" }} />
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-        <SectionCard icon={<FaUser size={14} color={C.brand} />} title="PERSONAL INFORMATION">
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <SectionCard icon={<FaUser size={14} color={C.brand} />} title="PERSONAL INFORMATION" style={{ padding: "8px 11px" }}>
           <Row icon={<FaUser size={11} />} label="Full Name" value={humanize(p.full_name)} />
           <Row icon={<FaBirthdayCake size={11} />} label="Age" value={p.age ? `${p.age} Years` : null} />
           <Row icon={<FaVenusMars size={11} />} label="Gender" value={humanize(p.gender)} />
@@ -300,7 +300,7 @@ const ProfilePage = ({ plan, page }: { plan: any; page: number }) => {
           <Row icon={<FaMapMarkerAlt size={11} />} label="Address" value={[p.city, p.state].filter(Boolean).join(", ")} />
         </SectionCard>
 
-        <SectionCard icon={<FaHeartbeat size={14} color={C.brand} />} title="CURRENT VITALS">
+        <SectionCard icon={<FaHeartbeat size={14} color={C.brand} />} title="CURRENT VITALS" style={{ padding: "8px 11px" }}>
           <Row icon={<FaWeight size={11} />} label="Weight" value={v.weight_kg ? `${v.weight_kg} kg` : null} />
           <Row icon={<FaRulerVertical size={11} />} label="Height" value={v.height_cm ? `${v.height_cm} cm` : null} />
           <Row icon={<FaCalculator size={11} />} label="BMI" value={v.bmi != null ? `${v.bmi}` : null} />
@@ -311,7 +311,7 @@ const ProfilePage = ({ plan, page }: { plan: any; page: number }) => {
           <Row icon={<FaStethoscope size={11} />} label="Digestive Health" value={humanize(lf.digestive_health)} />
         </SectionCard>
 
-        <SectionCard icon={<FaBullseye size={14} color={C.brand} />} title="HEALTH & FITNESS GOALS">
+        <SectionCard icon={<FaBullseye size={14} color={C.brand} />} title="HEALTH & FITNESS GOALS" style={{ padding: "8px 11px" }}>
           <Row icon={<FaBullseye size={11} />} label="Primary Goal" value={list(g.goals).map(humanize).join(", ") || humanize(s.primary_goal)} />
           <Row icon={<FaClipboardList size={11} />} label="Plan Type" value={g.plan_type} />
           <Row icon={<FaFireAlt size={11} />} label="Calorie Target" value={s.calorie_range} />
@@ -320,7 +320,7 @@ const ProfilePage = ({ plan, page }: { plan: any; page: number }) => {
           <Row icon={<FaRegStickyNote size={11} />} label="Final Notes" value={g.final_notes} />
         </SectionCard>
 
-        <SectionCard icon={<FaRunning size={14} color={C.brand} />} title="LIFESTYLE OVERVIEW">
+        <SectionCard icon={<FaRunning size={14} color={C.brand} />} title="LIFESTYLE OVERVIEW" style={{ padding: "8px 11px" }}>
           <Row icon={<FaBriefcase size={11} />} label="Work Type" value={humanize(lf.work_type)} />
           <Row icon={<FaDumbbell size={11} />} label="Workout Type" value={humanize(lf.workout_type)} />
           <Row icon={<FaRunning size={11} />} label="Activity Level" value={humanize(lf.activity_level)} />
@@ -328,7 +328,7 @@ const ProfilePage = ({ plan, page }: { plan: any; page: number }) => {
           <Row icon={<FaStethoscope size={11} />} label="Digestive Health" value={humanize(lf.digestive_health)} />
         </SectionCard>
 
-        <SectionCard icon={<FaNotesMedical size={14} color={C.brand} />} title="MEDICAL INFORMATION">
+        <SectionCard icon={<FaNotesMedical size={14} color={C.brand} />} title="MEDICAL INFORMATION" style={{ padding: "8px 11px" }}>
           <Row icon={<FaNotesMedical size={11} />} label="Medical Conditions" value={none(md.medical_conditions)} />
           <Row icon={<FaHeartbeat size={11} />} label="Other Condition" value={md.other_condition} />
           <Row icon={<FaPills size={11} />} label="On Medication" value={humanize(md.on_medication)} />
@@ -336,7 +336,7 @@ const ProfilePage = ({ plan, page }: { plan: any; page: number }) => {
           <Row icon={<FaExclamationTriangle size={11} />} label="Allergies / Intolerances" value={none(md.food_allergies)} />
         </SectionCard>
 
-        <SectionCard icon={<FaUtensils size={14} color={C.brand} />} title="DIETARY INFORMATION">
+        <SectionCard icon={<FaUtensils size={14} color={C.brand} />} title="DIETARY INFORMATION" style={{ padding: "8px 11px" }}>
           <Row icon={<FaUtensils size={11} />} label="Diet Type" value={humanize(di.diet_type)} />
           <Row icon={<FaPepperHot size={11} />} label="Cuisine Preference" value={list(di.cuisine_preference).map(humanize).join(", ")} />
           <Row icon={<FaHeart size={11} />} label="Favorite Foods" value={di.favorite_foods} />
@@ -344,15 +344,15 @@ const ProfilePage = ({ plan, page }: { plan: any; page: number }) => {
         </SectionCard>
       </div>
 
-      <div style={{ marginTop: 16, display: "flex", gap: 14, alignItems: "stretch" }}>
-        <div style={{ flex: 1.9, background: C.soft, borderRadius: 14, padding: "14px 18px" }}>
-          <div style={{ fontWeight: 800, fontSize: 13, color: C.dark, marginBottom: 5, display: "flex", alignItems: "center", gap: 8 }}><FaRegStickyNote size={13} color={C.brand} /> ADDITIONAL NOTES</div>
-          <div style={{ fontSize: 12, color: C.sub, lineHeight: 1.5 }}>{g.final_notes || g.health_notes || "Prefers simple, sustainable meals with Indian food options. Motivated to stay consistent and follow the plan."}</div>
+      <div style={{ marginTop: 10, display: "flex", gap: 10, alignItems: "stretch" }}>
+        <div style={{ flex: 1.9, background: C.soft, borderRadius: 14, padding: "10px 14px" }}>
+          <div style={{ fontWeight: 800, fontSize: 12, color: C.dark, marginBottom: 4, display: "flex", alignItems: "center", gap: 7 }}><FaRegStickyNote size={12} color={C.brand} /> ADDITIONAL NOTES</div>
+          <div style={{ fontSize: 11, color: C.sub, lineHeight: 1.45 }}>{g.final_notes || g.health_notes || "Prefers simple, sustainable meals with Indian food options. Motivated to stay consistent and follow the plan."}</div>
         </div>
-        <div style={{ flex: 1, background: C.soft, borderRadius: 14, padding: "14px 18px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", color: C.brand }}>
-          <FaQuoteLeft size={15} style={{ opacity: 0.55, alignSelf: "flex-start" }} />
-          <div style={{ fontFamily: "'Segoe Script',cursive", fontStyle: "italic", fontSize: 14, lineHeight: 1.4, margin: "4px 0" }}>Your health journey is unique. We're here to support you every step of the way.</div>
-          <FaQuoteRight size={15} style={{ opacity: 0.55, alignSelf: "flex-end" }} />
+        <div style={{ flex: 1, background: C.soft, borderRadius: 14, padding: "10px 14px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", color: C.brand }}>
+          <FaQuoteLeft size={13} style={{ opacity: 0.55, alignSelf: "flex-start" }} />
+          <div style={{ fontFamily: "'Segoe Script',cursive", fontStyle: "italic", fontSize: 12.5, lineHeight: 1.4, margin: "3px 0" }}>Your health journey is unique. We're here to support you every step of the way.</div>
+          <FaQuoteRight size={13} style={{ opacity: 0.55, alignSelf: "flex-end" }} />
         </div>
       </div>
 

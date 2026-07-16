@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import dietitianApi, { uploadDocuments } from '../api/dietitian'
+import { prepareImageFile } from '../utils/imageUtils'
 import authApi from '../api/auth'
 import { ApiError } from '../api/client'
 import { useToast } from '../context/ToastContext'
@@ -605,8 +606,13 @@ const JoinDietitian = () => {
                   ] as const).map(d => (
                     <div key={d.key} className={`jd2-upload-box${docs[d.key] ? ' uploaded' : ''}`}
                       onClick={() => { if (!docs[d.key]) fileRefs[d.key].current?.click() }}>
-                      <input ref={fileRefs[d.key]} type="file" accept="image/*,.pdf" style={{ display: 'none' }}
-                        onChange={e => { setDocs(p => ({ ...p, [d.key]: e.target.files?.[0] ?? null })); if (d.key === 'profilePhoto') setDocError('') }} />
+                      <input ref={fileRefs[d.key]} type="file" accept={d.key === 'profilePhoto' ? 'image/*' : 'image/*,.pdf'} style={{ display: 'none' }}
+                        onChange={async e => {
+                          const raw = e.target.files?.[0] ?? null
+                          const file = raw && raw.type.startsWith('image/') ? await prepareImageFile(raw) : raw
+                          setDocs(p => ({ ...p, [d.key]: file }))
+                          if (d.key === 'profilePhoto') setDocError('')
+                        }} />
                       <i className={`jd2-upload-icon ${d.icon}`} />
                       <span className="jd2-upload-lbl">
                         {d.label}{d.required && <span className="jd2-req" style={{ marginLeft: 2 }}>*</span>}

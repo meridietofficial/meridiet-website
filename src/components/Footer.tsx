@@ -48,6 +48,7 @@ const Footer = () => {
             <Link to="/#plans">Plans</Link>
             <Link to="/#sample-diet">Sample Diet</Link>
             <Link to="/#pricing">Pricing</Link>
+            <Link to="/nutritionist-course">Nutritionist Course</Link>
           </div>
 
           <div className="footer-col">

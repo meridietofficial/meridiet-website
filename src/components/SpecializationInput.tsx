@@ -14,6 +14,9 @@ export const SPECIALIZATIONS = [
   'Skin & Hair Nutrition', 'Mental Health & Nutrition',
 ]
 
+const SOFT_WARN  = 5
+const HARD_LIMIT = 8
+
 /* ── Specialization tag-input ── */
 export default function SpecializationInput({
   value, onChange,
@@ -33,12 +36,14 @@ export default function SpecializationInput({
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  const atLimit    = value.length >= HARD_LIMIT
   const suggestions = SPECIALIZATIONS.filter(
     s => s.toLowerCase().includes(query.toLowerCase()) && !value.includes(s)
   )
   const canAddCustom = query.trim() && !SPECIALIZATIONS.includes(query.trim()) && !value.includes(query.trim())
 
   const add = (item: string) => {
+    if (atLimit) return
     onChange([...value, item])
     setQuery(''); setOpen(false); inputRef.current?.focus()
   }
@@ -59,26 +64,39 @@ export default function SpecializationInput({
         </div>
       )}
 
+      {/* Nudge / limit messages */}
+      {atLimit ? (
+        <p className="jd2-spec-limit-msg">
+          Maximum {HARD_LIMIT} specializations reached. Remove one to add another.
+        </p>
+      ) : value.length >= SOFT_WARN ? (
+        <p className="jd2-spec-warn-msg">
+          Profiles with focused specializations tend to get more client trust.
+        </p>
+      ) : null}
+
       {/* Input */}
-      <div className="jd2-spec-input-row">
-        <input
-          ref={inputRef}
-          className="jd2-spec-input"
-          placeholder={value.length ? 'Search to add more…' : 'Search specialization…'}
-          value={query}
-          onChange={e => { setQuery(e.target.value); setOpen(true) }}
-          onFocus={() => setOpen(true)}
-        />
-        {query.trim() && (
-          <button type="button" className="jd2-spec-add-btn"
-            onClick={() => (canAddCustom ? add(query.trim()) : suggestions[0] && add(suggestions[0]))}>
-            + Add
-          </button>
-        )}
-      </div>
+      {!atLimit && (
+        <div className="jd2-spec-input-row">
+          <input
+            ref={inputRef}
+            className="jd2-spec-input"
+            placeholder={value.length ? 'Search to add more…' : 'Search specialization…'}
+            value={query}
+            onChange={e => { setQuery(e.target.value); setOpen(true) }}
+            onFocus={() => setOpen(true)}
+          />
+          {query.trim() && (
+            <button type="button" className="jd2-spec-add-btn"
+              onClick={() => (canAddCustom ? add(query.trim()) : suggestions[0] && add(suggestions[0]))}>
+              + Add
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Dropdown */}
-      {open && (query.trim() || suggestions.length > 0) && (
+      {!atLimit && open && (query.trim() || suggestions.length > 0) && (
         <div className="jd2-spec-dropdown">
           {suggestions.map(s => (
             <button key={s} type="button" className="jd2-spec-option" onClick={() => add(s)}>

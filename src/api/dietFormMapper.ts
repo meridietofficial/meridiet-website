@@ -259,7 +259,11 @@ const MEDICAL_REV: Record<string, string> = {
 
 function to12h(time: string | null | undefined): string {
   if (!time) return ''
+  // Already in 12h format (stored as-is from frontend) — return as-is
+  if (/AM|PM/i.test(time)) return time.trim()
+  // 24h format (HH:MM or HH:MM:SS) — convert
   const [h, m] = time.split(':').map(Number)
+  if (isNaN(h) || isNaN(m)) return ''
   const period = h >= 12 ? 'PM' : 'AM'
   const hour = h % 12 || 12
   return `${hour}:${String(m).padStart(2, '0')} ${period}`
@@ -296,7 +300,7 @@ export function mapApiToFormData(chart: Record<string, unknown>): Record<string,
     breakfastTime:    to12h(str(chart.breakfast_time))    || '8:00 AM',
     lunchTime:        to12h(str(chart.lunch_time))        || '1:30 PM',
     eveningSnackTime: to12h(str(chart.evening_snack_time))|| '5:00 PM',
-    dinnerTime:       to12h(str(chart.dinner_time))       || '8:30 PM',
+    dinnerTime:       to12h(str(chart.dinner_time))       || '8:00 PM',
 
     // Step 3
     dietType:         DIET_TYPE_REV[str(chart.diet_type)] ?? '',
@@ -318,7 +322,10 @@ export function mapApiToFormData(chart: Record<string, unknown>): Record<string,
     otherIntolerance: '',
 
     // Step 4
-    medicalConditions: arr(chart.medical_conditions).map(c => MEDICAL_REV[c] ?? c),
+    medicalConditions: [
+      ...arr(chart.medical_conditions).map(c => MEDICAL_REV[c] ?? c),
+      ...(chart.other_condition ? ['Other'] : []),
+    ],
     otherCondition:    str(chart.other_condition),
     onMedication:      ON_MEDICATION_REV[str(chart.on_medication)]  ?? '',
     medications:       str(chart.medications),

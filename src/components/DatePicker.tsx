@@ -106,7 +106,7 @@ export default function DatePicker({ value, onChange, min, max, placeholder, has
       {/* Trigger */}
       <button
         type="button"
-        className={['dp-trigger', hasError?'dp-trigger--err':'', open?'dp-trigger--open':''].filter(Boolean).join(' ')}
+        className={['cdp-input dp-trigger', hasError?'dp-trigger--err':'', open?'dp-trigger--open':''].filter(Boolean).join(' ')}
         onClick={() => { setShowYears(false); setOpen(p => !p) }}
       >
         <span className="dp-icon">📅</span>

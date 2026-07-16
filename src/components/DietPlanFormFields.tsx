@@ -27,6 +27,8 @@ export type DietPlanFormValues = {
   smoke_alcohol: string
   health_notes: string
   plan_type: string
+  city: string
+  state: string
 }
 
 export const EMPTY_FORM: DietPlanFormValues = {
@@ -35,6 +37,7 @@ export const EMPTY_FORM: DietPlanFormValues = {
   cuisine_preference: [], food_allergies: [], foods_dislike: '', favorite_foods: '',
   medical_conditions: [], other_condition: '', on_medication: '', medications: '',
   digestive_health: '', smoke_alcohol: '', health_notes: '', plan_type: '',
+  city: '', state: '',
 }
 
 const TODAY = new Date().toISOString().split('T')[0]
@@ -102,6 +105,12 @@ const CUISINE_OPTIONS = [
   { value: 'gujarati',       label: 'Gujarati',       emoji: '🥜' },
   { value: 'punjabi',        label: 'Punjabi',        emoji: '🧈' },
   { value: 'maharashtrian',  label: 'Maharashtrian',  emoji: '🥘' },
+  { value: 'rajasthani',     label: 'Rajasthani',     emoji: '🏜️' },
+  { value: 'kerala',         label: 'Kerala',         emoji: '🥥' },
+  { value: 'hyderabadi',     label: 'Hyderabadi',     emoji: '🍛' },
+  { value: 'odia',           label: 'Odia',           emoji: '🍚' },
+  { value: 'bihari',         label: 'Bihari',         emoji: '🌾' },
+  { value: 'kashmiri',       label: 'Kashmiri',       emoji: '🏔️' },
   { value: 'continental',    label: 'Continental',    emoji: '🥗' },
   { value: 'no_preference',  label: 'No Preference',  emoji: '✌️' },
 ]
@@ -155,6 +164,8 @@ type Props = {
   form: DietPlanFormValues
   onChange: <K extends keyof DietPlanFormValues>(key: K, val: DietPlanFormValues[K]) => void
   disabled?: boolean
+  afterLifestyle?: React.ReactNode
+  afterFoodPrefs?: React.ReactNode
 }
 
 function toggleArr(arr: string[], val: string, solo?: boolean): string[] {
@@ -164,7 +175,7 @@ function toggleArr(arr: string[], val: string, solo?: boolean): string[] {
   return arr.includes(val) ? without : [...without, val]
 }
 
-export default function DietPlanFormFields({ form, onChange, disabled }: Props) {
+export default function DietPlanFormFields({ form, onChange, disabled, afterLifestyle, afterFoodPrefs }: Props) {
   // Plan is fixed at 1 Month (value 2) for now
   useEffect(() => {
     if (form.plan_type !== '2') onChange('plan_type', '2')
@@ -286,6 +297,32 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
             />
           </div>
         </div>
+
+        {/* City + State */}
+        <div className="cdp-row" style={{ marginTop: 14 }}>
+          <div className="cdp-field">
+            <label className="cdp-label">City</label>
+            <input
+              className="cdp-input"
+              type="text"
+              placeholder="e.g. Mumbai"
+              value={form.city}
+              onChange={e => onChange('city', e.target.value)}
+              disabled={disabled}
+            />
+          </div>
+          <div className="cdp-field">
+            <label className="cdp-label">State</label>
+            <input
+              className="cdp-input"
+              type="text"
+              placeholder="e.g. Maharashtra"
+              value={form.state}
+              onChange={e => onChange('state', e.target.value)}
+              disabled={disabled}
+            />
+          </div>
+        </div>
       </div>
 
       {/* ─── Fitness Goals ─── */}
@@ -395,6 +432,8 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
         </div>
       </div>
 
+      {afterLifestyle}
+
       {/* ─── Food Preferences ─── */}
       <div className="cdp-section">
         <h3 className="cdp-section-title">
@@ -489,6 +528,8 @@ export default function DietPlanFormFields({ form, onChange, disabled }: Props) 
           </div>
         </div>
       </div>
+
+      {afterFoodPrefs}
 
       {/* ─── Health History ─── */}
       <div className="cdp-section">

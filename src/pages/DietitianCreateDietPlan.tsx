@@ -50,6 +50,8 @@ function dietFormToValues(df: AppointmentDietForm): DietPlanFormValues {
     smoke_alcohol:      df.smoke_alcohol        ?? '',
     health_notes:       df.health_notes         ?? '',
     plan_type:          df.plan_type?.toString() ?? '',
+    city:               df.city                 ?? '',
+    state:              df.state                ?? '',
   }
 }
 

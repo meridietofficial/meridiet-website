@@ -124,9 +124,11 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
           <ul className={`navbar-links ${menuOpen ? 'open' : ''}`}>
             <li><NavLink to="/consult-dietitian" onClick={() => setMenuOpen(false)}>Consult Dietitian</NavLink></li>
             <li><NavLink to="/for-dietitians" onClick={() => setMenuOpen(false)}>For Dietitians</NavLink></li>
+            <li><NavLink to="/nutritionist-course" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}>
+              Courses <span className="navbar-new-badge">New</span>
+            </NavLink></li>
             <li><NavLink to="/calculators" onClick={() => setMenuOpen(false)}>Calculators</NavLink></li>
             <li><NavLink to="/about" onClick={() => setMenuOpen(false)}>About Us</NavLink></li>
-            <li><NavLink to="/faq" onClick={() => setMenuOpen(false)}>FAQ</NavLink></li>
             <li><NavLink to="/contact" onClick={() => setMenuOpen(false)}>Contact Us</NavLink></li>
             <li className="navbar-mobile-actions">
               <button className="btn-primary navbar-cta" onClick={() => { setMenuOpen(false); onOpenForm() }}>

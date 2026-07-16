@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import dietitianApi, { uploadDocuments } from '../api/dietitian'
+import { prepareImageFile } from '../utils/imageUtils'
 import { ApiError } from '../api/client'
 import { useToast } from '../context/ToastContext'
 import AuthModal from '../components/AuthModal'
@@ -518,10 +519,12 @@ export default function DietitianOnboarding() {
                       <input
                         ref={fileRefs[d.key]}
                         type="file"
-                        accept="image/*,.pdf"
+                        accept={d.key === 'profilePhoto' ? 'image/*' : 'image/*,.pdf'}
                         style={{ display: 'none' }}
-                        onChange={e => {
-                          setDocs(p => ({ ...p, [d.key]: e.target.files?.[0] ?? null }))
+                        onChange={async e => {
+                          const raw = e.target.files?.[0] ?? null
+                          const file = raw && raw.type.startsWith('image/') ? await prepareImageFile(raw) : raw
+                          setDocs(p => ({ ...p, [d.key]: file }))
                           if (d.key === 'profilePhoto') setDocError('')
                         }}
                       />

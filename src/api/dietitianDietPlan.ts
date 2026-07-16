@@ -116,12 +116,25 @@ export type HealthFormData = {
 }
 
 export type CreateDraftBody = HealthFormData & { appointment_id: number }
-export type UpdateDraftBody = HealthFormData
+export type UpdateDraftBody = HealthFormData & {
+  // Extra fields for manual plans (ignored by appointment-linked plan updates)
+  full_name?: string
+  email?: string
+  whatsapp?: string
+  breakfast_time?: string
+  lunch_time?: string
+  evening_snack_time?: string
+  dinner_time?: string
+  city?: string
+  state?: string
+  whey_protein?: string
+}
 
 export type DietPlanSummary = {
   id: number
   form_id: number
   appointment_id?: number
+  user_id?: number | null
   client_name: string
   appointment_date?: string
   slot?: string

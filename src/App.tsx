@@ -30,9 +30,11 @@ const DietitianConsultationRequests = lazy(() => import('./pages/DietitianConsul
 const DietitianMyClients      = lazy(() => import('./pages/DietitianMyClients'))
 const DietitianAppointments       = lazy(() => import('./pages/DietitianAppointments'))
 const DietitianAppointmentDetail  = lazy(() => import('./pages/DietitianAppointmentDetail'))
-const DietitianDietPlans      = lazy(() => import('./pages/DietitianDietPlans'))
-const DietitianCreateDietPlan = lazy(() => import('./pages/DietitianCreateDietPlan'))
-const DietitianDraftDietPlan  = lazy(() => import('./pages/DietitianDraftDietPlan'))
+const DietitianDietPlans           = lazy(() => import('./pages/DietitianDietPlans'))
+const DietitianCreateDietPlan      = lazy(() => import('./pages/DietitianCreateDietPlan'))
+const DietitianDraftDietPlan       = lazy(() => import('./pages/DietitianDraftDietPlan'))
+const DietitianManualDietPlans     = lazy(() => import('./pages/DietitianManualDietPlans'))
+const DietitianManualDietPlanForm  = lazy(() => import('./pages/DietitianManualDietPlanForm'))
 const DietitianChat           = lazy(() => import('./pages/DietitianChat'))
 const DietitianFollowUps      = lazy(() => import('./pages/DietitianFollowUps'))
 const DietitianReports        = lazy(() => import('./pages/DietitianReports'))
@@ -42,6 +44,7 @@ const DietitianReviews        = lazy(() => import('./pages/DietitianReviews'))
 const DietitianSettings       = lazy(() => import('./pages/DietitianSettings'))
 const ResetPassword           = lazy(() => import('./pages/ResetPassword'))
 const Calculators             = lazy(() => import('./pages/Calculators'))
+const NutritionistCourse      = lazy(() => import('./pages/NutritionistCourse'))
 
 function PageLoader() {
   return (
@@ -115,6 +118,7 @@ function AppInner() {
           <Route path="/refund-policy"        element={<main><RefundPolicy /></main>} />
           <Route path="/contact"              element={<main><ContactUs /></main>} />
           <Route path="/calculators"              element={<Calculators />} />
+          <Route path="/nutritionist-course"    element={<NutritionistCourse />} />
           <Route path="/consult-dietitian"         element={<ConsultDietitian />} />
           <Route path="/consult-dietitian/success" element={<ConsultDietitian />} />
           <Route path="/dietitian/:id"        element={<DietitianProfile />} />
@@ -132,9 +136,12 @@ function AppInner() {
             <Route path="/dietitian-my-clients"              element={<DietitianMyClients />} />
             <Route path="/dietitian-appointments"            element={<DietitianAppointments />} />
             <Route path="/dietitian-appointments/:id"       element={<DietitianAppointmentDetail />} />
-            <Route path="/dietitian-diet-plans"              element={<DietitianDietPlans />} />
-            <Route path="/dietitian-diet-plans/new"         element={<DietitianCreateDietPlan />} />
-            <Route path="/dietitian-diet-plans/:planId"     element={<DietitianDraftDietPlan />} />
+            <Route path="/dietitian-diet-plans"                         element={<DietitianDietPlans />} />
+            <Route path="/dietitian-diet-plans/new"                    element={<DietitianCreateDietPlan />} />
+            <Route path="/dietitian-diet-plans/manual"                 element={<DietitianManualDietPlans />} />
+            <Route path="/dietitian-diet-plans/manual/new"             element={<DietitianManualDietPlanForm />} />
+            <Route path="/dietitian-diet-plans/manual/:planId/edit"    element={<DietitianManualDietPlanForm />} />
+            <Route path="/dietitian-diet-plans/:planId"                element={<DietitianDraftDietPlan />} />
             <Route path="/dietitian-chat"                   element={<DietitianChat />} />
             <Route path="/dietitian-follow-ups"             element={<DietitianFollowUps />} />
             <Route path="/dietitian-reports"               element={<DietitianReports />} />

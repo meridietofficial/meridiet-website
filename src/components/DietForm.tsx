@@ -48,7 +48,7 @@ const INIT: FormData = {
   breakfastTime: '8:00 AM',
   lunchTime: '1:30 PM',
   eveningSnackTime: '5:00 PM',
-  dinnerTime: '8:30 PM',
+  dinnerTime: '8:00 PM',
   medicalConditions: [],
   otherCondition: '',
   onMedication: '',

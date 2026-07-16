@@ -1,12 +1,16 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams, useLocation } from 'react-router-dom'
+import { useNavigate, useParams, useLocation, useOutletContext } from 'react-router-dom'
 import dietitianDietPlanApi, {
   DietPlanDetail, DietPlanStatus, DietWeek, DietFoodItem, FeaturedRecipe,
   HealthFormData, PlanContent, SendPlanResult, SmartSwap,
 } from '../api/dietitianDietPlan'
 import appointmentApi, { AppointmentDietForm } from '../api/appointment'
+import walletApi from '../api/wallet'
+import earningsApi from '../api/earnings'
 import DietPlanFormFields, { DietPlanFormValues, EMPTY_FORM } from '../components/DietPlanFormFields'
 import DietPlanDocument, { PAGE_W, PAGE_H } from '../components/DietPlanDocument'
+import WhiteLabelDietPlanDocument from '../components/WhiteLabelDietPlanDocument'
+import type { DietitianOutletContext } from '../components/DietitianLayout'
 
 /* Map Title Case goal labels from the client booking form → snake_case used by the dietitian form */
 const CLIENT_GOAL_MAP: Record<string, string> = {
@@ -48,6 +52,8 @@ function clientFormToValues(df: AppointmentDietForm): DietPlanFormValues {
     smoke_alcohol:      df.smoke_alcohol        ?? '',
     health_notes:       df.health_notes         ?? '',
     plan_type:          df.plan_type?.toString() ?? '',
+    city:               df.city                 ?? '',
+    state:              df.state                ?? '',
   }
 }
 
@@ -83,6 +89,8 @@ function mergeFormValues(draft: DietPlanFormValues, client: DietPlanFormValues):
     smoke_alcohol:      pick(draft.smoke_alcohol,      client.smoke_alcohol),
     health_notes:       pick(draft.health_notes,       client.health_notes),
     plan_type:          pick(draft.plan_type,          client.plan_type),
+    city:               pick(draft.city,               client.city),
+    state:              pick(draft.state,              client.state),
   }
 }
 
@@ -96,7 +104,7 @@ const STATUS_META: Partial<Record<DietPlanStatus, { label: string; color: string
 
 
 /* Build the plan shape that DietPlanDocument expects */
-function planDetailToDoc(plan: DietPlanDetail): any {
+function planDetailToDoc(plan: DietPlanDetail, clientForm?: import('../api/appointment').AppointmentDietForm | null): any {
   const fd = plan.form_data || plan.form || {}
   return {
     form_id: plan.form_id,
@@ -116,6 +124,10 @@ function planDetailToDoc(plan: DietPlanDetail): any {
         gender:    fd.gender,
         date_of_birth: fd.dob,
         height:    fd.height,
+        phone:     (fd as any).whatsapp || (fd as any).phone || clientForm?.whatsapp || null,
+        email:     (fd as any).email   || clientForm?.email  || null,
+        city:      (fd as any).city    || clientForm?.city   || null,
+        state:     (fd as any).state   || clientForm?.state  || null,
       },
       current_vitals: {
         weight_kg:    fd.weight,
@@ -188,6 +200,8 @@ function planToForm(fd: HealthFormData = {}): DietPlanFormValues {
     smoke_alcohol:      fd.smoke_alcohol            ?? '',
     health_notes:       fd.health_notes             ?? '',
     plan_type:          fd.plan_type?.toString()    ?? '',
+    city:               (fd as any).city            ?? '',
+    state:              (fd as any).state           ?? '',
   }
 }
 
@@ -236,12 +250,19 @@ function formToBody(form: DietPlanFormValues) {
     digestive_health: form.digestive_health || undefined,
     smoke_alcohol:    form.smoke_alcohol || undefined,
     health_notes:     form.health_notes || undefined,
+    city:             form.city  || undefined,
+    state:            form.state || undefined,
     plan_type:        2,  // always 1 month (4 weeks)
   }
 }
 
 /* ─── PDF-style plan preview wrapper ─── */
-function PlanDocPreview({ plan }: { plan: DietPlanDetail }) {
+function PlanDocPreview({ plan, dietitian, isManual, clientForm }: {
+  plan: DietPlanDetail
+  dietitian?: import('../api/dietitian').DietitianProfile | null
+  isManual?: boolean
+  clientForm?: import('../api/appointment').AppointmentDietForm | null
+}) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
   useEffect(() => {
@@ -253,9 +274,23 @@ function PlanDocPreview({ plan }: { plan: DietPlanDetail }) {
     window.addEventListener('resize', measure)
     return () => window.removeEventListener('resize', measure)
   }, [])
-  const docPlan = planDetailToDoc(plan)
+  const docPlan = planDetailToDoc(plan, clientForm)
+
+  function handleDownloadPdf() {
+    document.body.classList.add('dp-printing')
+    window.addEventListener('afterprint', () => {
+      document.body.classList.remove('dp-printing')
+    }, { once: true })
+    window.print()
+  }
+
   return (
     <div className="dpv-doc-outer">
+      <div className="dpv-download-bar">
+        <button className="dpv-download-btn" onClick={handleDownloadPdf}>
+          <i className="fa-solid fa-download" /> Download as PDF
+        </button>
+      </div>
       <div ref={wrapRef}
         style={{
           width: PAGE_W,
@@ -263,7 +298,10 @@ function PlanDocPreview({ plan }: { plan: DietPlanDetail }) {
           transform: `scale(${scale})`,
           marginBottom: `${(PAGE_H * (scale - 1))}px`,
         }}>
-        <DietPlanDocument plan={docPlan} />
+        {isManual
+          ? <WhiteLabelDietPlanDocument plan={docPlan} dietitian={dietitian} />
+          : <DietPlanDocument plan={docPlan} />
+        }
       </div>
     </div>
   )
@@ -340,6 +378,7 @@ type EditPlanContentProps = {
   saving: boolean
   sending: boolean
   actionErr: string | null
+  isManual?: boolean
 }
 
 const MEAL_COLORS: Record<MealKey, string> = {
@@ -365,7 +404,7 @@ function EditPlanContent({
   editTips, onTipsChange,
   editWeeks, onWeeksChange,
   editRecipes, onRecipesChange,
-  isDirty, onBack, onSave, onSend, saving, sending, actionErr,
+  isDirty, onBack, onSave, onSend, saving, sending, actionErr, isManual,
 }: EditPlanContentProps) {
   const [openWeekIdx, setOpenWeekIdx]     = useState<number | null>(0)
   const [openDays, setOpenDays]           = useState<Record<string, boolean>>({})
@@ -484,9 +523,11 @@ function EditPlanContent({
               <i className="fa-solid fa-floppy-disk" /> {saving ? 'Saving…' : 'Save Changes'}
             </button>
           )}
-          <button className="epm-send-btn" onClick={onSend} disabled={saving || sending}>
-            <i className="fa-solid fa-paper-plane" /> {sending ? 'Sending…' : 'Send to Patient'}
-          </button>
+          {!isManual && (
+            <button className="epm-send-btn" onClick={onSend} disabled={saving || sending}>
+              <i className="fa-solid fa-paper-plane" /> {sending ? 'Sending…' : 'Send to Patient'}
+            </button>
+          )}
         </div>
       </div>
 
@@ -956,10 +997,14 @@ export default function DietitianDraftDietPlan() {
   const navigate = useNavigate()
   const location = useLocation()
   const { planId } = useParams<{ planId: string }>()
+  const { profile } = useOutletContext<DietitianOutletContext>()
   const id = Number(planId)
-  const locationState = location.state as { returnTo?: string; appointmentId?: number } | null
+  const locationState = location.state as { returnTo?: string; appointmentId?: number; isManual?: boolean; startInEdit?: boolean } | null
+  const searchParams  = new URLSearchParams(location.search)
   const returnTo      = locationState?.returnTo ?? '/dietitian-diet-plans'
   const stateApptId   = locationState?.appointmentId
+  const stateIsManual = (locationState?.isManual ?? false) || searchParams.get('manual') === '1'
+  const startInEdit   = locationState?.startInEdit ?? false
 
   const [plan, setPlan]             = useState<DietPlanDetail | null>(null)
   const [loading, setLoading]       = useState(true)
@@ -980,6 +1025,12 @@ export default function DietitianDraftDietPlan() {
   const [savedOk, setSavedOk]             = useState(false)
   const [sendOk, setSendOk]               = useState(false)
   const [showSendModal, setShowSendModal] = useState(false)
+  // Wallet balance check for manual plans
+  const [walletBalance, setWalletBalance]         = useState<number | null>(null)
+  const [showWalletModal, setShowWalletModal]     = useState(false)
+  const [addMoneyAmt, setAddMoneyAmt]             = useState('200')
+  const [topping, setTopping]                     = useState(false)
+  const [topupError, setTopupError]               = useState<string | null>(null)
 
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
@@ -987,6 +1038,13 @@ export default function DietitianDraftDietPlan() {
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
 
   useEffect(() => { loadPlan() }, [id])
+
+  // Auto-enter edit mode when navigated here with startInEdit flag (e.g. from "Edit Plan" button on list)
+  useEffect(() => {
+    if (startInEdit && plan && (plan.status === 'completed' || plan.status === 'sent')) {
+      startEditContent()
+    }
+  }, [startInEdit, plan?.id])
 
   // Poll every 15 s while generating
   useEffect(() => {
@@ -1015,16 +1073,20 @@ export default function DietitianDraftDietPlan() {
       if (!data?.id) throw new Error('Plan not found')
       setPlan(data)
       setForm(planToForm(data.form_data))
-      // Fetch client's original diet form — prefer appointmentId from navigation state
-      // (always available when coming from the appointments list), fall back to the
-      // plan's own appointment_id field for direct URL access.
       const apptId = stateApptId ?? data.appointment_id
+      const isManual = stateIsManual || (!apptId && !data.user_id)
       if (apptId) {
         appointmentApi.getDietFormForAppointment(apptId)
           .then(df => {
             setClientForm(df)
             setForm(prev => mergeFormValues(prev, clientFormToValues(df)))
           })
+          .catch(() => {})
+      }
+      // Pre-load wallet balance for manual plans so the generate CTA can show it
+      if (isManual) {
+        earningsApi.getWalletOverview()
+          .then(res => setWalletBalance(res.available_balance ?? 0))
           .catch(() => {})
       }
     } catch (e: any) {
@@ -1055,23 +1117,86 @@ export default function DietitianDraftDietPlan() {
   }
 
   async function handleGenerate() {
-    setGenerating(true)
     setActionErr(null)
     setSavedOk(false)
+    const apptId  = stateApptId ?? plan?.appointment_id
+    const isManual = stateIsManual || (!apptId && !plan?.user_id)
+
+    // For manual plans: verify wallet balance before proceeding
+    if (isManual) {
+      try {
+        const balRes = await earningsApi.getWalletOverview()
+        const bal = balRes.available_balance ?? 0
+        setWalletBalance(bal)
+        if (bal < 100) {
+          setShowWalletModal(true)
+          return
+        }
+      } catch { /* proceed anyway — server will return 402 if balance is insufficient */ }
+    }
+
+    setGenerating(true)
     try {
-      // Best-effort save — don't let a save failure block generation
       try { await dietitianDietPlanApi.update(id, formToBody(form)) } catch {}
       await dietitianDietPlanApi.generatePlan(id)
-      const apptId = stateApptId ?? plan?.appointment_id
       if (apptId) {
         navigate(`/dietitian-appointments/${apptId}`)
       } else {
         navigate(returnTo)
       }
     } catch (e: any) {
-      setActionErr(e.message ?? 'Failed to start generation')
+      // 402 = insufficient wallet balance
+      if (e?.status === 402 || e?.message?.toLowerCase().includes('insufficient')) {
+        setShowWalletModal(true)
+        earningsApi.getWalletOverview().then(res => setWalletBalance(res.available_balance ?? 0)).catch(() => {})
+      } else {
+        setActionErr(e.message ?? 'Failed to start generation')
+      }
     } finally {
       setGenerating(false)
+    }
+  }
+
+  async function handleWalletTopup() {
+    const amt = Number(addMoneyAmt)
+    if (!amt || amt < 100) { setTopupError('Minimum top-up amount is ₹100'); return }
+    setTopping(true)
+    setTopupError(null)
+    try {
+      const orderRes = await walletApi.topupCreateOrder(amt)
+      const { order_id, key_id, amount, currency } = orderRes.data
+      const rzp = new window.Razorpay({
+        key:         key_id,
+        amount:      amount * 100,
+        currency:    currency ?? 'INR',
+        order_id,
+        name:        'MeriDiet',
+        description: 'Wallet Top-up',
+        image:       '/logo.png',
+        theme: { color: '#006B28' },
+        handler: async (rzpResponse: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          try {
+            const verifyRes = await walletApi.topupVerify(rzpResponse)
+            setWalletBalance(verifyRes.data?.new_balance ?? (walletBalance ?? 0) + amt)
+            setShowWalletModal(false)
+            setTopupError(null)
+          } catch (err: any) {
+            setTopupError(err.message ?? 'Payment verification failed')
+          } finally {
+            setTopping(false)
+          }
+        },
+        modal: {
+          ondismiss: async () => {
+            try { await walletApi.topupFailed(order_id) } catch {}
+            setTopping(false)
+          },
+        },
+      })
+      rzp.open()
+    } catch (e: any) {
+      setTopupError(e.message ?? 'Could not initiate payment')
+      setTopping(false)
     }
   }
 
@@ -1184,6 +1309,8 @@ export default function DietitianDraftDietPlan() {
   const weeks = plan.weeks ?? []
   const busy  = updating || generating || savingContent || sending
   const isFormValid = isFormComplete(form)
+  const apptIdForRender = stateApptId ?? plan.appointment_id
+  const isManualPlan = stateIsManual || (!apptIdForRender && !plan.user_id)
 
   const isDirty = editingContent && (
     Object.keys(editedFields).length > 0 ||
@@ -1213,8 +1340,9 @@ export default function DietitianDraftDietPlan() {
           saving={savingContent}
           sending={sending}
           actionErr={actionErr}
+          isManual={isManualPlan}
         />
-        {showSendModal && (
+        {showSendModal && !isManualPlan && (
           <div className="epm-modal-overlay"
             onClick={e => { if (e.target === e.currentTarget) setShowSendModal(false) }}>
             <div className="epm-modal">
@@ -1258,6 +1386,7 @@ export default function DietitianDraftDietPlan() {
   }
 
   return (
+    <>
     <div className="cdp-root">
 
       {/* ── Header ── */}
@@ -1276,6 +1405,13 @@ export default function DietitianDraftDietPlan() {
             {plan.client_name}
             {plan.appointment_date && ` · ${fmtDate(plan.appointment_date)}`}
             {plan.slot && ` · ${plan.slot}`}
+          </p>
+          <p className="cdp-logo-hint">
+            <i className="fa-solid fa-image" />
+            To upload or update your personal logo on the diet plan —{' '}
+            <button className="cdp-logo-hint-link" onClick={() => navigate('/dietitian-profile', { state: { openTab: 'Documents' } })}>
+              go to Profile → Documents section
+            </button>
           </p>
         </div>
       </div>
@@ -1341,7 +1477,7 @@ export default function DietitianDraftDietPlan() {
 
         {/* PDF-style plan preview (view mode for completed/sent) */}
         {(isCompleted || isSent) && (
-          <PlanDocPreview plan={plan} />
+          <PlanDocPreview plan={plan} dietitian={profile} isManual={isManualPlan} clientForm={clientForm} />
         )}
 
         {/* Generate CTA — shown in-body for draft/failed so it's impossible to miss */}
@@ -1355,6 +1491,18 @@ export default function DietitianDraftDietPlan() {
                   AI will build a personalised <strong>1-month meal plan</strong> based on the health details above.
                   Your draft will be saved automatically before generation starts.
                 </p>
+                {isManualPlan && (
+                  <p className="ddp-generate-cta-sub" style={{ marginTop: 4 }}>
+                    <i className="fa-solid fa-wallet" style={{ marginRight: 6, color: '#6366f1' }} />
+                    <strong>₹100</strong> will be deducted from your wallet.
+                    {walletBalance !== null && (
+                      <span style={{ marginLeft: 8, color: walletBalance >= 100 ? '#16a34a' : '#ef4444' }}>
+                        Balance: ₹{walletBalance}
+                        {walletBalance < 100 && ' — insufficient'}
+                      </span>
+                    )}
+                  </p>
+                )}
                 {!isFormValid && (
                   <p className="ddp-generate-cta-warn">
                     <i className="fa-solid fa-triangle-exclamation" /> Please fill all required fields (*) above before generating.
@@ -1370,7 +1518,9 @@ export default function DietitianDraftDietPlan() {
             >
               {generating
                 ? <><i className="fa-solid fa-spinner fa-spin" /> Starting…</>
-                : <><i className="fa-solid fa-wand-magic-sparkles" /> Generate Diet Plan</>
+                : isManualPlan
+                  ? <><i className="fa-solid fa-wand-magic-sparkles" /> Generate — ₹100</>
+                  : <><i className="fa-solid fa-wand-magic-sparkles" /> Generate Diet Plan</>
               }
             </button>
           </div>
@@ -1411,10 +1561,12 @@ export default function DietitianDraftDietPlan() {
             <button className="cdp-btn-save" onClick={startEditContent} disabled={busy}>
               <i className="fa-solid fa-pen" /> Edit Plan
             </button>
-            <button className="cdp-btn-send" onClick={handleSendPlan} disabled={busy}>
-              <i className="fa-solid fa-paper-plane" />
-              {sending ? 'Sending…' : 'Send to Patient'}
-            </button>
+            {!isManualPlan && (
+              <button className="cdp-btn-send" onClick={handleSendPlan} disabled={busy}>
+                <i className="fa-solid fa-paper-plane" />
+                {sending ? 'Sending…' : 'Send to Patient'}
+              </button>
+            )}
           </>
         )}
 
@@ -1428,10 +1580,12 @@ export default function DietitianDraftDietPlan() {
             <button className="cdp-btn-save" onClick={startEditContent} disabled={busy}>
               <i className="fa-solid fa-pen" /> Edit Plan
             </button>
-            <button className="cdp-btn-send" onClick={handleSendPlan} disabled={busy}>
-              <i className="fa-solid fa-rotate-right" />
-              {sending ? 'Sending…' : 'Resend to Patient'}
-            </button>
+            {!isManualPlan && (
+              <button className="cdp-btn-send" onClick={handleSendPlan} disabled={busy}>
+                <i className="fa-solid fa-rotate-right" />
+                {sending ? 'Sending…' : 'Resend to Patient'}
+              </button>
+            )}
           </>
         )}
 
@@ -1443,5 +1597,80 @@ export default function DietitianDraftDietPlan() {
       </div>
 
     </div>
+
+    {/* ── Wallet Top-up Modal ── */}
+    {showWalletModal && (
+      <div className="epm-modal-overlay"
+        onClick={e => { if (e.target === e.currentTarget && !topping) setShowWalletModal(false) }}>
+        <div className="epm-modal">
+          <div className="epm-modal-title">
+            <i className="fa-solid fa-wallet" style={{ color: '#6366f1', marginRight: 8 }} />
+            Insufficient Wallet Balance
+          </div>
+          <p className="epm-modal-sub">
+            Your current balance is{' '}
+            <strong style={{ color: walletBalance !== null && walletBalance > 0 ? '#f97316' : '#ef4444' }}>
+              ₹{walletBalance ?? 0}
+            </strong>
+            . You need at least <strong>₹100</strong> to generate a manual diet plan.
+          </p>
+          <div className="epm-modal-warn" style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1d4ed8' }}>
+            <i className="fa-solid fa-circle-info" /> Add money to your wallet to continue.
+          </div>
+          <div style={{ marginTop: 16 }}>
+            <label className="epm-field-label">Amount to Add (₹)</label>
+            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+              {[100, 200, 500].map(a => (
+                <button key={a} type="button"
+                  onClick={() => setAddMoneyAmt(String(a))}
+                  style={{
+                    padding: '6px 14px', borderRadius: 8, cursor: 'pointer', fontSize: 13,
+                    border: `2px solid ${addMoneyAmt === String(a) ? '#6366f1' : '#e5e7eb'}`,
+                    background: addMoneyAmt === String(a) ? '#eef2ff' : '#fff',
+                    color: addMoneyAmt === String(a) ? '#4338ca' : '#374151',
+                    fontWeight: addMoneyAmt === String(a) ? 700 : 400,
+                  }}>
+                  ₹{a}
+                </button>
+              ))}
+              <input
+                type="number"
+                min={100}
+                placeholder="Custom"
+                value={addMoneyAmt}
+                onChange={e => setAddMoneyAmt(e.target.value)}
+                style={{
+                  flex: 1, border: '1.5px solid #e5e7eb', borderRadius: 8,
+                  padding: '6px 10px', fontSize: 13, outline: 'none',
+                }}
+              />
+            </div>
+          </div>
+          {topupError && (
+            <div className="epm-error" style={{ marginTop: 10 }}>
+              <i className="fa-solid fa-circle-exclamation" /> {topupError}
+            </div>
+          )}
+          <div className="epm-modal-actions" style={{ marginTop: 20 }}>
+            <button className="cdp-btn-cancel" disabled={topping}
+              onClick={() => { setShowWalletModal(false); setTopupError(null) }}>
+              Cancel
+            </button>
+            <button
+              className="epm-send-btn"
+              disabled={topping || !addMoneyAmt || Number(addMoneyAmt) < 100}
+              onClick={handleWalletTopup}
+            >
+              <i className="fa-solid fa-credit-card" />
+              {topping ? 'Processing…' : `Pay ₹${addMoneyAmt || 0}`}
+            </button>
+          </div>
+          <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 10, textAlign: 'center' }}>
+            Accepted: UPI · Debit/Credit Card · Net Banking
+          </p>
+        </div>
+      </div>
+    )}
+  </>
   )
 }

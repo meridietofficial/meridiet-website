@@ -20,6 +20,7 @@ const NAV_ITEMS: { icon: string; label: string; route?: string; badge?: number }
   { icon: 'fa-solid fa-calendar-check',  label: 'Appointments',          route: '/dietitian-appointments' },
   { icon: 'fa-solid fa-users',           label: 'My Clients',            route: '/dietitian-my-clients' },
   { icon: 'fa-solid fa-bowl-food',       label: 'Diet Plans',            route: '/dietitian-diet-plans' },
+  { icon: 'fa-solid fa-pen-to-square',  label: 'Manual Diet Plans',     route: '/dietitian-diet-plans/manual' },
   // { icon: 'fa-solid fa-comments',        label: 'Chat',                  route: '/dietitian-chat' },
   { icon: 'fa-solid fa-bell',            label: 'Follow Ups',            route: '/dietitian-follow-ups' },
   // { icon: 'fa-solid fa-chart-line',      label: 'Reports',               route: '/dietitian-reports' },
@@ -33,7 +34,7 @@ const NAV_ITEMS: { icon: string; label: string; route?: string; badge?: number }
 export default function DietitianLayout() {
   const { user, token } = useAuth()
   const navigate = useNavigate()
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const [online, setOnline] = useState(false)
   const toggling = useRef(false)
   const [onlineError, setOnlineError] = useState<string | null>(null)
@@ -71,7 +72,14 @@ export default function DietitianLayout() {
     }
   }
 
-  const activeNav = NAV_ITEMS.find(i => i.route && pathname.startsWith(i.route))?.label ?? 'Dashboard'
+  // Pick the nav item whose route is the longest prefix of pathname (most specific wins)
+  // Special case: ?manual=1 on a diet plan detail page → highlight Manual Diet Plans
+  const isManualDetailRoute = search.includes('manual=1') && pathname.startsWith('/dietitian-diet-plans/')
+  const activeNav = isManualDetailRoute
+    ? 'Manual Diet Plans'
+    : NAV_ITEMS
+        .filter(i => i.route && (pathname === i.route || pathname.startsWith(i.route + '/')))
+        .sort((a, b) => (b.route?.length ?? 0) - (a.route?.length ?? 0))[0]?.label ?? 'Dashboard'
   const { pendingCount } = useConsultationCount()
 
   const handleNavClick = (item: typeof NAV_ITEMS[number]) => {

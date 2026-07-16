@@ -201,6 +201,7 @@ export type DietitianProfile = {
   is_online: number
   documents: {
     profile_photo: string | null
+    logo_url: string | null
     degree_certificate: string | null
     registration_certificate: string | null
     id_proof: string | null

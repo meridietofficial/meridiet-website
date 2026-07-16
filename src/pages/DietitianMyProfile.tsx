@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useOutletContext } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import dietitianApi, { uploadSingleDocument, deleteDocument, type DietitianProfile } from '../api/dietitian'
+import { prepareImageFile } from '../utils/imageUtils'
 import { ApiError } from '../api/client'
 import accountsApi, { LinkedAccount } from '../api/accounts'
 import banksApi, { Bank } from '../api/banks'
@@ -663,14 +664,43 @@ function TabDocuments({ profile, onSaved }: { profile: DietitianProfile | null; 
   const fileNameFromUrl = (url: string | null) =>
     url ? decodeURIComponent(url.split('/').pop() ?? '') : ''
 
+  const [logoBusy, setLogoBusy] = useState(false)
+
   // Current documents as the API's camelCase body (used as the base on each update)
   const docsBody = () => ({
     profilePhoto:            profile?.documents.profile_photo ?? null,
+    logoUrl:                 profile?.documents.logo_url ?? null,
     degreeCertificate:       profile?.documents.degree_certificate ?? null,
     registrationCertificate: profile?.documents.registration_certificate ?? null,
     idProof:                 profile?.documents.id_proof ?? null,
     experienceCertificate:   profile?.documents.experience_certificate ?? null,
   })
+
+  const handleLogoUpload = async (file: File) => {
+    if (!profile) return
+    setLogoBusy(true)
+    try {
+      const url = await uploadSingleDocument(file, 'clinic-logos')
+      await save({ documents: { ...docsBody(), logoUrl: url } })
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Logo upload failed.', 'error')
+    } finally {
+      setLogoBusy(false)
+    }
+  }
+
+  const handleLogoRemove = async () => {
+    if (!profile) return
+    setLogoBusy(true)
+    try {
+      if (profile.documents.logo_url) await deleteDocument(profile.documents.logo_url)
+      await save({ documents: { ...docsBody(), logoUrl: null } })
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Could not remove logo.', 'error')
+    } finally {
+      setLogoBusy(false)
+    }
+  }
 
   const handleUpload = async (def: typeof DOC_DEFS[number], file: File) => {
     if (!profile) return
@@ -749,6 +779,59 @@ function TabDocuments({ profile, onSaved }: { profile: DietitianProfile | null; 
           )
         })}
       </div>
+
+      {/* ── Clinic Logo — Manual Diet Plan white-label ── */}
+      <div className="dmp-logo-section">
+        <div className="dmp-logo-section-header">
+          <div>
+            <p className="dmp-logo-section-title">
+              <i className="fa-solid fa-image" style={{ marginRight: 8, color: '#1E8E3E' }} />
+              Clinic / Brand Logo
+            </p>
+            <p className="dmp-logo-section-note">
+              <i className="fa-solid fa-pen-to-square" style={{ marginRight: 5, color: '#6366f1' }} />
+              Used only on <strong>Manual Diet Plan PDFs</strong> — replaces MeriDiet branding with your clinic logo on the cover page and page headers.
+            </p>
+          </div>
+        </div>
+
+        <div className="dmp-logo-card">
+          {/* Preview */}
+          <div className="dmp-logo-preview">
+            {profile?.documents.logo_url
+              ? <img src={profile.documents.logo_url} alt="Clinic logo" className="dmp-logo-preview-img" />
+              : (
+                <div className="dmp-logo-preview-placeholder">
+                  <i className="fa-solid fa-store" />
+                  <span>No logo uploaded</span>
+                </div>
+              )
+            }
+          </div>
+
+          {/* Actions */}
+          <div className="dmp-logo-actions">
+            <p className="dmp-logo-tip">Recommended: PNG with transparent background, at least 400 × 120 px</p>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <label className={`dmp-doc-upload-btn${logoBusy ? ' dmp-doc-upload-btn--busy' : ''}`}>
+                {logoBusy
+                  ? <><i className="fa-solid fa-spinner fa-spin" /> Uploading…</>
+                  : <><i className="fa-solid fa-upload" /> {profile?.documents.logo_url ? 'Replace Logo' : 'Upload Logo'}</>}
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                  style={{ display: 'none' }} disabled={logoBusy}
+                  onChange={e => { const f = e.target.files?.[0]; if (f) handleLogoUpload(f) }} />
+              </label>
+              {profile?.documents.logo_url && (
+                <button className="dmp-logo-remove-btn" disabled={logoBusy} onClick={handleLogoRemove}>
+                  <i className="fa-solid fa-trash" /> Remove
+                </button>
+              )}
+            </div>
+            <p className="dmp-doc-formats">Accepted: PNG, JPG, WebP, SVG &nbsp;·&nbsp; Max 5 MB</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   )
 }
@@ -1721,10 +1804,11 @@ export default function DietitianMyProfile() {
   const [cropSrc, setCropSrc] = useState<string | null>(null)
   const cropObjectUrl = useRef<string | null>(null)
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.files?.[0]
     e.target.value = ''
-    if (!file) return
+    if (!raw) return
+    const file = await prepareImageFile(raw)
     if (cropObjectUrl.current) URL.revokeObjectURL(cropObjectUrl.current)
     const url = URL.createObjectURL(file)
     cropObjectUrl.current = url

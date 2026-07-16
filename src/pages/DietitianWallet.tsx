@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import earningsApi, { WalletTransaction, WalletOverview, PayoutData } from '../api/earnings'
 import accountsApi, { LinkedAccount } from '../api/accounts'
+import walletApi from '../api/wallet'
 
 type TxTab = 'all' | 'credits' | 'debits'
 
@@ -25,6 +26,8 @@ export default function DietitianWallet() {
   const [showWithdraw, setShowWithdraw] = useState(false)
   const [withdrawAmt, setWithdrawAmt]   = useState('')
   const [addAmt, setAddAmt]             = useState('')
+  const [addingMoney, setAddingMoney]   = useState(false)
+  const [addMoneyErr, setAddMoneyErr]   = useState<string | null>(null)
 
   const [overview, setOverview]             = useState<WalletOverview | null>(null)
   const [overviewLoading, setOverviewLoading] = useState(true)
@@ -79,6 +82,53 @@ export default function DietitianWallet() {
       .catch(() => {})
       .finally(() => { setLoading(false); setLoadingMore(false) })
   }, [page])
+
+  async function handleAddMoney() {
+    const amt = Number(addAmt)
+    if (!amt || amt < 1) { setAddMoneyErr('Please enter a valid amount'); return }
+    setAddingMoney(true)
+    setAddMoneyErr(null)
+    try {
+      const orderRes = await walletApi.topupCreateOrder(amt)
+      const { order_id, key_id, amount, currency } = orderRes.data
+      const rzp = new window.Razorpay({
+        key:         key_id,
+        amount:      amount * 100,
+        currency:    currency ?? 'INR',
+        order_id,
+        name:        'MeriDiet',
+        description: 'Wallet Top-up',
+        image:       '/logo.png',
+        theme: { color: '#006B28' },
+        handler: async (rzpResponse: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          try {
+            const verifyRes = await walletApi.topupVerify(rzpResponse)
+            if (verifyRes.data?.new_balance !== undefined) {
+              setOverview(prev => prev ? { ...prev, available_balance: verifyRes.data.new_balance } : prev)
+            }
+            setShowAdd(false)
+            setAddAmt('')
+            // Refresh transactions
+            setPage(1)
+          } catch (err: any) {
+            setAddMoneyErr(err.message ?? 'Payment verification failed')
+          } finally {
+            setAddingMoney(false)
+          }
+        },
+        modal: {
+          ondismiss: async () => {
+            try { await walletApi.topupFailed(order_id) } catch {}
+            setAddingMoney(false)
+          },
+        },
+      })
+      rzp.open()
+    } catch (e: any) {
+      setAddMoneyErr(e.message ?? 'Could not initiate payment')
+      setAddingMoney(false)
+    }
+  }
 
   const filtered = transactions.filter(t => {
     if (tab === 'credits' && t.type !== 'credit') return false
@@ -235,13 +285,25 @@ export default function DietitianWallet() {
                     type="number"
                     placeholder="Enter amount"
                     value={addAmt}
-                    onChange={e => setAddAmt(e.target.value)}
+                    onChange={e => { setAddAmt(e.target.value); setAddMoneyErr(null) }}
                     min={1}
+                    disabled={addingMoney}
                   />
                 </div>
-                <button className="wa-action-confirm">Proceed to Pay</button>
-                <button className="wa-action-cancel" onClick={() => setShowAdd(false)}>Cancel</button>
+                <button
+                  className="wa-action-confirm"
+                  onClick={handleAddMoney}
+                  disabled={addingMoney || !addAmt}
+                >
+                  {addingMoney ? 'Processing…' : 'Proceed to Pay'}
+                </button>
+                <button className="wa-action-cancel" onClick={() => { setShowAdd(false); setAddMoneyErr(null) }} disabled={addingMoney}>Cancel</button>
               </div>
+              {addMoneyErr && (
+                <p style={{ color: '#ef4444', fontSize: 12, marginTop: 6 }}>
+                  <i className="fa-solid fa-circle-exclamation" style={{ marginRight: 4 }} />{addMoneyErr}
+                </p>
+              )}
               <p className="wa-action-hint">Accepted: UPI · Debit/Credit Card · Net Banking</p>
             </div>
           </div>
