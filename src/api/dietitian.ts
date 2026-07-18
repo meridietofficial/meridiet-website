@@ -66,6 +66,30 @@ async function getAwsKeys(): Promise<AwsCredentials> {
   }
 }
 
+async function detectExtension(file: File): Promise<string> {
+  const buf  = await file.slice(0, 12).arrayBuffer()
+  const u8   = new Uint8Array(buf)
+  const hex  = Array.from(u8).map(b => b.toString(16).padStart(2, '0')).join('')
+  const ftyp = new TextDecoder().decode(u8.slice(4, 12))
+
+  if (hex.startsWith('ffd8ff'))   return 'jpg'
+  if (hex.startsWith('89504e47')) return 'png'
+  if (hex.startsWith('25504446')) return 'pdf'
+  if (hex.startsWith('47494638')) return 'gif'
+
+  // HEIC/HEIF that the browser couldn't convert — allow through
+  if (ftyp.includes('heic') || ftyp.includes('heix') ||
+      ftyp.includes('mif1') || ftyp.includes('msf1') ||
+      ftyp.includes('heif')) return 'heic'
+
+  // Trust the MIME type set by normalizeImageFile as last resort
+  if (file.type === 'image/heic' || file.type === 'image/heif') return 'heic'
+  if (file.type === 'image/jpeg') return 'jpg'
+  if (file.type === 'image/png')  return 'png'
+
+  throw new Error(`File "${file.name}" is not a valid image or PDF. Please upload a JPG, PNG, or PDF file.`)
+}
+
 // ── Upload one file to S3, returns public URL ─────────────────
 async function uploadFileToS3(
   file: File,
@@ -73,6 +97,8 @@ async function uploadFileToS3(
   credentials: AwsCredentials
 ): Promise<string> {
   console.log(`[S3 Upload] Starting upload — file: ${file.name}, size: ${file.size} bytes, folder: ${folder}`)
+
+  const ext = await detectExtension(file)
 
   const client = new S3Client({
     region: credentials.region,
@@ -82,16 +108,16 @@ async function uploadFileToS3(
     },
   })
 
-  const ext = file.name.split('.').pop()
   const key = `dietitians/${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
 
   try {
     const buffer = await file.arrayBuffer()
+    const MIME: Record<string, string> = { jpg: 'image/jpeg', png: 'image/png', pdf: 'application/pdf', gif: 'image/gif', heic: 'image/heic' }
     await client.send(new PutObjectCommand({
       Bucket:      credentials.bucket,
       Key:         key,
       Body:        new Uint8Array(buffer),
-      ContentType: file.type,
+      ContentType: MIME[ext] ?? 'application/octet-stream',
     }))
     const url = `${credentials.baseUrl}/${key}`
     console.log(`[S3 Upload] ✓ Uploaded ${file.name} → ${url}`)

@@ -30,6 +30,13 @@ const ENDPOINTS = {
     specializations: '/dietitians/specializations',
     list:            '/dietitians',
   },
+  dietitianRegistrationPayment: {
+    createOrder: '/dietitian/register/create-order',
+    verify:      '/dietitian/register/verify-payment',
+    failed:      '/dietitian/register/failed',
+    sendOtp:     '/dietitian/register/send-otp',
+    verifyOtp:   '/dietitian/register/verify-otp',
+  },
   consultation: {
     fee: '/consultation-fee',
   },

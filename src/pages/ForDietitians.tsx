@@ -1,7 +1,18 @@
+const PRICING_FEATURES = [
+  { icon: 'fa-solid fa-tag',            text: 'White Label Diet Charts with your branding' },
+  { icon: 'fa-solid fa-video',          text: 'Online Appointments & Video Consultations' },
+  { icon: 'fa-solid fa-users',          text: 'Manage Online + Offline Clients in one place' },
+  { icon: 'fa-solid fa-calendar-check', text: 'Appointment & Follow-up Tracking' },
+  { icon: 'fa-solid fa-wallet',         text: 'Earnings Dashboard & Payout Management' },
+  { icon: 'fa-solid fa-shield-halved',  text: 'Verified Dietitian Badge on your profile' },
+  { icon: 'fa-solid fa-headset',        text: 'Dedicated Support at every step' },
+  { icon: 'fa-solid fa-coins',          text: '₹500 wallet credit added to your account' },
+]
+
 const BENEFITS = [
-  { icon: '/benefit-icon-1.png', text: 'Get new clients every day' },
-  { icon: '/benefit-icon-2.png', text: 'Flexible consultation timings' },
-  { icon: '/benefit-icon-3.png', text: 'Grow your brand with MeriDiet' },
+  { icon: '/benefit-icon-1.png', text: 'White label diet charts under your brand' },
+  { icon: '/benefit-icon-2.png', text: 'Manage online & offline clients in one place' },
+  { icon: '/benefit-icon-3.png', text: 'Online appointments with video consultations' },
   { icon: '/benefit-icon-4.png', text: 'Dedicated support at every step' },
 ]
 
@@ -47,8 +58,8 @@ const ForDietitians = () => {
           <p className="fd-hero-eyebrow">Join MeriDiet as a</p>
           <h1 className="fd-hero-title">Dietitian</h1>
           <p className="fd-hero-desc">
-            Empower lives with science-backed nutrition.<br />
-            Grow your practice with India's trusted nutrition platform.
+            Build your online + offline practice with powerful tools designed for dietitians.<br />
+            Manage clients, appointments, and diet plans — all in one place.
           </p>
 
           <ul className="fd-benefits">
@@ -65,7 +76,7 @@ const ForDietitians = () => {
             <button className="btn-outline fd-cta-btn" onClick={() => setLoginOpen(true)}>Login</button>
           </div>
           <p className="fd-free-note">
-            <img src="/free-icon.png" alt="" className="fd-free-check" /> It's free to register
+            <img src="/free-icon.png" alt="" className="fd-free-check" /> Trusted by dietitians across India
           </p>
         </div>
 
@@ -91,6 +102,51 @@ const ForDietitians = () => {
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </section>
+
+    {/* ── Pricing Section ── */}
+    <section className="fd-pricing">
+      <div className="container fd-pricing-inner">
+        <div className="fd-pricing-left">
+          <p className="fd-pricing-eyebrow">Simple & Transparent</p>
+          <h2 className="fd-pricing-title">One-Time Investment to Grow Your Practice</h2>
+          <p className="fd-pricing-sub">No monthly fees. No hidden charges. Pay once and get everything you need.</p>
+
+          <ul className="fd-pricing-features">
+            {PRICING_FEATURES.map(f => (
+              <li key={f.text} className="fd-pricing-feature-item">
+                <span className="fd-pricing-feature-icon-wrap">
+                  <i className={f.icon} />
+                </span>
+                {f.text}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="fd-pricing-right">
+          <div className="fd-plan-card">
+            <div className="fd-plan-badge">One-Time Fee</div>
+            <div className="fd-plan-price-row">
+              <span className="fd-plan-currency">₹</span>
+              <span className="fd-plan-amount">2,499</span>
+            </div>
+            <p className="fd-plan-credit-note">
+              <i className="fa-solid fa-coins" style={{ color: '#f59e0b', marginRight: 6 }} />
+              Includes <strong>₹500 wallet credit</strong> on activation
+            </p>
+            <div className="fd-plan-divider" />
+            <p className="fd-plan-value-note">Effective cost just <strong>₹1,999</strong> after credit</p>
+            <button className="btn-primary fd-plan-cta" onClick={() => navigate('/for-dietitians/basic-info')}>
+              Get Started →
+            </button>
+            <p className="fd-plan-secure">
+              <i className="fa-solid fa-lock" style={{ fontSize: 11, marginRight: 5 }} />
+              Secured by Razorpay · 100% safe
+            </p>
+          </div>
         </div>
       </div>
     </section>

@@ -3174,6 +3174,7 @@
   top: calc(100% + 6px);
   left: 0;
   width: 284px;
+  max-width: calc(100vw - 32px);
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
@@ -4382,6 +4383,9 @@
   border: 1.5px solid #e5e7eb;
   border-radius: 14px;
   padding: 18px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .ct-contact-header {
@@ -4526,6 +4530,8 @@
   display: flex;
   gap: 8px;
   align-items: center;
+  min-width: 0;
+  width: 100%;
 }
 
 .ct-coupon-apply-btn {
@@ -5587,6 +5593,259 @@
 .jd2-login-note a { color: #006B28; font-weight: 600; text-decoration: none; }
 .jd2-login-link { background: none; border: none; padding: 0; cursor: pointer; color: #006B28; font-weight: 600; font-size: 14px; font-family: inherit; }
 
+/* ── Registration Success Modal ── */
+.jd2-success-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  padding: 16px;
+}
+
+.jd2-success-modal {
+  background: #fff;
+  border-radius: 24px;
+  padding: 40px 32px 32px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  animation: jd2-success-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes jd2-success-pop {
+  from { opacity: 0; transform: scale(0.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.jd2-success-icon-wrap {
+  margin-bottom: 18px;
+}
+
+.jd2-success-icon {
+  font-size: 56px;
+  color: #16a34a;
+}
+
+.jd2-success-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a2e1a;
+  margin-bottom: 6px;
+}
+
+.jd2-success-welcome {
+  font-size: 15px;
+  color: #5a7060;
+  margin-bottom: 24px;
+}
+
+.jd2-success-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 28px;
+  text-align: left;
+}
+
+.jd2-success-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f0fdf4;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 13.5px;
+  color: #2d4a33;
+  font-weight: 500;
+}
+
+.jd2-success-card i {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.jd2-success-btn {
+  width: 100%;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 15px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.jd2-success-btn:hover { background: #15803d; }
+
+/* ── Phone verified badge ── */
+.jd2-phone-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #16a34a;
+  background: #dcfce7;
+  border-radius: 20px;
+  padding: 2px 8px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+/* ── Send OTP button inside input ── */
+.jd2-send-otp-btn {
+  flex-shrink: 0;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 12px;
+  cursor: pointer;
+  margin-right: 4px;
+  white-space: nowrap;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+.jd2-send-otp-btn:hover:not(:disabled) { background: #15803d; }
+.jd2-send-otp-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ── OTP Modal ── */
+.jd2-otp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.jd2-otp-modal {
+  background: #fff;
+  border-radius: 20px;
+  padding: 36px 32px 28px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.18);
+}
+
+.jd2-otp-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #9ca3af;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+.jd2-otp-close:hover { color: #374151; }
+
+.jd2-otp-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #dcfce7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: #16a34a;
+  font-size: 22px;
+}
+
+.jd2-otp-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a2e1a;
+  margin-bottom: 8px;
+}
+
+.jd2-otp-sub {
+  font-size: 13.5px;
+  color: #5a7060;
+  margin-bottom: 24px;
+  line-height: 1.5;
+}
+
+.jd2-otp-inputs {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+
+.jd2-otp-input {
+  width: 52px;
+  height: 58px;
+  border: 2px solid #d1fae5;
+  border-radius: 12px;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+  color: #1a2e1a;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+}
+.jd2-otp-input:focus { border-color: #16a34a; }
+
+.jd2-otp-err {
+  font-size: 12.5px;
+  color: #dc2626;
+  margin-bottom: 14px;
+}
+
+.jd2-otp-verify-btn {
+  width: 100%;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  padding: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 16px;
+  transition: background 0.15s;
+}
+.jd2-otp-verify-btn:hover:not(:disabled) { background: #15803d; }
+.jd2-otp-verify-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.jd2-otp-resend {
+  font-size: 13px;
+  color: #5a7060;
+  margin: 0;
+}
+
+.jd2-otp-resend-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: #16a34a;
+  font-weight: 600;
+  font-size: 13px;
+  font-family: inherit;
+}
+.jd2-otp-resend-btn:hover:not(:disabled) { text-decoration: underline; }
+.jd2-otp-resend-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
 /* ── Success ── */
 .jd2-success {
   display: flex; flex-direction: column; align-items: center;
@@ -5690,6 +5949,260 @@
   }
 }
 
+/* ════════════════════════════════════════
+   FOR DIETITIANS – PRICING SECTION (fd-pricing-)
+════════════════════════════════════════ */
+.fd-pricing {
+  padding: 80px 0;
+  background: linear-gradient(160deg, #f0fdf4 0%, #fff 60%);
+}
+
+.fd-pricing-inner {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 56px;
+  align-items: center;
+}
+
+.fd-pricing-eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #16a34a;
+  margin-bottom: 10px;
+}
+
+.fd-pricing-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1a2e1a;
+  line-height: 1.25;
+  margin-bottom: 14px;
+}
+
+.fd-pricing-sub {
+  font-size: 15px;
+  color: #5a7060;
+  margin-bottom: 32px;
+  line-height: 1.6;
+}
+
+.fd-pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.fd-pricing-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14.5px;
+  color: #2d4a33;
+  font-weight: 500;
+}
+
+.fd-pricing-feature-icon-wrap {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #dcfce7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #16a34a;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+/* ── Plan card ── */
+.fd-plan-card {
+  background: #fff;
+  border: 2px solid #16a34a;
+  border-radius: 20px;
+  padding: 36px 32px;
+  box-shadow: 0 12px 40px rgba(22,163,74,0.12);
+  text-align: center;
+  position: relative;
+}
+
+.fd-plan-badge {
+  display: inline-block;
+  background: #16a34a;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+.fd-plan-price-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.fd-plan-currency {
+  font-size: 26px;
+  font-weight: 700;
+  color: #16a34a;
+  margin-top: 10px;
+}
+
+.fd-plan-amount {
+  font-size: 64px;
+  font-weight: 800;
+  color: #1a2e1a;
+  line-height: 1;
+}
+
+.fd-plan-credit-note {
+  font-size: 13.5px;
+  color: #5a7060;
+  margin-bottom: 16px;
+}
+
+.fd-plan-divider {
+  border: none;
+  border-top: 1px dashed #d1fae5;
+  margin: 16px 0;
+}
+
+.fd-plan-value-note {
+  font-size: 13px;
+  color: #16a34a;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.fd-plan-cta {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  border-radius: 12px;
+  margin-bottom: 14px;
+}
+
+.fd-plan-secure {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+/* ════════════════════════════════════════
+   ONBOARDING – STEP 4 PAYMENT (jd2-pay-)
+════════════════════════════════════════ */
+.jd2-pay-card {
+  background: linear-gradient(135deg, #f0fdf4 0%, #fff 100%);
+  border: 2px solid #bbf7d0;
+  border-radius: 16px;
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.jd2-pay-badge {
+  display: inline-block;
+  background: #16a34a;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+
+.jd2-pay-price-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+  margin-bottom: 8px;
+}
+
+.jd2-pay-currency {
+  font-size: 22px;
+  font-weight: 700;
+  color: #16a34a;
+  margin-top: 8px;
+}
+
+.jd2-pay-amount {
+  font-size: 56px;
+  font-weight: 800;
+  color: #1a2e1a;
+  line-height: 1;
+}
+
+.jd2-pay-credit-note {
+  font-size: 13px;
+  color: #5a7060;
+  margin-bottom: 20px;
+}
+
+.jd2-pay-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px dashed #d1fae5;
+  padding-top: 16px;
+}
+
+.jd2-pay-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #2d4a33;
+  font-weight: 500;
+}
+
+.jd2-pay-feature-icon {
+  color: #16a34a;
+  font-size: 13px;
+  width: 16px;
+  flex-shrink: 0;
+}
+
+.jd2-pay-secure-note {
+  font-size: 11.5px;
+  color: #9ca3af;
+  border-top: 1px dashed #d1fae5;
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+/* ── Pricing section responsive ── */
+@media (max-width: 900px) {
+  .fd-pricing-inner {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .fd-pricing-title { font-size: 26px; }
+}
+
+@media (max-width: 600px) {
+  .fd-pricing { padding: 48px 0; }
+  .fd-pricing-title { font-size: 22px; }
+  .fd-plan-amount { font-size: 48px; }
+  .fd-plan-card { padding: 28px 20px; }
+}
+
 /* ── Step slide animations ── */
 @keyframes df-slide-in-forward {
   from {
@@ -5721,6 +6234,12 @@
 
 .df-step-anim--backward {
   animation: df-slide-in-backward 0.32s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* wrapper div around each step — must not overflow panel */
+[class^="df-step-anim"] {
+  min-width: 0;
+  width: 100%;
 }
 
 /* ── Step content shared ── */
@@ -6752,6 +7271,28 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  /* Diet type + whey protein: 3-col → row of cards (horizontal scroll-free) */
+  .fp-diet-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .fp-diet-card {
+    padding: 12px 6px 10px;
+    gap: 4px;
+  }
+
+  .fp-diet-icon {
+    font-size: 22px;
+  }
+
+  .fp-diet-name {
+    font-size: 11px;
+  }
+
+  .fp-diet-desc {
+    font-size: 10px;
+  }
+
   /* Success box: reduce excessive padding */
   .df-success-box {
     padding: 32px 20px;
@@ -6774,6 +7315,11 @@
 
   /* Keep plan cards single-column on tiny screens */
   .ct-plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Diet type + whey protein cards → 1 col on tiny phones */
+  .fp-diet-grid {
     grid-template-columns: 1fr;
   }
 
@@ -8449,6 +8995,46 @@
   color: var(--text-mid);
 }
 .auth-otp-timer strong { color: var(--text-dark); }
+
+/* ── Auth success screen ── */
+.auth-success {
+  text-align: center;
+  padding: 8px 0 4px;
+}
+
+.auth-success-icon-wrap {
+  margin-bottom: 16px;
+}
+
+.auth-success-icon {
+  font-size: 60px;
+  color: #16a34a;
+  animation: auth-success-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes auth-success-pop {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.auth-success-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1a2e1a;
+  margin-bottom: 6px;
+}
+
+.auth-success-name {
+  font-size: 14.5px;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.auth-success-sub {
+  font-size: 13.5px;
+  color: #6b7280;
+  margin-bottom: 24px;
+}
 
 .jd2-otp-wrap {
   display: flex;

@@ -80,7 +80,7 @@ function FormPage() {
 }
 
 const NO_NAVBAR_PREFIXES = ['/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
-const NO_FOOTER_PREFIXES = ['/diet-plan', '/form', '/join-as-dietitian', '/for-dietitians/basic-info', '/for-dietitians/qualification', '/for-dietitians/document-upload', '/dietitian/verification-submitted', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
+const NO_FOOTER_PREFIXES = ['/diet-plan', '/form', '/join-as-dietitian', '/for-dietitians/basic-info', '/for-dietitians/qualification', '/for-dietitians/document-upload', '/for-dietitians/payment', '/dietitian/verification-submitted', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
 
 function ActiveVideoCall() {
   const { activeCall, clearCall } = useVideoCall()
@@ -126,6 +126,7 @@ function AppInner() {
           <Route path="/for-dietitians/basic-info"         element={<DietitianOnboarding />} />
           <Route path="/for-dietitians/qualification"      element={<DietitianOnboarding />} />
           <Route path="/for-dietitians/document-upload"    element={<DietitianOnboarding />} />
+          <Route path="/for-dietitians/payment"            element={<DietitianOnboarding />} />
           <Route path="/dietitian/verification-submitted"  element={<DietitianVerificationSubmitted />} />
           <Route path="/join-as-dietitian"                 element={<JoinDietitian />} />
           <Route path="/reset-password"                    element={<ResetPassword />} />
