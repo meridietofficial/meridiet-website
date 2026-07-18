@@ -23,7 +23,7 @@ function GoogleBtn({ onSuccess, onError }: {
   )
 }
 
-type Tab = 'login' | 'signup' | 'forgot' | 'verify'
+type Tab = 'login' | 'signup' | 'forgot' | 'verify' | 'success'
 export type UserType = 'user' | 'dietitian'
 
 type Props = {
@@ -74,6 +74,9 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
   const [signupPhoneCode, setSignupPhoneCode] = useState('+91')
   const [signupPhone, setSignupPhone] = useState(prefillPhone)
   const [signupPassword, setSignupPassword] = useState('')
+
+  // Registration success
+  const [registeredName, setRegisteredName] = useState('')
 
   // OTP verify (signup phone verification)
   const [otpDigits, setOtpDigits] = useState(['', '', '', ''])
@@ -184,9 +187,9 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
     try {
       const res = await authApi.register(signupBody)
       saveAuth(res.data.user, res.data.token)
-      showToast('Account created successfully! Welcome to MeriDiet.', 'success')
+      setRegisteredName(res.data.user.full_name)
+      setTab('success')
       onAuthSuccess?.()
-      onClose()
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : 'Registration failed. Please try again.', 'error')
     } finally {
@@ -208,9 +211,9 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
       await authApi.verifyOtp({ phone_code: phoneCode, phone_number: phoneNumber, otp })
       const res = await authApi.register(pendingSignupData)
       saveAuth(res.data.user, res.data.token)
-      showToast('Account created successfully! Welcome to MeriDiet.', 'success')
+      setRegisteredName(res.data.user.full_name)
+      setTab('success')
       onAuthSuccess?.()
-      onClose()
     } catch (err) {
       showToast(err instanceof ApiError ? err.message : 'Invalid OTP. Please try again.', 'error')
     } finally {
@@ -317,9 +320,11 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
     <div className="auth-overlay" ref={overlayRef} onClick={handleOverlayClick}>
       <div className="auth-modal">
 
-        <button className="auth-close" onClick={onClose} aria-label="Close">
-          <X size={20} strokeWidth={2} />
-        </button>
+        {tab !== 'success' && (
+          <button className="auth-close" onClick={onClose} aria-label="Close">
+            <X size={20} strokeWidth={2} />
+          </button>
+        )}
 
         {formGateMode ? (
           <div className="auth-gate-banner">
@@ -401,7 +406,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
               {loading ? 'Logging in…' : 'Login to MeriDiet'}
             </button>
 
-            {GOOGLE_CLIENT_ID && (
+            {GOOGLE_CLIENT_ID && userType === 'user' && (
               <>
                 <div className="auth-divider"><span>or continue with</span></div>
                 <GoogleBtn onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
@@ -571,7 +576,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
                 : 'Create Free Account'}
             </button>
 
-            {GOOGLE_CLIENT_ID && (
+            {GOOGLE_CLIENT_ID && userType === 'user' && (
               <>
                 <div className="auth-divider"><span>or continue with</span></div>
                 <GoogleBtn onSuccess={handleGoogleSuccess} onError={handleGoogleError} />
@@ -653,6 +658,24 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
                 </>
               )}
             </div>
+          </div>
+        )}
+
+        {tab === 'success' && (
+          <div className="auth-form auth-success">
+            <div className="auth-success-icon-wrap">
+              <i className="fa-solid fa-circle-check auth-success-icon" />
+            </div>
+            <h3 className="auth-success-title">Welcome to MeriDiet!</h3>
+            <p className="auth-success-name">Hi <strong>{registeredName.split(' ')[0]}</strong>, your account is ready.</p>
+            <p className="auth-success-sub">Start your personalized nutrition journey today.</p>
+            <button
+              type="button"
+              className="btn-primary auth-submit"
+              onClick={onClose}
+            >
+              Get Started →
+            </button>
           </div>
         )}
 

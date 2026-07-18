@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import dietitianApi, { uploadDocuments } from '../api/dietitian'
-import { prepareImageFile } from '../utils/imageUtils'
+import { uploadDocuments } from '../api/dietitian'
+import { dietitianRegPaymentApi, dietitianRegOtpApi } from '../api/payment'
+import { normalizeImageFile, normalizeDocumentFile } from '../utils/imageUtils'
 import { ApiError } from '../api/client'
 import { useToast } from '../context/ToastContext'
 import AuthModal from '../components/AuthModal'
@@ -19,18 +20,32 @@ const STEP_MAP: Record<string, number> = {
   '/for-dietitians/basic-info':      1,
   '/for-dietitians/qualification':   2,
   '/for-dietitians/document-upload': 3,
+  '/for-dietitians/payment':         4,
 }
 const STEP_PATHS = [
   '',
   '/for-dietitians/basic-info',
   '/for-dietitians/qualification',
   '/for-dietitians/document-upload',
+  '/for-dietitians/payment',
 ]
 
 const STEPS = [
   { num: 1, label: 'Basic Info' },
   { num: 2, label: 'Qualifications' },
   { num: 3, label: 'Documents' },
+  { num: 4, label: 'Payment' },
+]
+
+const REG_FEATURES = [
+  { icon: 'fa-solid fa-tag',            text: 'White Label Diet Charts with your branding' },
+  { icon: 'fa-solid fa-video',          text: 'Online Appointments & Video Consultations' },
+  { icon: 'fa-solid fa-users',          text: 'Manage Online + Offline Clients in one place' },
+  { icon: 'fa-solid fa-calendar-check', text: 'Appointment & Follow-up Tracking' },
+  { icon: 'fa-solid fa-wallet',         text: 'Earnings Dashboard & Payout Management' },
+  { icon: 'fa-solid fa-shield-halved',  text: 'Verified Dietitian Badge on your profile' },
+  { icon: 'fa-solid fa-headset',        text: 'Dedicated Support at every step' },
+  { icon: 'fa-solid fa-coins',          text: '₹500 wallet credit — use for diet plans & more' },
 ]
 
 /* ── Degrees (unchanged from JoinDietitian) ── */
@@ -151,12 +166,35 @@ export default function DietitianOnboarding() {
 
   const step = STEP_MAP[pathname] ?? 1
 
-  const [loginOpen, setLoginOpen]     = useState(false)
-  const [showPassword, setShowPassword] = useState(false)
-  const [data, setData]               = useState<Form>(() => ({ ...INIT, ...loadSaved() }))
-  const [errors, setErrors]           = useState<Partial<Record<keyof Form, string>>>({})
-  const [uploading, setUploading]     = useState(false)
-  const [docError, setDocError]       = useState('')
+  const [loginOpen, setLoginOpen]         = useState(false)
+  const [showPassword, setShowPassword]   = useState(false)
+  const [data, setData]                   = useState<Form>(() => ({ ...INIT, ...loadSaved() }))
+  const [errors, setErrors]               = useState<Partial<Record<keyof Form, string>>>({})
+  const [uploading, setUploading]         = useState(false)
+  const [docError, setDocError]           = useState('')
+
+  /* Registration success modal */
+  const [successData, setSuccessData] = useState<{ name: string } | null>(null)
+
+  /* OTP state */
+  const [phoneVerified, setPhoneVerified]       = useState(false)
+  const [phoneVerifiedAt, setPhoneVerifiedAt]   = useState<number | null>(null)
+  const [otpModalOpen, setOtpModalOpen]         = useState(false)
+  const [otpDigits, setOtpDigits]               = useState(['', '', '', ''])
+  const [otpLoading, setOtpLoading]             = useState(false)
+  const [sendOtpLoading, setSendOtpLoading]     = useState(false)
+  const [otpError, setOtpError]                 = useState('')
+
+  const OTP_EXPIRY_MS = 10 * 60 * 1000 // 10 minutes
+
+  const isPhoneVerificationExpired = () =>
+    phoneVerifiedAt !== null && Date.now() - phoneVerifiedAt > OTP_EXPIRY_MS
+  const otpRefs = [
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+    useRef<HTMLInputElement>(null),
+  ]
   const [cities, setCities]           = useState<string[]>([])
   const [citiesLoading, setCitiesLoading] = useState(false)
   const [docs, setDocs]               = useState<Record<string, File | null>>({
@@ -176,8 +214,11 @@ export default function DietitianOnboarding() {
       navigate('/for-dietitians/basic-info', { replace: true })
     } else if (step > 2 && !data.qualification.trim()) {
       navigate('/for-dietitians/qualification', { replace: true })
+    } else if (step > 3 && !docs.profilePhoto) {
+      // docs live only in component state — if lost (page refresh), send back to upload step
+      navigate('/for-dietitians/document-upload', { replace: true })
     }
-  }, [step, data.fullName, data.qualification, navigate])
+  }, [step, data.fullName, data.qualification, docs.profilePhoto, navigate])
 
   /* Fire funnel tracking event on each step load */
   useEffect(() => {
@@ -185,6 +226,7 @@ export default function DietitianOnboarding() {
       1: 'dietitian_onboarding_step1_basic_info',
       2: 'dietitian_onboarding_step2_qualification',
       3: 'dietitian_onboarding_step3_documents',
+      4: 'dietitian_onboarding_step4_payment',
     }
     if (EVENT_NAMES[step]) trackEvent(EVENT_NAMES[step])
   }, [step])
@@ -211,6 +253,7 @@ export default function DietitianOnboarding() {
   const set = (k: keyof Form, v: Form[keyof Form]) => {
     setData(p => ({ ...p, [k]: v }))
     setErrors(p => { const n = { ...p }; delete n[k]; return n })
+    if (k === 'phone') { setPhoneVerified(false); setPhoneVerifiedAt(null) }
   }
 
   const validate = (s: number) => {
@@ -219,6 +262,7 @@ export default function DietitianOnboarding() {
       if (!data.fullName.trim())  e.fullName = 'Full name is required'
       if (!data.email.trim() || !/\S+@\S+\.\S+/.test(data.email)) e.email = 'Valid email is required'
       if (!data.phone.trim() || !/^\d{10}$/.test(data.phone))     e.phone = 'Valid 10-digit number required'
+      else if (!phoneVerified)                                      e.phone = 'Please verify your phone number'
       if (!data.state.trim())    e.state    = 'State is required'
       if (!data.city.trim())     e.city     = 'City is required'
       if (!data.password.trim()) e.password = 'Password is required'
@@ -235,29 +279,81 @@ export default function DietitianOnboarding() {
     return e
   }
 
+  const sendOtp = async () => {
+    setSendOtpLoading(true)
+    setErrors(p => { const n = { ...p }; delete n.phone; return n })
+    try {
+      await dietitianRegOtpApi.sendOtp(data.phone)
+      setOtpDigits(['', '', '', ''])
+      setOtpError('')
+      setOtpModalOpen(true)
+      setTimeout(() => otpRefs[0].current?.focus(), 100)
+    } catch (err) {
+      setErrors(p => ({ ...p, phone: err instanceof ApiError ? err.message : 'Failed to send OTP. Please try again.' }))
+    } finally {
+      setSendOtpLoading(false)
+    }
+  }
+
+  const submitOtp = async () => {
+    const otp = otpDigits.join('')
+    if (otp.length < 4) { setOtpError('Please enter the 4-digit OTP'); return }
+    setOtpLoading(true)
+    setOtpError('')
+    try {
+      await dietitianRegOtpApi.verifyOtp(data.phone, otp)
+      setPhoneVerified(true)
+      setPhoneVerifiedAt(Date.now())
+      setOtpModalOpen(false)
+      setErrors(p => { const n = { ...p }; delete n.phone; return n })
+    } catch (err) {
+      setOtpError(err instanceof ApiError ? err.message : 'Invalid OTP. Please try again.')
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
   const goNext = async () => {
     const e = validate(step)
     if (Object.keys(e).length > 0) { setErrors(e); return }
 
     if (step === 3) {
-      /* ── Submit: upload docs → register API (same flow as JoinDietitian) ── */
       if (!docs.profilePhoto) { setDocError('Profile Photo is required'); return }
+      if (!docs.degreeCert)   { setDocError('Degree Certificate is required'); return }
+      if (!docs.idProof)      { setDocError('ID Proof is required'); return }
       setDocError('')
+      setErrors({})
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      navigate(STEP_PATHS[4])
+      return
+    }
+
+    if (step === 4) {
+      /* ── Check phone verification hasn't expired ── */
+      if (isPhoneVerificationExpired()) {
+        setPhoneVerified(false)
+        setPhoneVerifiedAt(null)
+        showToast('Phone verification expired. Please re-verify your number.', 'error')
+        navigate(STEP_PATHS[1])
+        return
+      }
+
+      /* ── Upload docs → create-order (all data in one call) → Razorpay → verify → JWT ── */
       setUploading(true)
       try {
         const docUrls = await uploadDocuments(
           docs as Record<'profilePhoto' | 'degreeCert' | 'regCert' | 'idProof', File | null>
         )
 
-        const body = {
+        const orderRes = await dietitianRegPaymentApi.createOrder({
           fullName:           data.fullName,
           email:              data.email,
           phone:              data.phone,
+          password:           data.password,
           state:              data.state,
           city:               data.city,
-          password:           data.password,
-          registrationNumber: data.license,
           experience:         data.experience,
+          registrationNumber: data.license,
           specialization:     data.specializations.length ? data.specializations : [],
           degrees: [{ degree: data.qualification, institute: '', year: '' }],
           documents: {
@@ -266,19 +362,59 @@ export default function DietitianOnboarding() {
             registrationCertificate: docUrls.regCert,
             idProof:                 docUrls.idProof,
           },
-        }
+        })
 
-        await dietitianApi.register(body)
-        clearSaved()
-        trackEvent('dietitian_onboarding_complete')
-        navigate('/dietitian/verification-submitted')
-      } catch (err) {
-        showToast(
-          err instanceof ApiError ? err.message : 'Upload failed. Please try again.',
-          'error'
-        )
-      } finally {
+        const { key_id, order_id, amount, currency } = orderRes.data
         setUploading(false)
+
+        let paymentSucceeded = false
+
+        const rzp = new window.Razorpay({
+          key:      key_id,
+          order_id,
+          amount:   amount * 100,
+          currency,
+          name:        'MeriDiet',
+          description: 'Dietitian Registration – One-time fee',
+          prefill: { name: data.fullName, email: data.email, contact: data.phone },
+          theme: { color: '#16a34a' },
+          handler: async (rzpRes: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+            paymentSucceeded = true
+            try {
+              const verifyRes = await dietitianRegPaymentApi.verify({
+                razorpay_order_id:   rzpRes.razorpay_order_id,
+                razorpay_payment_id: rzpRes.razorpay_payment_id,
+                razorpay_signature:  rzpRes.razorpay_signature,
+              })
+              clearSaved()
+              trackEvent('dietitian_onboarding_complete')
+              const { user } = verifyRes.data
+              setSuccessData({ name: user.full_name })
+            } catch {
+              showToast('Payment received but verification failed. Please contact support.', 'error')
+            }
+          },
+          modal: {
+            ondismiss: async () => {
+              if (paymentSucceeded) return   // payment went through — don't mark as failed
+              try { await dietitianRegPaymentApi.failed(order_id) } catch { /* silent */ }
+              showToast('Payment cancelled. Please try again to complete registration.', 'error')
+            },
+          },
+        })
+        rzp.open()
+      } catch (err) {
+        setUploading(false)
+        const msg = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.'
+        // Backend rejected because phone verification expired/not found — send back to Step 1
+        if (msg.toLowerCase().includes('verif') && msg.toLowerCase().includes('phone')) {
+          setPhoneVerified(false)
+          setPhoneVerifiedAt(null)
+          showToast('Phone verification expired. Please re-verify your number.', 'error')
+          navigate(STEP_PATHS[1])
+          return
+        }
+        showToast(msg, 'error')
       }
       return
     }
@@ -330,18 +466,22 @@ export default function DietitianOnboarding() {
                 ? <img src="/jd-step1-icon.png" alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} />
                 : step === 2
                 ? <i className="fa-solid fa-briefcase" />
-                : <i className="fa-solid fa-file-arrow-up" />}
+                : step === 3
+                ? <i className="fa-solid fa-file-arrow-up" />
+                : <i className="fa-solid fa-credit-card" />}
             </div>
             <div>
               <h2 className="jd2-card-title">
                 {step === 1 ? 'Basic Information'
                   : step === 2 ? 'Professional Details'
-                  : 'Document Upload'}
+                  : step === 3 ? 'Document Upload'
+                  : 'Complete Registration'}
               </h2>
               <p className="jd2-card-sub">
                 {step === 1 ? "Let's start with some basic details"
                   : step === 2 ? 'Tell us about your professional background'
-                  : 'Upload your documents for verification'}
+                  : step === 3 ? 'Upload your documents for verification'
+                  : 'One-time fee to activate your dietitian account'}
               </p>
             </div>
           </div>
@@ -360,13 +500,22 @@ export default function DietitianOnboarding() {
                   <Err msg={errors.fullName} />
                 </div>
                 <div className="jd2-field">
-                  <label className="jd2-label">Mobile Number <span className="jd2-req">*</span></label>
+                  <label className="jd2-label">
+                    Mobile Number <span className="jd2-req">*</span>
+                    {phoneVerified && <span className="jd2-phone-verified">✓ Verified</span>}
+                  </label>
                   <div className={`jd2-input-wrap${errors.phone ? ' err' : ''}`}>
                     <i className="jd2-ico fa-solid fa-phone" />
                     <input className="jd2-input" type="tel" placeholder="Enter your 10-digit number"
                       maxLength={10}
                       value={data.phone}
+                      readOnly={phoneVerified}
                       onChange={e => set('phone', e.target.value.replace(/\D/g, ''))} />
+                    {!phoneVerified && data.phone.length === 10 && (
+                      <button type="button" className="jd2-send-otp-btn" onClick={sendOtp} disabled={sendOtpLoading}>
+                        {sendOtpLoading ? '...' : 'Send OTP'}
+                      </button>
+                    )}
                   </div>
                   <Err msg={errors.phone} />
                 </div>
@@ -509,10 +658,10 @@ export default function DietitianOnboarding() {
                 <label className="jd2-label">Upload Documents <span className="jd2-req">*</span></label>
                 <div className="jd2-upload-grid">
                   {([
-                    { key: 'profilePhoto', label: 'Profile Photo',             icon: 'fa-regular fa-image',      hint: 'JPG, PNG up\nto 2MB',      required: true  },
-                    { key: 'degreeCert',   label: 'Degree Certificate',        icon: 'fa-regular fa-file-lines', hint: 'JPG, PNG, PDF\nup to 5MB', required: false },
+                    { key: 'profilePhoto', label: 'Profile Photo',             icon: 'fa-regular fa-image',      hint: 'JPG, PNG up\nto 2MB',      required: true },
+                    { key: 'degreeCert',   label: 'Degree Certificate',        icon: 'fa-regular fa-file-lines', hint: 'JPG, PNG, PDF\nup to 5MB', required: true },
+                    { key: 'idProof',      label: 'ID Proof',                  icon: 'fa-regular fa-id-card',    hint: 'JPG, PNG, PDF\nup to 5MB', required: true },
                     { key: 'regCert',      label: 'Registration\nCertificate', icon: 'fa-regular fa-file-lines', hint: 'JPG, PNG, PDF\nup to 5MB', required: false },
-                    { key: 'idProof',      label: 'ID Proof',                  icon: 'fa-regular fa-id-card',    hint: 'JPG, PNG, PDF\nup to 5MB', required: false },
                   ] as const).map(d => (
                     <div key={d.key} className={`jd2-upload-box${docs[d.key] ? ' uploaded' : ''}`}
                       onClick={() => { if (!docs[d.key]) fileRefs[d.key].current?.click() }}>
@@ -523,9 +672,19 @@ export default function DietitianOnboarding() {
                         style={{ display: 'none' }}
                         onChange={async e => {
                           const raw = e.target.files?.[0] ?? null
-                          const file = raw && raw.type.startsWith('image/') ? await prepareImageFile(raw) : raw
-                          setDocs(p => ({ ...p, [d.key]: file }))
-                          if (d.key === 'profilePhoto') setDocError('')
+                          if (!raw) return
+                          try {
+                            const file = d.key === 'profilePhoto'
+                              ? await normalizeImageFile(raw)
+                              : await normalizeDocumentFile(raw)
+                            setDocs(p => ({ ...p, [d.key]: file }))
+                            if (['profilePhoto', 'degreeCert', 'idProof'].includes(d.key)) setDocError('')
+                          } catch (err) {
+                            const fallback = d.key === 'profilePhoto'
+                              ? 'Invalid file. Please upload a JPG or PNG image.'
+                              : 'Invalid file. Please upload a JPG, PNG, or PDF.'
+                            setDocError(err instanceof Error ? err.message : fallback)
+                          }
                         }}
                       />
                       <i className={`jd2-upload-icon ${d.icon}`} />
@@ -572,13 +731,48 @@ export default function DietitianOnboarding() {
             </div>
           )}
 
+          {/* ── Step 4: Payment ── */}
+          {step === 4 && (
+            <div className="jd2-fields">
+              <div className="jd2-pay-card">
+                <div className="jd2-pay-badge">One-Time Registration Fee</div>
+                <div className="jd2-pay-price-row">
+                  <span className="jd2-pay-currency">₹</span>
+                  <span className="jd2-pay-amount">2,499</span>
+                </div>
+                <p className="jd2-pay-credit-note">
+                  <i className="fa-solid fa-coins" style={{ color: '#f59e0b', marginRight: 6 }} />
+                  Includes <strong>₹500 wallet credit</strong> added to your account instantly
+                </p>
+
+                <ul className="jd2-pay-features">
+                  {REG_FEATURES.map(f => (
+                    <li key={f.text} className="jd2-pay-feature-item">
+                      <i className={`${f.icon} jd2-pay-feature-icon`} />
+                      {f.text}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="jd2-pay-secure-note">
+                  <i className="fa-solid fa-lock" style={{ fontSize: 11, marginRight: 5 }} />
+                  Secured by Razorpay · 100% safe & encrypted
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ── Nav buttons ── */}
           <div className="jd2-nav">
             <button className="jd2-back-btn" onClick={goBack}>
               ← {step === 1 ? 'Home' : 'Back'}
             </button>
             <button className="jd2-next-btn" disabled={uploading} onClick={goNext}>
-              {uploading ? 'Uploading…' : step === 3 ? 'Submit →' : 'Next →'}
+              {uploading
+                ? 'Processing…'
+                : step === 4
+                ? 'Pay ₹2,499 →'
+                : 'Next →'}
             </button>
           </div>
         </div>
@@ -595,6 +789,98 @@ export default function DietitianOnboarding() {
           initialUserType="dietitian"
           initialTab="login"
         />
+      )}
+
+      {/* ── Registration Success Modal ── */}
+      {successData && (
+        <div className="jd2-success-overlay">
+          <div className="jd2-success-modal">
+            <div className="jd2-success-icon-wrap">
+              <i className="fa-solid fa-circle-check jd2-success-icon" />
+            </div>
+            <h2 className="jd2-success-title">Thank You, {successData.name.split(' ')[0]}!</h2>
+            <p className="jd2-success-welcome">Your registration & payment are confirmed.</p>
+
+            <div className="jd2-success-cards">
+              <div className="jd2-success-card">
+                <i className="fa-solid fa-coins" style={{ color: '#f59e0b' }} />
+                <span>₹500 wallet credit will be added after approval</span>
+              </div>
+              <div className="jd2-success-card">
+                <i className="fa-solid fa-clock" style={{ color: '#3b82f6' }} />
+                <span>Our team will review your documents in 24–48 hours</span>
+              </div>
+              <div className="jd2-success-card">
+                <i className="fa-solid fa-envelope" style={{ color: '#16a34a' }} />
+                <span>You'll receive a login email once your account is approved</span>
+              </div>
+            </div>
+
+            <button
+              className="jd2-success-btn"
+              onClick={() => navigate('/dietitian/verification-submitted')}
+            >
+              OK, Got It →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── OTP Modal ── */}
+      {otpModalOpen && (
+        <div className="jd2-otp-overlay" onClick={() => setOtpModalOpen(false)}>
+          <div className="jd2-otp-modal" onClick={e => e.stopPropagation()}>
+            <button className="jd2-otp-close" onClick={() => setOtpModalOpen(false)}>✕</button>
+            <div className="jd2-otp-icon"><i className="fa-solid fa-mobile-screen" /></div>
+            <h3 className="jd2-otp-title">Verify Your Phone</h3>
+            <p className="jd2-otp-sub">Enter the 4-digit OTP sent to <strong>+91 {data.phone}</strong></p>
+
+            <div className="jd2-otp-inputs">
+              {otpDigits.map((d, i) => (
+                <input
+                  key={i}
+                  ref={otpRefs[i]}
+                  className="jd2-otp-input"
+                  type="tel"
+                  maxLength={1}
+                  value={d}
+                  onChange={e => {
+                    const val = e.target.value.replace(/\D/g, '').slice(-1)
+                    const next = [...otpDigits]
+                    next[i] = val
+                    setOtpDigits(next)
+                    setOtpError('')
+                    if (val && i < 3) otpRefs[i + 1].current?.focus()
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Backspace' && !otpDigits[i] && i > 0) otpRefs[i - 1].current?.focus()
+                  }}
+                  onPaste={e => {
+                    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 4)
+                    if (pasted.length === 4) {
+                      setOtpDigits(pasted.split(''))
+                      otpRefs[3].current?.focus()
+                    }
+                    e.preventDefault()
+                  }}
+                />
+              ))}
+            </div>
+
+            {otpError && <p className="jd2-otp-err">⚠ {otpError}</p>}
+
+            <button className="jd2-otp-verify-btn" onClick={submitOtp} disabled={otpLoading}>
+              {otpLoading ? 'Verifying…' : 'Verify OTP'}
+            </button>
+
+            <p className="jd2-otp-resend">
+              Didn't receive it?{' '}
+              <button type="button" className="jd2-otp-resend-btn" onClick={sendOtp} disabled={sendOtpLoading}>
+                {sendOtpLoading ? 'Sending…' : 'Resend OTP'}
+              </button>
+            </p>
+          </div>
+        </div>
       )}
     </div>
   )
