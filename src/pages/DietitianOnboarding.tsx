@@ -48,7 +48,7 @@ const REG_FEATURES = [
   { icon: 'fa-solid fa-coins',          text: '₹500 wallet credit — use for diet plans & more' },
 ]
 
-/* ── Degrees (unchanged from JoinDietitian) ── */
+/* ── Degrees ── */
 const DEGREES: SelectOption[] = [
   { value: '', label: 'Undergraduate Degrees', isGroup: true },
   { value: 'B.Sc. Nutrition & Dietetics',            label: 'B.Sc. Nutrition & Dietetics' },
@@ -231,7 +231,7 @@ export default function DietitianOnboarding() {
     if (EVENT_NAMES[step]) trackEvent(EVENT_NAMES[step])
   }, [step])
 
-  /* Fetch cities whenever state changes — same logic as JoinDietitian */
+  /* Fetch cities whenever state changes */
   useEffect(() => {
     if (!data.state) { setCities([]); return }
     setCitiesLoading(true)

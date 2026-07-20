@@ -283,7 +283,7 @@ const AuthModal = ({ onClose, initialTab = 'login', initialUserType = 'user', pr
 
   const goToDietitianSignup = () => {
     onClose()
-    navigate('/join-as-dietitian')
+    navigate('/for-dietitians/basic-info')
   }
 
   const handleGoogleSuccess = async (tokenResponse: { access_token: string }) => {

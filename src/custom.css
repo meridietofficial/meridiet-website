@@ -4827,6 +4827,37 @@
   object-fit: contain;
 }
 
+.fd-hero-price-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 40px;
+  padding: 8px 18px;
+  margin-bottom: 20px;
+}
+
+.fd-hero-price-amount {
+  font-size: 17px;
+  font-weight: 800;
+  color: #16a34a;
+  letter-spacing: -0.02em;
+}
+
+.fd-hero-price-sep {
+  width: 1px;
+  height: 16px;
+  background: #86efac;
+  flex-shrink: 0;
+}
+
+.fd-hero-price-note {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
 .fd-cta-row {
   display: flex;
   align-items: center;
@@ -5029,6 +5060,8 @@
   }
 
   .fd-cta-btn { width: 100%; max-width: 320px; }
+
+  .fd-hero-price-chip { align-self: center; }
 
   .fd-free-note { justify-content: center; }
 
@@ -5954,7 +5987,8 @@
 ════════════════════════════════════════ */
 .fd-pricing {
   padding: 80px 0;
-  background: linear-gradient(160deg, #f0fdf4 0%, #fff 60%);
+  background: #fff;
+  border-top: 1px solid #f0f4f0;
 }
 
 .fd-pricing-inner {
@@ -5986,6 +6020,12 @@
   color: #5a7060;
   margin-bottom: 32px;
   line-height: 1.6;
+}
+
+.fd-pricing-amount-inline {
+  color: #16a34a;
+  font-size: 17px;
+  font-weight: 800;
 }
 
 .fd-pricing-features {
@@ -6021,11 +6061,11 @@
 
 /* ── Plan card ── */
 .fd-plan-card {
-  background: #fff;
-  border: 2px solid #16a34a;
+  background: linear-gradient(160deg, #f0fdf4 0%, #ffffff 70%);
+  border: 1.5px solid #bbf7d0;
   border-radius: 20px;
   padding: 36px 32px;
-  box-shadow: 0 12px 40px rgba(22,163,74,0.12);
+  box-shadow: 0 4px 24px rgba(22,163,74,0.08);
   text-align: center;
   position: relative;
 }
@@ -28643,6 +28683,72 @@
   line-height: 1;
 }
 .cp-strip-stat span { font-size: 13px; color: rgba(255,255,255,.55); font-weight: 500; }
+
+/* ── KEY BENEFITS STRIP ── */
+.cp-key-strip {
+  background: #fff;
+  border-top: 1px solid #f0f4f0;
+  border-bottom: 1px solid #f0f4f0;
+  padding: 36px 0;
+}
+
+.cp-key-strip-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.cp-key-item {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 8px 32px;
+}
+
+.cp-key-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.cp-key-text strong {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+  color: #1a2e1a;
+  margin-bottom: 5px;
+}
+
+.cp-key-text p {
+  font-size: 13px;
+  color: #5a7060;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.cp-key-sep {
+  width: 1px;
+  background: #e5f0e5;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .cp-key-strip-inner {
+    flex-direction: column;
+    gap: 0;
+  }
+  .cp-key-item {
+    padding: 18px 20px;
+  }
+  .cp-key-sep {
+    width: auto;
+    height: 1px;
+    align-self: unset;
+  }
+}
 
 /* ── OUTCOMES ── */
 .cp-outcomes { padding: 96px 0; background: #f8fafc; }

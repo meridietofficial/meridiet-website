@@ -17,7 +17,6 @@ const PAGE_TITLES: Record<string, string> = {
   '/for-dietitians/qualification':        'Join as Dietitian – Qualifications | MeriDiet',
   '/for-dietitians/document-upload':      'Join as Dietitian – Documents | MeriDiet',
   '/dietitian/verification-submitted':    'Application Submitted | MeriDiet',
-  '/join-as-dietitian':                   'Join as Dietitian | MeriDiet',
   '/privacy-policy':                      'Privacy Policy | MeriDiet',
   '/terms-conditions':                    'Terms & Conditions | MeriDiet',
   '/refund-policy':                       'Refund Policy | MeriDiet',

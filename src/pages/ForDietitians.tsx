@@ -71,6 +71,12 @@ const ForDietitians = () => {
             ))}
           </ul>
 
+          <div className="fd-hero-price-chip">
+            <span className="fd-hero-price-amount">₹2,499</span>
+            <span className="fd-hero-price-sep" />
+            <span className="fd-hero-price-note">One-time fee &nbsp;·&nbsp; ₹500 wallet credit included</span>
+          </div>
+
           <div className="fd-cta-row">
             <button className="btn-primary fd-cta-btn" onClick={() => navigate('/for-dietitians/basic-info')}>Join as Dietitian</button>
             <button className="btn-outline fd-cta-btn" onClick={() => setLoginOpen(true)}>Login</button>
@@ -88,31 +94,16 @@ const ForDietitians = () => {
       </div>
     </section>
 
-    {/* ── Why Dietitians love MeriDiet ── */}
-    <section className="fd-why">
-      <div className="fd-why-inner">
-        <h2 className="fd-why-title">Why Dietitians love MeriDiet?</h2>
-        <div className="fd-why-grid">
-          {WHY_CARDS.map((c) => (
-            <div key={c.title} className="fd-why-card">
-              <img src={c.icon} alt={c.title} className="fd-why-icon" />
-              <div className="fd-why-text">
-                <strong className="fd-why-name">{c.title}</strong>
-                <p className="fd-why-desc">{c.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-
     {/* ── Pricing Section ── */}
     <section className="fd-pricing">
       <div className="container fd-pricing-inner">
         <div className="fd-pricing-left">
-          <p className="fd-pricing-eyebrow">Simple & Transparent</p>
+          <p className="fd-pricing-eyebrow">Simple & Transparent Pricing</p>
           <h2 className="fd-pricing-title">One-Time Investment to Grow Your Practice</h2>
-          <p className="fd-pricing-sub">No monthly fees. No hidden charges. Pay once and get everything you need.</p>
+          <p className="fd-pricing-sub">
+            Pay <strong className="fd-pricing-amount-inline">₹2,499</strong> once — no monthly fees, no hidden charges.
+            Get lifetime access to all MeriDiet features.
+          </p>
 
           <ul className="fd-pricing-features">
             {PRICING_FEATURES.map(f => (
@@ -147,6 +138,24 @@ const ForDietitians = () => {
               Secured by Razorpay · 100% safe
             </p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    {/* ── Why Dietitians love MeriDiet ── */}
+    <section className="fd-why">
+      <div className="fd-why-inner">
+        <h2 className="fd-why-title">Why Dietitians love MeriDiet?</h2>
+        <div className="fd-why-grid">
+          {WHY_CARDS.map((c) => (
+            <div key={c.title} className="fd-why-card">
+              <img src={c.icon} alt={c.title} className="fd-why-icon" />
+              <div className="fd-why-text">
+                <strong className="fd-why-name">{c.title}</strong>
+                <p className="fd-why-desc">{c.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

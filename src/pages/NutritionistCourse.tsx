@@ -60,7 +60,6 @@ const HIGHLIGHTS = [
   ['Mode',          'Live + Recorded'],
   ['Live Classes',  '3 per Week'],
   ['Language',      'English'],
-  ['Trainer',       'Dietitian Nandini'],
   ['Eligibility',   '12th Pass'],
   ['Certification', 'Meri Diet Certified Nutritionist'],
 ]
@@ -222,7 +221,6 @@ export default function NutritionistCourse() {
               <li><span>✔</span> Live + Recorded Classes</li>
               <li><span>✔</span> English Medium</li>
               <li><span>✔</span> 12th Pass Eligible</li>
-              <li><span>✔</span> Learn from Dietitian Nandini</li>
             </ul>
             <a href="#enroll" className="cp-btn-green">Apply Now →</a>
           </div>
@@ -244,6 +242,35 @@ export default function NutritionistCourse() {
               </ul>
               <a href="#enroll" className="cp-card-cta">Apply for First Batch →</a>
               <p className="cp-card-seats">⚡ Limited seats — first come, first served</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── KEY BENEFITS STRIP ── */}
+      <section className="cp-key-strip">
+        <div className="container cp-key-strip-inner">
+          <div className="cp-key-item">
+            <span className="cp-key-icon">🎥</span>
+            <div className="cp-key-text">
+              <strong>Recorded + Live Guest Lectures</strong>
+              <p>Learn at your own pace with recorded sessions, plus attend exclusive live guest lectures by industry experts</p>
+            </div>
+          </div>
+          <div className="cp-key-sep" />
+          <div className="cp-key-item">
+            <span className="cp-key-icon">🎓</span>
+            <div className="cp-key-text">
+              <strong>Certification</strong>
+              <p>Meri Diet Certified Nutritionist — official certificate after successful course completion</p>
+            </div>
+          </div>
+          <div className="cp-key-sep" />
+          <div className="cp-key-item">
+            <span className="cp-key-icon">💰</span>
+            <div className="cp-key-text">
+              <strong>₹5,000 Free Wallet Credit</strong>
+              <p>Receive ₹5,000 wallet credit after completion to generate AI-powered diet plans on the Meri Diet Platform</p>
             </div>
           </div>
         </div>
@@ -322,31 +349,6 @@ export default function NutritionistCourse() {
                 <span className="cp-hl-detail">{detail}</span>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── TRAINER ── */}
-      <section className="cp-trainer">
-        <div className="container cp-trainer-inner">
-          <div className="cp-trainer-badge-wrap">
-            <div className="cp-trainer-avatar">DN</div>
-            <div className="cp-trainer-tag">Lead Trainer</div>
-          </div>
-          <div className="cp-trainer-info">
-            <p className="cp-eyebrow" style={{ textAlign: 'left' }}>Learn from industry experts</p>
-            <h2 className="cp-trainer-name">Dietitian Nandini</h2>
-            <p className="cp-trainer-desc">
-              Train under experienced professionals and gain practical knowledge that prepares you for
-              real-world nutrition consultations. Dietitian Nandini brings hands-on clinical experience
-              to every session — helping you learn what actually works in practice.
-            </p>
-            <div className="cp-trainer-chips">
-              <span>Clinical Nutrition</span>
-              <span>Weight Management</span>
-              <span>PCOS & Diabetes</span>
-              <span>Diet Planning</span>
-            </div>
           </div>
         </div>
       </section>

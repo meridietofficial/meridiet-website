@@ -17,7 +17,7 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
   const { pathname, hash, search } = useLocation()
   const navigate = useNavigate()
 
-  const formMode = pathname === '/form' || pathname === '/join-as-dietitian'
+  const formMode = pathname === '/form'
   const s = (hash: string) => pathname === '/' ? hash : `/${hash}`
 
   useEffect(() => {
