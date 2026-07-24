@@ -49,7 +49,7 @@ const WHY_STANDS_OUT = [
 const FAQS = [
   { q: 'Who can apply?',                                   a: 'Anyone who has completed 12th grade can apply.' },
   { q: 'Do I need a medical background?',                  a: 'No. The program is designed for beginners as well as fitness professionals who want to learn nutrition.' },
-  { q: 'Is the course online?',                            a: 'Yes. It includes live classes (3 per week) and recorded sessions you can watch anytime.' },
+  { q: 'Is the course online?',                            a: 'Yes. It includes live classes and recorded sessions you can watch anytime.' },
   { q: 'Will I receive a certificate?',                    a: 'Yes. After successfully completing the program, you\'ll receive the Meri Diet Certified Nutritionist Certificate.' },
   { q: 'Can I offer consultations after completing?',      a: 'After successful completion and onboarding to the Meri Diet platform, eligible learners can create a professional profile and offer nutrition consultations, subject to platform policies.' },
   { q: 'What is the ₹5,000 AI Diet Plan Credit Wallet?',  a: 'You\'ll receive AI Diet Plan credits worth ₹5,000 that can be used to generate personalized diet plans through the Meri Diet platform after successful course completion.' },
@@ -58,15 +58,13 @@ const FAQS = [
 const HIGHLIGHTS = [
   ['Duration',      '3 Months'],
   ['Mode',          'Live + Recorded'],
-  ['Live Classes',  '3 per Week'],
   ['Language',      'English'],
   ['Eligibility',   '12th Pass'],
   ['Certification', 'Meri Diet Certified Nutritionist'],
 ]
 
 const INCLUDES = [
-  'Live classes 3× per week',
-  'Recorded lectures — watch anytime',
+  'Live + Recorded lectures — learn at your pace',
   'Meri Diet Certified Nutritionist Certificate',
   'Professional profile on Meri Diet Platform',
   '₹5,000 AI Diet Plan Credit Wallet',

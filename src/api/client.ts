@@ -1,7 +1,5 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://api.meridiet.com/api/v1'
 
-console.log("base url :", BASE_URL)
-
 export class ApiError extends Error {
   constructor(message: string) {
     super(message)

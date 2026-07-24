@@ -21,14 +21,15 @@ const ENDPOINTS = {
     changePassword: '/user/change-password',
   },
   dietitian: {
-    register:        '/dietitian/register',
-    profile:         '/dietitian/profile',
-    changePassword:  '/dietitian/change-password',
-    onlineStatus:    '/dietitian/online-status',
-    deleteAccount:   '/dietitian/account',
-    awsKeys:         '/aws-keys/',   // replace with your actual endpoint
-    specializations: '/dietitians/specializations',
-    list:            '/dietitians',
+    register:          '/dietitian/register',
+    profile:           '/dietitian/profile',
+    changePassword:    '/dietitian/change-password',
+    onlineStatus:      '/dietitian/online-status',
+    syncOfflineSlots:  '/dietitian/sync-offline-slots',
+    deleteAccount:     '/dietitian/account',
+    awsKeys:           '/aws-keys/',
+    specializations:   '/dietitians/specializations',
+    list:              '/dietitians',
   },
   dietitianRegistrationPayment: {
     createOrder: '/dietitian/register/create-order',
@@ -73,6 +74,7 @@ const ENDPOINTS = {
     recording:         '/appointments',   // used as /appointments/:id/recording
     dashboardStats:    '/appointments/dietitian/dashboard',
     dietitianReviews:  '/appointments/dietitian/reviews',
+    offlineCreate:     '/appointments/offline',
   },
   followUps: {
     list: '/follow-ups',

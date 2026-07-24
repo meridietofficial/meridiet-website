@@ -182,6 +182,7 @@ export default function DietitianAppointments() {
     appointmentApi.getDietitianSessions({
       tab,
       search: debouncedSearch || undefined,
+      source: 'platform',
     }).then(res => {
       if (aborted) return
       setSummary(res.data.summary)
@@ -400,11 +401,23 @@ export default function DietitianAppointments() {
                             <div className="ap-name-row">
                               <span className="ap-name">{s.client.name}</span>
                               <span className={`ap-status ap-status--${meta.color}`}>{meta.label}</span>
+                              {s.appointment_source === 'dietitian' && (
+                                <span className="ap-source-badge ap-source-badge--offline">Offline</span>
+                              )}
+                              {s.appointment_source === 'platform' && (
+                                <span className="ap-source-badge ap-source-badge--online">Online</span>
+                              )}
                             </div>
                             <div className="ap-meta-row">
                               <span className="ap-meta-pill">
                                 <i className={typeMeta.icon} /> {typeMeta.label}
                               </span>
+                              {s.appointment_source === 'dietitian' && s.payment_method && (
+                                <span className="ap-meta-pill ap-payment-pill">
+                                  <i className="fa-solid fa-indian-rupee-sign" />
+                                  {s.payment_method.charAt(0).toUpperCase() + s.payment_method.slice(1)}
+                                </span>
+                              )}
                               {s.is_follow_up
                                 ? <span className="ap-meta-pill ap-meta-pill--followup">
                                     <i className="fa-solid fa-calendar-plus" /> Follow-up

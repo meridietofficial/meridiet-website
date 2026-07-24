@@ -276,19 +276,46 @@ function PlanDocPreview({ plan, dietitian, isManual, clientForm }: {
   }, [])
   const docPlan = planDetailToDoc(plan, clientForm)
 
-  function handleDownloadPdf() {
-    document.body.classList.add('dp-printing')
-    window.addEventListener('afterprint', () => {
-      document.body.classList.remove('dp-printing')
-    }, { once: true })
-    window.print()
+  const [downloading, setDownloading] = useState(false)
+
+  async function handleDownloadPdf() {
+    if (!wrapRef.current || downloading) return
+    setDownloading(true)
+    try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ])
+      const pages = Array.from(wrapRef.current.querySelectorAll<HTMLElement>('.dp-page'))
+      if (pages.length === 0) return
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [PAGE_W, PAGE_H], hotfixes: ['px_scaling'] })
+      for (let i = 0; i < pages.length; i++) {
+        const canvas = await html2canvas(pages[i], {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          width: PAGE_W,
+          height: PAGE_H,
+          windowWidth: PAGE_W,
+          windowHeight: PAGE_H,
+        })
+        if (i > 0) pdf.addPage([PAGE_W, PAGE_H])
+        pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, PAGE_W, PAGE_H)
+      }
+      const name = (plan.client_name || 'diet-plan').replace(/\s+/g, '-').toLowerCase()
+      pdf.save(`${name}-diet-plan.pdf`)
+    } finally {
+      setDownloading(false)
+    }
   }
 
   return (
     <div className="dpv-doc-outer">
       <div className="dpv-download-bar">
-        <button className="dpv-download-btn" onClick={handleDownloadPdf}>
-          <i className="fa-solid fa-download" /> Download as PDF
+        <button className="dpv-download-btn" onClick={handleDownloadPdf} disabled={downloading}>
+          {downloading
+            ? <><i className="fa-solid fa-circle-notch fa-spin" /> Generating PDF…</>
+            : <><i className="fa-solid fa-download" /> Download as PDF</>}
         </button>
       </div>
       <div ref={wrapRef}

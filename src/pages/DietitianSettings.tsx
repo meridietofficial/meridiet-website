@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import dietitianApi from '../api/dietitian'
 
 type Section = 'profile' | 'notifications' | 'availability' | 'security' | 'preferences'
 
@@ -92,6 +93,25 @@ export default function DietitianSettings() {
     showEarnings:     false,
     showReviews:      true,
   })
+
+  /* ── Sync offline slots ── */
+  const [syncOfflineSlots, setSyncOfflineSlots] = useState(false)
+
+  useEffect(() => {
+    dietitianApi.getProfile()
+      .then(p => setSyncOfflineSlots(p.sync_offline_slots ?? false))
+      .catch(() => {})
+  }, [])
+
+  async function handleSyncToggle() {
+    const next = !syncOfflineSlots
+    setSyncOfflineSlots(next)
+    try {
+      await dietitianApi.setSyncOfflineSlots(next)
+    } catch {
+      setSyncOfflineSlots(!next)
+    }
+  }
 
   /* ── Preferences state ── */
   const [prefs, setPrefs] = useState({
@@ -225,7 +245,7 @@ export default function DietitianSettings() {
                 {
                   icon: 'fa-solid fa-envelope', label: 'Email Notifications', color: '#3b82f6',
                   items: [
-                    { key: 'emailNew' as const,      label: 'New consultation request', sub: 'Notified when a client submits a new request' },
+                    { key: 'emailNew' as const,      label: 'New appointment confirmed', sub: 'Notified when a client books an appointment' },
                     { key: 'emailAppt' as const,     label: 'Appointment reminders',   sub: '30 minutes before each scheduled session' },
                     { key: 'emailPayment' as const,  label: 'Payment received',         sub: 'Confirmation when a client pays for a plan' },
                     { key: 'emailFollowup' as const, label: 'Follow-up due',            sub: 'When a scheduled follow-up is due today' },
@@ -235,7 +255,7 @@ export default function DietitianSettings() {
                 {
                   icon: 'fa-solid fa-mobile-screen', label: 'SMS Notifications', color: '#16a34a',
                   items: [
-                    { key: 'smsNew' as const,     label: 'New consultation request', sub: 'Instant SMS for new client requests' },
+                    { key: 'smsNew' as const,     label: 'New appointment confirmed', sub: 'Instant SMS when a client books an appointment' },
                     { key: 'smsAppt' as const,    label: 'Appointment reminders',   sub: '1 hour before each session' },
                     { key: 'smsPayment' as const, label: 'Payment received',         sub: 'SMS confirmation on payment' },
                   ],
@@ -243,7 +263,7 @@ export default function DietitianSettings() {
                 {
                   icon: 'fa-solid fa-bell', label: 'In-App Notifications', color: '#a855f7',
                   items: [
-                    { key: 'appNew' as const,      label: 'New consultation request', sub: 'Push notification on the dashboard' },
+                    { key: 'appNew' as const,      label: 'New appointment confirmed', sub: 'Push notification for new client bookings' },
                     { key: 'appChat' as const,     label: 'Chat messages',            sub: 'When a client sends you a message' },
                     { key: 'appFollowup' as const, label: 'Follow-up reminders',      sub: 'Due follow-ups appear in the notification bar' },
                     { key: 'appPayment' as const,  label: 'Payment alerts',           sub: 'Instant alert when payment is processed' },
@@ -386,6 +406,20 @@ export default function DietitianSettings() {
                       <p className="sg-toggle-sub">Automatically accept new requests from existing clients</p>
                     </div>
                     <Toggle checked={avail.autoAccept} onChange={() => setAvail(p => ({ ...p, autoAccept: !p.autoAccept }))} />
+                  </div>
+                </div>
+              </div>
+
+              {/* Offline slot sync */}
+              <div className="sg-card">
+                <p className="sg-card-label">Offline Appointments</p>
+                <div className="sg-toggle-list">
+                  <div className="sg-toggle-row">
+                    <div className="sg-toggle-info">
+                      <p className="sg-toggle-label">Sync offline slots with online availability</p>
+                      <p className="sg-toggle-sub">When enabled, adding an offline appointment blocks that slot for online bookings too</p>
+                    </div>
+                    <Toggle checked={syncOfflineSlots} onChange={handleSyncToggle} />
                   </div>
                 </div>
               </div>

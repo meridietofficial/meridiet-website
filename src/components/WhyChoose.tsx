@@ -5,7 +5,7 @@ import {
 } from 'lucide-react'
 
 const stats = [
-  { icon: Users,        value: '1,000+', label: 'Happy Clients' },
+  { icon: Users,        value: '500+',   label: 'Happy Clients' },
   { icon: Star,         value: '4.9/5',   label: 'Average Rating' },
   { icon: Leaf,         value: '100%',    label: 'Indian Recipes' },
   { icon: Trophy,       value: '#1',      label: 'Diet Platform' },

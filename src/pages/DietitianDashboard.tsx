@@ -101,9 +101,7 @@ export default function DietitianDashboard() {
   const [setupItems, setSetupItems] = useState<SetupItem[] | null>(null)
   const [stats, setStats]           = useState<DashboardStats | null>(null)
   const [upcoming, setUpcoming]     = useState<DietitianAppointment[]>([])
-  const [pending, setPending]       = useState<DietitianAppointment[]>([])
   const [apptLoading, setApptLoading] = useState(true)
-  const [actionId, setActionId]     = useState<number | null>(null)
 
   const loading = profileLoading || apptLoading
 
@@ -119,15 +117,13 @@ export default function DietitianDashboard() {
 
     async function fetchDashboard() {
       try {
-        const [statsData, pendingRes, confirmedRes] = await Promise.all([
+        const [statsData, confirmedRes] = await Promise.all([
           appointmentApi.getDashboardStats(),
-          appointmentApi.getDietitianAppointments({ status: 'pending',   limit: 5  }),
           appointmentApi.getDietitianAppointments({ status: 'confirmed', limit: 20 }),
         ])
         if (!active) return
 
         setStats(statsData)
-        setPending(pendingRes.data)
 
         const todayStr = new Date().toISOString().slice(0, 10)
         const upcomingFiltered = confirmedRes.data
@@ -155,22 +151,6 @@ export default function DietitianDashboard() {
   const handleSetupSkip = () => {
     sessionStorage.setItem(SETUP_SKIPPED_KEY, '1')
     setSetupItems(null)
-  }
-
-  async function handleAccept(id: number) {
-    setActionId(id)
-    try {
-      await appointmentApi.updateAppointmentStatus(id, 'confirmed')
-      setPending(prev => prev.filter(r => r.id !== id))
-      setStats(prev => prev ? {
-        ...prev,
-        pending_requests: { count: Math.max(0, prev.pending_requests.count - 1) },
-      } : prev)
-    } catch {
-      // silent
-    } finally {
-      setActionId(null)
-    }
   }
 
   const nextTime      = stats?.upcoming_appointments.next_slot ?? null
@@ -204,19 +184,6 @@ export default function DietitianDashboard() {
                 {stats.today_consultations.change_direction === 'up' ? '↗' : '↘'} {stats.today_consultations.change_percent}% from yesterday
               </p>
             ) : <p className="dd-stat-card-sub">&nbsp;</p>}
-          </div>
-        </div>
-
-        <div className="dd-stat-card dd-stat-card--orange">
-          <div className="dd-stat-card-icon dd-stat-icon--orange">&#128203;</div>
-          <div>
-            <p className="dd-stat-card-label">Pending Requests</p>
-            <p className="dd-stat-card-val">{loading ? '—' : (stats?.pending_requests.count ?? 0)}</p>
-            <p
-              className="dd-stat-card-link"
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/dietitian-consultation-requests')}
-            >View all requests &rarr;</p>
           </div>
         </div>
 
@@ -275,55 +242,6 @@ export default function DietitianDashboard() {
                     <button className="dd-video-btn" onClick={() => startCall(a.id, a.name)}>
                       &#128249; Video Call
                     </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Middle column */}
-        <div className="dd-col">
-          <div className="dd-card">
-            <div className="dd-card-header">
-              <h2 className="dd-card-title">Consultation Requests</h2>
-              <button className="dd-card-link" onClick={() => navigate('/dietitian-consultation-requests')}>View All</button>
-            </div>
-            <div className="dd-req-list">
-              {loading ? (
-                <p style={{ color: '#9ca3af', padding: '12px 0', fontSize: 14 }}>Loading&hellip;</p>
-              ) : pending.length === 0 ? (
-                <p style={{ color: '#9ca3af', padding: '12px 0', fontSize: 14 }}>No pending requests.</p>
-              ) : (
-                pending.slice(0, 2).map(r => (
-                  <div key={r.id} className="dd-req-item">
-                    <div className="dd-req-top">
-                      <div className="dd-req-avatar">{getInitials(r.name)}</div>
-                      <div className="dd-req-info">
-                        <div className="dd-req-name-row">
-                          <p className="dd-req-name">{r.name}</p>
-                          <span className="dd-req-new">NEW</span>
-                          <span className="dd-req-time">{relativeTime(r.created_at)}</span>
-                        </div>
-                        <p className="dd-req-goal">General Consultation</p>
-                        <p className="dd-req-desc">{r.notes ?? 'No additional notes provided.'}</p>
-                      </div>
-                    </div>
-                    <div className="dd-req-meta">
-                      <span>&#128197; {new Date(r.appointment_date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
-                      <span>&#128336; {fmtSlot(r.slot)}</span>
-                      <div className="dd-req-actions">
-                        <button
-                          className="dd-req-view"
-                          onClick={() => navigate('/dietitian-consultation-requests')}
-                        >View Details</button>
-                        <button
-                          className="dd-req-accept"
-                          disabled={actionId === r.id}
-                          onClick={() => handleAccept(r.id)}
-                        >{actionId === r.id ? '…' : 'Accept'}</button>
-                      </div>
-                    </div>
                   </div>
                 ))
               )}

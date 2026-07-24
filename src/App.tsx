@@ -25,7 +25,6 @@ const ConsultDietitian    = lazy(() => import('./pages/ConsultDietitian'))
 const DietitianProfile    = lazy(() => import('./pages/DietitianProfile'))
 const DietitianDashboard  = lazy(() => import('./pages/DietitianDashboard'))
 const DietitianMyProfile  = lazy(() => import('./pages/DietitianMyProfile'))
-const DietitianConsultationRequests = lazy(() => import('./pages/DietitianConsultationRequests'))
 const DietitianMyClients      = lazy(() => import('./pages/DietitianMyClients'))
 const DietitianAppointments       = lazy(() => import('./pages/DietitianAppointments'))
 const DietitianAppointmentDetail  = lazy(() => import('./pages/DietitianAppointmentDetail'))
@@ -41,6 +40,7 @@ const DietitianEarnings       = lazy(() => import('./pages/DietitianEarnings'))
 const DietitianWallet         = lazy(() => import('./pages/DietitianWallet'))
 const DietitianReviews        = lazy(() => import('./pages/DietitianReviews'))
 const DietitianSettings       = lazy(() => import('./pages/DietitianSettings'))
+const DietitianClinicPatients = lazy(() => import('./pages/DietitianClinicPatients'))
 const ResetPassword           = lazy(() => import('./pages/ResetPassword'))
 const Calculators             = lazy(() => import('./pages/Calculators'))
 const NutritionistCourse      = lazy(() => import('./pages/NutritionistCourse'))
@@ -78,8 +78,8 @@ function FormPage() {
   )
 }
 
-const NO_NAVBAR_PREFIXES = ['/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
-const NO_FOOTER_PREFIXES = ['/diet-plan', '/form', '/for-dietitians/basic-info', '/for-dietitians/qualification', '/for-dietitians/document-upload', '/for-dietitians/payment', '/dietitian/verification-submitted', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-consultation-requests', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
+const NO_NAVBAR_PREFIXES = ['/dietitian-dashboard', '/dietitian-profile', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-clinic-patients', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
+const NO_FOOTER_PREFIXES = ['/diet-plan', '/form', '/for-dietitians/basic-info', '/for-dietitians/qualification', '/for-dietitians/document-upload', '/for-dietitians/payment', '/dietitian/verification-submitted', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-clinic-patients', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
 
 function ActiveVideoCall() {
   const { activeCall, clearCall } = useVideoCall()
@@ -132,10 +132,11 @@ function AppInner() {
           <Route element={<ConsultationCountProvider><DietitianLayout /></ConsultationCountProvider>}>
             <Route path="/dietitian-dashboard"               element={<DietitianDashboard />} />
             <Route path="/dietitian-profile"                 element={<DietitianMyProfile />} />
-            <Route path="/dietitian-consultation-requests"   element={<DietitianConsultationRequests />} />
+            <Route path="/dietitian-consultation-requests"   element={<Navigate to="/dietitian-appointments" replace />} />
             <Route path="/dietitian-my-clients"              element={<DietitianMyClients />} />
             <Route path="/dietitian-appointments"            element={<DietitianAppointments />} />
             <Route path="/dietitian-appointments/:id"       element={<DietitianAppointmentDetail />} />
+            <Route path="/dietitian-clinic-patients"        element={<DietitianClinicPatients />} />
             <Route path="/dietitian-diet-plans"                         element={<DietitianDietPlans />} />
             <Route path="/dietitian-diet-plans/new"                    element={<DietitianCreateDietPlan />} />
             <Route path="/dietitian-diet-plans/manual"                 element={<DietitianManualDietPlans />} />

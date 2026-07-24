@@ -75,6 +75,7 @@ type LocationState = {
   session?: DietitianSession
   dateLabel?: string
   fromTab?: string
+  fromPage?: 'clinic' | 'appointments'
 }
 
 type DietPlanButtonVariant = 'hero' | 'action-row'
@@ -176,6 +177,7 @@ export default function DietitianAppointmentDetail() {
   const session   = locationState.session
   const dateLabel = locationState.dateLabel
   const fromTab   = locationState.fromTab ?? 'upcoming'
+  const fromPage  = locationState.fromPage ?? 'appointments'
 
   const [appt, setAppt] = useState<DietitianAppointment | null>(null)
   const [loading, setLoading] = useState(true)
@@ -224,6 +226,18 @@ export default function DietitianAppointmentDetail() {
   const [fuSlotsLoading, setFuSlotsLoading]       = useState(false)
   const [fuCustomTime, setFuCustomTime]           = useState(false)
   const [fuShowOverrides, setFuShowOverrides]     = useState(false)
+
+  /* ── Diet plan tracking ── */
+  const [dpSent, setDpSent]           = useState(session?.diet_plan_sent ?? false)
+  const [dpSentLoading, setDpSentLoading] = useState(false)
+  const [dpFileUrl, setDpFileUrl]     = useState<string | null>(session?.diet_plan_file_url ?? null)
+  const [dpFileLoading, setDpFileLoading] = useState(false)
+  const [dpFileRemoving, setDpFileRemoving] = useState(false)
+
+  /* ── Collect payment (offline) ── */
+  const [collectPayOpen, setCollectPayOpen]     = useState(false)
+  const [collectPayMethod, setCollectPayMethod] = useState<'cash' | 'upi' | 'card' | 'other' | ''>('')
+  const [collectingPay, setCollectingPay]       = useState(false)
 
   useEffect(() => {
     if (!appt || appt.status !== 'completed') return
@@ -303,7 +317,11 @@ export default function DietitianAppointmentDetail() {
         reason: rescheduleReason || undefined,
       })
       setRescheduleOpen(false)
-      navigate('/dietitian-appointments', { state: { returnTab: fromTab } })
+      if (fromPage === 'clinic') {
+        navigate('/dietitian-clinic-patients', { state: { returnTab: fromTab } })
+      } else {
+        navigate('/dietitian-appointments', { state: { returnTab: fromTab } })
+      }
     } catch (e: any) {
       setRescheduleError(e.message ?? 'Failed to reschedule. Please try again.')
     } finally {
@@ -382,10 +400,66 @@ export default function DietitianAppointmentDetail() {
       .then(data => {
         setAppt(data)
         setNotes(data.dietitian_notes ?? '')
+        setDpSent(data.diet_plan_sent ?? session?.diet_plan_sent ?? false)
+        setDpFileUrl(data.diet_plan_file_url ?? session?.diet_plan_file_url ?? null)
       })
       .catch(err => setError(err?.message ?? 'Failed to load appointment'))
       .finally(() => setLoading(false))
   }, [id])
+
+  async function handleDpSentToggle() {
+    if (!appt || dpSentLoading) return
+    const next = !dpSent
+    setDpSent(next)
+    setDpSentLoading(true)
+    try {
+      await appointmentApi.setDietPlanSent(appt.id, next)
+    } catch {
+      setDpSent(!next)
+    } finally {
+      setDpSentLoading(false)
+    }
+  }
+
+  async function handleDpFileUpload(file: File) {
+    if (!appt) return
+    setDpFileLoading(true)
+    try {
+      const { url } = await appointmentApi.uploadDietPlanFile(appt.id, file)
+      if (url) {
+        setDpFileUrl(url)
+      } else {
+        const fresh = await appointmentApi.getById(appt.id)
+        setDpFileUrl(fresh.diet_plan_file_url ?? null)
+      }
+    } catch { } finally {
+      setDpFileLoading(false)
+    }
+  }
+
+  async function handleDpFileRemove() {
+    if (!appt) return
+    setDpFileRemoving(true)
+    try {
+      await appointmentApi.removeDietPlanFile(appt.id)
+      setDpFileUrl(null)
+    } catch { } finally {
+      setDpFileRemoving(false)
+    }
+  }
+
+  async function handleCollectPayment() {
+    if (!appt || !collectPayMethod || collectingPay) return
+    setCollectingPay(true)
+    try {
+      await appointmentApi.markPaid(appt.id, collectPayMethod as 'cash' | 'upi' | 'card' | 'other')
+      setAppt(prev => prev ? { ...prev, payment_status: 'paid', payment_method: collectPayMethod as any } : prev)
+      setCollectPayOpen(false)
+      setCollectPayMethod('')
+    } catch { } finally {
+      setCollectingPay(false)
+    }
+  }
 
   useEffect(() => {
     if (!appt || !['confirmed', 'completed'].includes(appt.status)) return
@@ -429,13 +503,17 @@ export default function DietitianAppointmentDetail() {
         <div className="apd-state-box">
           <span className="apd-state-icon">⚠️</span>
           <p className="apd-state-text">{error ?? 'Appointment not found'}</p>
-          <button className="apd-back-btn" onClick={() => navigate('/dietitian-appointments', { state: { returnTab: fromTab } })}>
-            <i className="fa-solid fa-arrow-left" /> Back to Appointments
+          <button className="apd-back-btn" onClick={() => fromPage === 'clinic'
+            ? navigate('/dietitian-clinic-patients', { state: { returnTab: fromTab } })
+            : navigate('/dietitian-appointments', { state: { returnTab: fromTab } })}>
+            <i className="fa-solid fa-arrow-left" /> {fromPage === 'clinic' ? 'Back to Clinic Patients' : 'Back to Appointments'}
           </button>
         </div>
       </div>
     )
   }
+
+  const isClinic = fromPage === 'clinic' || appt.appointment_source === 'dietitian'
 
   const meta = STATUS_META[appt.status] ?? { label: appt.status, color: 'blue' }
   const sessionTypeMeta = session?.session_type
@@ -451,8 +529,10 @@ export default function DietitianAppointmentDetail() {
 
       {/* Top nav */}
       <div className="apd-topbar">
-        <button className="apd-back-btn" onClick={() => navigate('/dietitian-appointments', { state: { returnTab: fromTab } })}>
-          <i className="fa-solid fa-arrow-left" /> Back to Appointments
+        <button className="apd-back-btn" onClick={() => fromPage === 'clinic'
+          ? navigate('/dietitian-clinic-patients', { state: { returnTab: fromTab } })
+          : navigate('/dietitian-appointments', { state: { returnTab: fromTab } })}>
+          <i className="fa-solid fa-arrow-left" /> {fromPage === 'clinic' ? 'Back to Clinic Patients' : 'Back to Appointments'}
         </button>
         <span className={`ap-status ap-status--${meta.color} apd-status-badge`}>{meta.label}</span>
       </div>
@@ -484,15 +564,23 @@ export default function DietitianAppointmentDetail() {
         <div className="apd-hero-actions">
           {appt.status === 'confirmed' && (
             <>
-              <button
-                className="apd-hero-btn apd-hero-btn--primary"
-                onClick={() => startCall(appt.id, clientName)}
-              >
-                <i className="fa-solid fa-video" /> Join Call
-              </button>
-              <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
-                returnTo={`/dietitian-appointments/${appt.id}`} variant="hero"
-                onViewPdf={setPdfPreviewUrl} />
+              {!isClinic && (
+                <button
+                  className="apd-hero-btn apd-hero-btn--primary"
+                  onClick={() => startCall(appt.id, clientName)}
+                >
+                  <i className="fa-solid fa-video" /> Join Call
+                </button>
+              )}
+              {isClinic ? (
+                <button className="apd-hero-btn" onClick={() => navigate('/dietitian-diet-plans/manual')}>
+                  <i className="fa-solid fa-pen-to-square" /> Manual Diet Plan
+                </button>
+              ) : (
+                <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
+                  returnTo={`/dietitian-appointments/${appt.id}`} variant="hero"
+                  onViewPdf={setPdfPreviewUrl} />
+              )}
               {!appt.follow_up && (
                 <button className="apd-hero-btn" onClick={openFollowUp}>
                   <i className="fa-solid fa-calendar-plus" /> Follow-up
@@ -518,9 +606,15 @@ export default function DietitianAppointmentDetail() {
           )}
           {(appt.status === 'completed' || appt.status === 'cancelled') && (
             <>
-              <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
-                returnTo={`/dietitian-appointments/${appt.id}`} variant="hero"
-                onViewPdf={setPdfPreviewUrl} />
+              {isClinic ? (
+                <button className="apd-hero-btn" onClick={() => navigate('/dietitian-diet-plans/manual')}>
+                  <i className="fa-solid fa-pen-to-square" /> Manual Diet Plan
+                </button>
+              ) : (
+                <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
+                  returnTo={`/dietitian-appointments/${appt.id}`} variant="hero"
+                  onViewPdf={setPdfPreviewUrl} />
+              )}
               {appt.status === 'completed' && !appt.follow_up && (
                 <button className="apd-hero-btn apd-hero-btn--primary" onClick={openFollowUp}>
                   <i className="fa-solid fa-calendar-plus" /> Schedule Follow-up
@@ -598,6 +692,14 @@ export default function DietitianAppointmentDetail() {
                   <span className="apd-info-val">{session.session_number}</span>
                 </div>
               )}
+              {appt.appointment_source && (
+                <div className="apd-info-field">
+                  <span className="apd-info-label">Source</span>
+                  <span className={`apd-source-pill apd-source-pill--${appt.appointment_source}`}>
+                    {appt.appointment_source === 'dietitian' ? 'Offline' : 'Online'}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -611,6 +713,110 @@ export default function DietitianAppointmentDetail() {
             </div>
           )}
 
+          {/* Payment — offline only */}
+          {appt.appointment_source === 'dietitian' && (
+            <div className="apd-section">
+              <p className="apd-section-title">
+                <i className="fa-solid fa-indian-rupee-sign" /> Payment
+              </p>
+              <div className="apd-info-grid">
+                <div className="apd-info-field">
+                  <span className="apd-info-label">Status</span>
+                  <span className="apd-info-val" style={{ textTransform: 'capitalize' }}>
+                    {appt.payment_status === 'paid' ? '✅ Paid' : '⏳ Unpaid'}
+                  </span>
+                </div>
+                {appt.payment_method && (
+                  <div className="apd-info-field">
+                    <span className="apd-info-label">Method</span>
+                    <span className="apd-info-val" style={{ textTransform: 'capitalize' }}>{appt.payment_method}</span>
+                  </div>
+                )}
+              </div>
+              {appt.payment_status !== 'paid' && (
+                <div className="apd-collect-pay-row">
+                  {collectPayOpen ? (
+                    <div className="apd-pay-method-row">
+                      {(['cash', 'upi', 'card', 'other'] as const).map(m => (
+                        <button
+                          key={m}
+                          className={`apd-pay-method-btn${collectPayMethod === m ? ' apd-pay-method-btn--active' : ''}`}
+                          onClick={() => setCollectPayMethod(m)}
+                        >
+                          {m.charAt(0).toUpperCase() + m.slice(1)}
+                        </button>
+                      ))}
+                      <button
+                        className="apd-pay-confirm-btn"
+                        disabled={!collectPayMethod || collectingPay}
+                        onClick={handleCollectPayment}
+                      >
+                        {collectingPay ? <><i className="fa-solid fa-circle-notch fa-spin" /> Saving…</> : 'Mark as Paid'}
+                      </button>
+                      <button
+                        className="apd-pay-cancel-btn"
+                        onClick={() => { setCollectPayOpen(false); setCollectPayMethod('') }}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button className="apd-collect-pay-btn" onClick={() => setCollectPayOpen(true)}>
+                      <i className="fa-solid fa-indian-rupee-sign" /> Mark as Paid
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Diet plan tracking — offline/clinic only */}
+          {isClinic && <div className="apd-section">
+            <p className="apd-section-title">
+              <i className="fa-solid fa-bowl-food" /> Diet Plan Tracking
+            </p>
+            <div className="apd-dp-tracking">
+              <div className="apd-dp-sent-toggle" onClick={handleDpSentToggle} style={{ cursor: dpSentLoading ? 'wait' : 'pointer' }}>
+                <div className={`apd-dp-sent-check${dpSent ? ' apd-dp-sent-check--on' : ''}`}>
+                  {dpSent && <i className="fa-solid fa-check" />}
+                </div>
+                <span className="apd-dp-sent-label">Diet Plan Sent to Client</span>
+                {dpSentLoading && <i className="fa-solid fa-circle-notch fa-spin" style={{ marginLeft: 8, color: '#9ca3af', fontSize: 12 }} />}
+              </div>
+              <div className="apd-dp-file">
+                <p className="apd-dp-file-label">Diet Plan File</p>
+                {dpFileUrl ? (
+                  <div className="apd-dp-file-actions">
+                    <a href={dpFileUrl} target="_blank" rel="noopener noreferrer" className="apd-dp-view-btn">
+                      <i className="fa-solid fa-file" /> View File
+                    </a>
+                    <button
+                      className="apd-dp-remove-btn"
+                      onClick={handleDpFileRemove}
+                      disabled={dpFileRemoving}
+                    >
+                      {dpFileRemoving
+                        ? <i className="fa-solid fa-circle-notch fa-spin" />
+                        : <><i className="fa-solid fa-trash" /> Remove</>}
+                    </button>
+                  </div>
+                ) : (
+                  <label className="apd-dp-upload-label">
+                    <i className="fa-solid fa-upload" />
+                    {dpFileLoading ? ' Uploading…' : ' Upload File'}
+                    <input
+                      type="file"
+                      style={{ display: 'none' }}
+                      accept=".pdf,.jpg,.jpeg,.png,.webp"
+                      disabled={dpFileLoading}
+                      onChange={e => { if (e.target.files?.[0]) handleDpFileUpload(e.target.files[0]) }}
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+          </div>}
+
           {/* Quick actions */}
           <div className="apd-section">
             <p className="apd-section-title">
@@ -619,17 +825,27 @@ export default function DietitianAppointmentDetail() {
             <div className="apd-actions-list">
               {appt.status === 'confirmed' && (
                 <>
-                  <button
-                    className="apd-action-row apd-action-row--primary"
-                    onClick={() => startCall(appt.id, clientName)}
-                  >
-                    <span className="apd-action-icon"><i className="fa-solid fa-video" /></span>
-                    <span className="apd-action-label">Join Video Call</span>
-                    <i className="fa-solid fa-chevron-right apd-action-arrow" />
-                  </button>
-                  <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
-                    returnTo={`/dietitian-appointments/${appt.id}`} variant="action-row"
-                    onViewPdf={setPdfPreviewUrl} />
+                  {!isClinic && (
+                    <button
+                      className="apd-action-row apd-action-row--primary"
+                      onClick={() => startCall(appt.id, clientName)}
+                    >
+                      <span className="apd-action-icon"><i className="fa-solid fa-video" /></span>
+                      <span className="apd-action-label">Join Video Call</span>
+                      <i className="fa-solid fa-chevron-right apd-action-arrow" />
+                    </button>
+                  )}
+                  {isClinic ? (
+                    <button className="apd-action-row" onClick={() => navigate('/dietitian-diet-plans/manual')}>
+                      <span className="apd-action-icon"><i className="fa-solid fa-pen-to-square" /></span>
+                      <span className="apd-action-label">Manual Diet Plan</span>
+                      <i className="fa-solid fa-chevron-right apd-action-arrow" />
+                    </button>
+                  ) : (
+                    <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
+                      returnTo={`/dietitian-appointments/${appt.id}`} variant="action-row"
+                      onViewPdf={setPdfPreviewUrl} />
+                  )}
                   <button className="apd-action-row" onClick={openReschedule}>
                     <span className="apd-action-icon"><i className="fa-solid fa-rotate-right" /></span>
                     <span className="apd-action-label">Reschedule Session</span>
@@ -658,9 +874,17 @@ export default function DietitianAppointmentDetail() {
               )}
               {(appt.status === 'completed' || appt.status === 'cancelled') && (
                 <>
-                  <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
-                    returnTo={`/dietitian-appointments/${appt.id}`} variant="action-row"
-                    onViewPdf={setPdfPreviewUrl} />
+                  {isClinic ? (
+                    <button className="apd-action-row" onClick={() => navigate('/dietitian-diet-plans/manual')}>
+                      <span className="apd-action-icon"><i className="fa-solid fa-pen-to-square" /></span>
+                      <span className="apd-action-label">Manual Diet Plan</span>
+                      <i className="fa-solid fa-chevron-right apd-action-arrow" />
+                    </button>
+                  ) : (
+                    <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
+                      returnTo={`/dietitian-appointments/${appt.id}`} variant="action-row"
+                      onViewPdf={setPdfPreviewUrl} />
+                  )}
                   {appt.status === 'completed' && !appt.follow_up && (
                     <button className="apd-action-row" onClick={openFollowUp}>
                       <span className="apd-action-icon"><i className="fa-solid fa-calendar-plus" /></span>
@@ -683,10 +907,6 @@ export default function DietitianAppointmentDetail() {
                   <span className="apd-action-label">Reschedule Session</span>
                   <i className="fa-solid fa-chevron-right apd-action-arrow" />
                 </button>
-              )}
-              {appt.status === 'pending' && (
-                <DietPlanButton dp={appt.diet_plan} apptId={appt.id}
-                  returnTo={`/dietitian-appointments/${appt.id}`} variant="action-row" />
               )}
             </div>
           </div>

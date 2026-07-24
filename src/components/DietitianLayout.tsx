@@ -3,7 +3,6 @@ import { Link, useNavigate, useLocation, Outlet, Navigate } from 'react-router-d
 import DietitianTopbar from './DietitianTopbar'
 import dietitianApi, { type DietitianProfile } from '../api/dietitian'
 import { ApiError } from '../api/client'
-import { useConsultationCount } from '../context/ConsultationCountContext'
 import { useAuth } from '../context/AuthContext'
 
 export type DietitianOutletContext = {
@@ -16,8 +15,8 @@ export type DietitianOutletContext = {
 
 const NAV_ITEMS: { icon: string; label: string; route?: string; badge?: number }[] = [
   { icon: 'fa-solid fa-table-columns',   label: 'Dashboard',             route: '/dietitian-dashboard' },
-  { icon: 'fa-solid fa-clipboard-list',  label: 'Consultation Requests', route: '/dietitian-consultation-requests' },
   { icon: 'fa-solid fa-calendar-check',  label: 'Appointments',          route: '/dietitian-appointments' },
+  { icon: 'fa-solid fa-hospital-user',   label: 'Clinic Patients',       route: '/dietitian-clinic-patients' },
   { icon: 'fa-solid fa-users',           label: 'My Clients',            route: '/dietitian-my-clients' },
   { icon: 'fa-solid fa-bowl-food',       label: 'Diet Plans',            route: '/dietitian-diet-plans' },
   { icon: 'fa-solid fa-pen-to-square',  label: 'Manual Diet Plans',     route: '/dietitian-diet-plans/manual' },
@@ -73,15 +72,16 @@ export default function DietitianLayout() {
   }
 
   // Pick the nav item whose route is the longest prefix of pathname (most specific wins)
-  // Special case: ?manual=1 on a diet plan detail page → highlight Manual Diet Plans
+  // Special cases: ?manual=1 → Manual Diet Plans; ?from=clinic → Clinic Patients
   const isManualDetailRoute = search.includes('manual=1') && pathname.startsWith('/dietitian-diet-plans/')
+  const isClinicDetailRoute = search.includes('from=clinic') && pathname.startsWith('/dietitian-appointments/')
   const activeNav = isManualDetailRoute
     ? 'Manual Diet Plans'
-    : NAV_ITEMS
+    : isClinicDetailRoute
+      ? 'Clinic Patients'
+      : NAV_ITEMS
         .filter(i => i.route && (pathname === i.route || pathname.startsWith(i.route + '/')))
         .sort((a, b) => (b.route?.length ?? 0) - (a.route?.length ?? 0))[0]?.label ?? 'Dashboard'
-  const { pendingCount } = useConsultationCount()
-
   const handleNavClick = (item: typeof NAV_ITEMS[number]) => {
     if (item.route && item.route !== pathname) navigate(item.route)
   }
@@ -144,9 +144,6 @@ export default function DietitianLayout() {
               >
                 <span className="dd-nav-icon"><i className={item.icon} /></span>
                 <span className="dd-nav-label">{item.label}</span>
-                {item.label === 'Consultation Requests' && pendingCount > 0 && (
-                  <span className="dd-nav-badge">{pendingCount}</span>
-                )}
               </button>
             ))}
           </nav>

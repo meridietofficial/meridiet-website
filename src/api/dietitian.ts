@@ -106,6 +106,8 @@ async function uploadFileToS3(
       accessKeyId:     credentials.accessKeyId,
       secretAccessKey: credentials.secretAccessKey,
     },
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
   })
 
   const key = `dietitians/${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
@@ -149,6 +151,8 @@ export async function deleteDocument(url: string | null | undefined): Promise<vo
         accessKeyId:     credentials.accessKeyId,
         secretAccessKey: credentials.secretAccessKey,
       },
+      requestChecksumCalculation: 'WHEN_REQUIRED',
+      responseChecksumValidation: 'WHEN_REQUIRED',
     })
     await client.send(new DeleteObjectCommand({ Bucket: credentials.bucket, Key: key }))
     console.log('[S3 Delete] ✓ Deleted old file:', key)
@@ -235,6 +239,7 @@ export type DietitianProfile = {
   }
   appointment_fee: number | null
   appointment_currency: string | null
+  sync_offline_slots?: boolean
   created_at: string
   updated_at: string
 }
@@ -396,6 +401,10 @@ const dietitianApi = {
       { is_online }
     )
     return res.data.is_online
+  },
+
+  async setSyncOfflineSlots(enabled: boolean): Promise<void> {
+    await apiClient.apiPatch(ENDPOINTS.dietitian.syncOfflineSlots, { enabled })
   },
 
   deleteAccount(password: string) {

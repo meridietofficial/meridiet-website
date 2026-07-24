@@ -13,7 +13,6 @@ import { IN_STATES, getCitiesOfState } from '../data/indiaCities'
 import SEO from '../components/SEO'
 
 const ALL_CATEGORY = 'All Dietitians'
-const CONSULT_FEE = 0
 const FEE_RANGE_MIN = 999
 const FEE_RANGE_MAX = 4500
 
@@ -21,7 +20,7 @@ const TRUST_ITEMS = [
   { icon: Lock,           title: 'Secure Payments',     desc: '100% safe & secure' },
   { icon: Stethoscope,    title: 'Expert Dietitians',   desc: 'Verified & experienced' },
   { icon: ClipboardList,  title: 'Personalized Plans',  desc: 'Tailored just for you' },
-  { icon: Headset,        title: 'Ongoing Support',     desc: 'Chat with your dietitian anytime' },
+  { icon: Headset,        title: 'Ongoing Support',     desc: '1 follow-up included per consultation' },
 ]
 
 // Same experience buckets dietitians choose during registration
@@ -235,17 +234,17 @@ export default function ConsultDietitian() {
             <p className="cd-hero-sub">Get a personalised diet plan, expert guidance, and ongoing support — all in one place.</p>
             <div className="cd-hero-badges">
               <span className="cd-badge"><span className="cd-badge-icon"><UserRound size={14} strokeWidth={2.4} /></span> 1-on-1 Consultation</span>
-              <span className="cd-badge"><span className="cd-badge-icon"><MessagesSquare size={14} strokeWidth={2.4} /></span> 7-Day Chat Support</span>
+              <span className="cd-badge"><span className="cd-badge-icon"><MessagesSquare size={14} strokeWidth={2.4} /></span> 1 Follow Up</span>
               <span className="cd-badge"><span className="cd-badge-icon"><ShieldCheck size={14} strokeWidth={2.4} /></span> 100% Confidential</span>
             </div>
             <div className="cd-hero-stats">
               <div className="cd-hero-stat">
-                <span className="cd-hero-stat-val">500+</span>
+                <span className="cd-hero-stat-val">100+</span>
                 <span className="cd-hero-stat-label">Verified Dietitians</span>
               </div>
               <div className="cd-hero-stat-divider" />
               <div className="cd-hero-stat">
-                <span className="cd-hero-stat-val">10,000+</span>
+                <span className="cd-hero-stat-val">500+</span>
                 <span className="cd-hero-stat-label">Happy Clients</span>
               </div>
               <div className="cd-hero-stat-divider" />

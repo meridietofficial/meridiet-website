@@ -131,6 +131,10 @@ export type DietitianAppointment = {
   dietitian_review: string | null
   dietitian_reviewed_at: string | null
   diet_plan: DietPlanRef | null
+  appointment_source?: 'platform' | 'dietitian'
+  payment_method?: 'razorpay' | 'cash' | 'upi' | 'card' | 'other' | null
+  diet_plan_sent?: boolean
+  diet_plan_file_url?: string | null
 }
 
 export type DietitianReviewItem = {
@@ -193,6 +197,20 @@ export type CreateFollowUpBody = {
   duration?: number
   fee?: number
   session_type?: 'video_call' | 'in_person'
+  notes?: string
+}
+
+export type CreateOfflineAppointmentBody = {
+  name: string
+  phone?: string
+  email?: string
+  appointment_date: string
+  slot: string
+  duration?: number
+  session_type?: 'in_person' | 'video_call'
+  fee?: number
+  payment_method?: 'cash' | 'upi' | 'card' | 'other'
+  payment_collected?: boolean
   notes?: string
 }
 
@@ -268,6 +286,7 @@ export type DietitianSession = {
   session_type: string
   status: string
   payment_status: string
+  fee?: number | string | null
   notes: string | null
   session_number: number
   is_follow_up: boolean
@@ -284,6 +303,10 @@ export type DietitianSession = {
   dietitian_review?: string | null
   user_review_done?: boolean
   user_rating?: number | null
+  appointment_source?: 'platform' | 'dietitian'
+  payment_method?: 'razorpay' | 'cash' | 'upi' | 'card' | 'other' | null
+  diet_plan_sent?: boolean
+  diet_plan_file_url?: string | null
 }
 
 export type DietitianSessionGroup = {
@@ -418,12 +441,14 @@ const appointmentApi = {
     search?: string
     page?: number
     limit?: number
+    source?: 'platform' | 'dietitian'
   }): Promise<{ data: { summary: DietitianSessionsSummary; grouped: DietitianSessionGroup[] }; meta: MyAppointmentsMeta }> {
     const q = new URLSearchParams()
     if (params?.tab)    q.set('tab',    params.tab)
     if (params?.search) q.set('search', params.search)
     if (params?.page)   q.set('page',   String(params.page))
     if (params?.limit)  q.set('limit',  String(params.limit))
+    if (params?.source) q.set('source', params.source)
     q.set('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone)
     const qs = q.toString()
     const res = await apiClient.apiGet<{
@@ -571,6 +596,51 @@ const appointmentApi = {
       `${ENDPOINTS.appointment.single}/${id}/follow-ups`
     )
     return res.data
+  },
+
+  async createOfflineAppointment(body: CreateOfflineAppointmentBody): Promise<DietitianAppointment> {
+    const res = await apiClient.apiPost<{ success: boolean; data: DietitianAppointment }>(
+      ENDPOINTS.appointment.offlineCreate,
+      body
+    )
+    return res.data
+  },
+
+  async markPaid(id: number, paymentMethod: 'cash' | 'upi' | 'card' | 'other'): Promise<void> {
+    await apiClient.apiPatch(
+      `${ENDPOINTS.appointment.single}/${id}/mark-paid`,
+      { payment_method: paymentMethod }
+    )
+  },
+
+  async markMissed(id: number): Promise<void> {
+    await apiClient.apiPatch(
+      `${ENDPOINTS.appointment.single}/${id}/mark-missed`,
+      {}
+    )
+  },
+
+  async setDietPlanSent(id: number, sent: boolean): Promise<void> {
+    await apiClient.apiPatch(
+      `${ENDPOINTS.appointment.single}/${id}/diet-plan-sent`,
+      { sent }
+    )
+  },
+
+  async uploadDietPlanFile(id: number, file: File): Promise<{ url: string }> {
+    const form = new FormData()
+    form.append('file', file)
+    const res = await apiClient.apiPostForm<{ success: boolean; data: { url: string } }>(
+      `${ENDPOINTS.appointment.single}/${id}/diet-plan-file`,
+      form
+    )
+    return res.data
+  },
+
+  async removeDietPlanFile(id: number): Promise<void> {
+    await apiClient.apiDelete(
+      `${ENDPOINTS.appointment.single}/${id}/diet-plan-file`
+    )
   },
 }
 
