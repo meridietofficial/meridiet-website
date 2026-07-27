@@ -129,7 +129,7 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
             </NavLink></li>
             <li><NavLink to="/calculators" onClick={() => setMenuOpen(false)}>Calculators</NavLink></li>
             <li><NavLink to="/about" onClick={() => setMenuOpen(false)}>About Us</NavLink></li>
-            <li><NavLink to="/contact" onClick={() => setMenuOpen(false)}>Contact Us</NavLink></li>
+            <li><NavLink to="/blog" onClick={() => setMenuOpen(false)}>Blog</NavLink></li>
             <li className="navbar-mobile-actions">
               <button className="btn-primary navbar-cta" onClick={() => { setMenuOpen(false); onOpenForm() }}>
                 Get My Diet Plan

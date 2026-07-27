@@ -7,6 +7,7 @@ import SamplePlan from '../components/SamplePlan'
 import Pricing from '../components/Pricing'
 import WhyChoose from '../components/WhyChoose'
 import Testimonials from '../components/Testimonials'
+import MediaPress from '../components/MediaPress'
 import CTA from '../components/CTA'
 import SEO from '../components/SEO'
 
@@ -53,6 +54,7 @@ const HomePage = ({ onOpenForm }: { onOpenForm: () => void }) => (
     <Pricing onOpenForm={onOpenForm} />
     <WhyChoose onOpenForm={onOpenForm} />
     <Testimonials />
+    <MediaPress />
     <CTA onOpenForm={onOpenForm} />
   </main>
 )

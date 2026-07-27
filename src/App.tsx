@@ -44,6 +44,7 @@ const DietitianClinicPatients = lazy(() => import('./pages/DietitianClinicPatien
 const ResetPassword           = lazy(() => import('./pages/ResetPassword'))
 const Calculators             = lazy(() => import('./pages/Calculators'))
 const NutritionistCourse      = lazy(() => import('./pages/NutritionistCourse'))
+const Blog                    = lazy(() => import('./pages/Blog'))
 
 function PageLoader() {
   return (
@@ -116,6 +117,7 @@ function AppInner() {
           <Route path="/terms-conditions"     element={<main><TermsConditions /></main>} />
           <Route path="/refund-policy"        element={<main><RefundPolicy /></main>} />
           <Route path="/contact"              element={<main><ContactUs /></main>} />
+          <Route path="/blog"                 element={<Blog />} />
           <Route path="/calculators"              element={<Calculators />} />
           <Route path="/nutritionist-course"    element={<NutritionistCourse />} />
           <Route path="/consult-dietitian"         element={<ConsultDietitian />} />

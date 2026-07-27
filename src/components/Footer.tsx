@@ -39,6 +39,7 @@ const Footer = () => {
           <div className="footer-col">
             <h4>Company</h4>
             <Link to="/about">About Us</Link>
+            <Link to="/blog">Blog & Press</Link>
             <Link to="/faq">FAQ</Link>
           </div>
 
@@ -48,6 +49,7 @@ const Footer = () => {
             <Link to="/#plans">Plans</Link>
             <Link to="/#sample-diet">Sample Diet</Link>
             <Link to="/#pricing">Pricing</Link>
+            <Link to="/calculators">Calculators</Link>
             <Link to="/nutritionist-course">Nutritionist Course</Link>
           </div>
 
