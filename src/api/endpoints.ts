@@ -119,6 +119,11 @@ const ENDPOINTS = {
     verify:      '/wallet/topup/verify',
     failed:      '/wallet/topup/failed',
   },
+  dietitianWalletRecharge: {
+    createOrder: '/dietitian/wallet/recharge/create-order',
+    verify:      '/dietitian/wallet/recharge/verify-payment',
+    failed:      '/dietitian/wallet/recharge/failed',
+  },
 } as const
 
 export default ENDPOINTS

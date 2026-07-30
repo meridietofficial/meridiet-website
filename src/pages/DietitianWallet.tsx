@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import earningsApi, { WalletTransaction, WalletOverview, PayoutData } from '../api/earnings'
 import accountsApi, { LinkedAccount } from '../api/accounts'
-import walletApi from '../api/wallet'
 
 type TxTab = 'all' | 'credits' | 'debits'
 
@@ -45,6 +44,7 @@ export default function DietitianWallet() {
   const [totalPages, setTotalPages]         = useState(1)
   const [loading, setLoading]               = useState(true)
   const [loadingMore, setLoadingMore]       = useState(false)
+  const [txRefreshTick, setTxRefreshTick]   = useState(0)
 
   useEffect(() => {
     setAccountsLoading(true)
@@ -81,15 +81,17 @@ export default function DietitianWallet() {
       })
       .catch(() => {})
       .finally(() => { setLoading(false); setLoadingMore(false) })
-  }, [page])
+  }, [page, txRefreshTick])
 
   async function handleAddMoney() {
     const amt = Number(addAmt)
-    if (!amt || amt < 1) { setAddMoneyErr('Please enter a valid amount'); return }
+    if (!amt || !Number.isInteger(amt)) { setAddMoneyErr('Please enter a valid whole number amount'); return }
+    if (amt < 100)   { setAddMoneyErr('Minimum recharge amount is ₹100'); return }
+    if (amt > 50000) { setAddMoneyErr('Maximum recharge amount is ₹50,000'); return }
     setAddingMoney(true)
     setAddMoneyErr(null)
     try {
-      const orderRes = await walletApi.topupCreateOrder(amt)
+      const orderRes = await earningsApi.rechargeCreateOrder(amt)
       const { order_id, key_id, amount, currency } = orderRes.data
       const rzp = new window.Razorpay({
         key:         key_id,
@@ -97,19 +99,19 @@ export default function DietitianWallet() {
         currency:    currency ?? 'INR',
         order_id,
         name:        'MeriDiet',
-        description: 'Wallet Top-up',
+        description: 'Wallet Recharge',
         image:       '/logo.png',
         theme: { color: '#006B28' },
         handler: async (rzpResponse: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
           try {
-            const verifyRes = await walletApi.topupVerify(rzpResponse)
-            if (verifyRes.data?.new_balance !== undefined) {
-              setOverview(prev => prev ? { ...prev, available_balance: verifyRes.data.new_balance } : prev)
-            }
+            await earningsApi.rechargeVerify(rzpResponse)
             setShowAdd(false)
             setAddAmt('')
-            // Refresh transactions
+            // Re-fetch overview for correct balance (don't rely on verify response)
+            earningsApi.getWalletOverview().then(data => setOverview(data)).catch(() => {})
+            // Force transaction list refresh even if already on page 1
             setPage(1)
+            setTxRefreshTick(t => t + 1)
           } catch (err: any) {
             setAddMoneyErr(err.message ?? 'Payment verification failed')
           } finally {
@@ -118,7 +120,7 @@ export default function DietitianWallet() {
         },
         modal: {
           ondismiss: async () => {
-            try { await walletApi.topupFailed(order_id) } catch {}
+            try { await earningsApi.rechargeFailed(order_id) } catch {}
             setAddingMoney(false)
           },
         },
@@ -304,7 +306,7 @@ export default function DietitianWallet() {
                   <i className="fa-solid fa-circle-exclamation" style={{ marginRight: 4 }} />{addMoneyErr}
                 </p>
               )}
-              <p className="wa-action-hint">Accepted: UPI · Debit/Credit Card · Net Banking</p>
+              <p className="wa-action-hint">Min ₹100 · Max ₹50,000 · Accepted: UPI · Debit/Credit Card · Net Banking</p>
             </div>
           </div>
         </div>

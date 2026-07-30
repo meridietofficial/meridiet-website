@@ -132,6 +132,27 @@ export type WalletTransactionsResponse = {
   }
 }
 
+export type RechargeOrderResponse = {
+  success: true
+  message: string
+  data: {
+    order_id: string
+    amount: number
+    currency: string
+    key_id: string
+  }
+}
+
+export type RechargeVerifyResponse = {
+  success: true
+  message: string
+  data: {
+    amount_added: number
+    new_balance: number
+    transaction_id: number
+  }
+}
+
 const earningsApi = {
   async getMonthlyRevenue(months = 6): Promise<MonthlyRevenueData> {
     const res = await apiClient.apiGet<{ success: boolean; data: MonthlyRevenueData }>(
@@ -187,6 +208,20 @@ const earningsApi = {
     )
     return res
   },
+
+  rechargeCreateOrder: (amount: number) =>
+    apiClient.apiPost<RechargeOrderResponse>(ENDPOINTS.dietitianWalletRecharge.createOrder, { amount }),
+
+  rechargeVerify: (data: {
+    razorpay_order_id: string
+    razorpay_payment_id: string
+    razorpay_signature: string
+  }) => apiClient.apiPost<RechargeVerifyResponse>(ENDPOINTS.dietitianWalletRecharge.verify, data),
+
+  rechargeFailed: (orderId: string) =>
+    apiClient.apiPost<{ success: boolean }>(ENDPOINTS.dietitianWalletRecharge.failed, {
+      razorpay_order_id: orderId,
+    }),
 
   async getSummary(period: EarningsPeriod): Promise<EarningsSummary> {
     const res = await apiClient.apiGet<{ success: boolean; data: EarningsSummary }>(
