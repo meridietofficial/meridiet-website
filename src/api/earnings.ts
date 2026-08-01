@@ -97,6 +97,7 @@ export type PayoutData = {
 
 export type WalletOverview = {
   available_balance: number
+  plan_credits: number
   platform_commission_pct: number
   pending_payout: number
   earned_this_month: number
@@ -109,12 +110,14 @@ export type WalletTransaction = {
   id: number
   dietitian_id: number
   type: 'credit' | 'debit'
+  wallet: 'plan' | 'earnings'
   source: string
   gross_amount: number
   commission: number
   net_amount: number
   balance_after: number
   description: string
+  reference_id?: string | null
   appointment_id: number | null
   created_at: string
 }
@@ -148,7 +151,7 @@ export type RechargeVerifyResponse = {
   message: string
   data: {
     amount_added: number
-    new_balance: number
+    plan_credits: number
     transaction_id: number
   }
 }
@@ -199,10 +202,11 @@ const earningsApi = {
     return res.data
   },
 
-  async getWalletTransactions(params: { page?: number; limit?: number } = {}): Promise<WalletTransactionsResponse> {
+  async getWalletTransactions(params: { page?: number; limit?: number; wallet?: 'plan' | 'earnings' } = {}): Promise<WalletTransactionsResponse> {
     const qs = new URLSearchParams()
     qs.set('page', String(params.page ?? 1))
     qs.set('limit', String(params.limit ?? 10))
+    if (params.wallet) qs.set('wallet', params.wallet)
     const res = await apiClient.apiGet<WalletTransactionsResponse & { success: boolean }>(
       `${ENDPOINTS.earnings.walletTransactions}?${qs}`
     )

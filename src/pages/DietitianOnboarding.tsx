@@ -737,8 +737,9 @@ export default function DietitianOnboarding() {
               <div className="jd2-pay-card">
                 <div className="jd2-pay-badge">One-Time Registration Fee</div>
                 <div className="jd2-pay-price-row">
+                  <span className="fd-price-old jd2-pay-old-price">₹2,499</span>
                   <span className="jd2-pay-currency">₹</span>
-                  <span className="jd2-pay-amount">2,499</span>
+                  <span className="jd2-pay-amount">999</span>
                 </div>
                 <p className="jd2-pay-credit-note">
                   <i className="fa-solid fa-coins" style={{ color: '#f59e0b', marginRight: 6 }} />
@@ -771,7 +772,7 @@ export default function DietitianOnboarding() {
               {uploading
                 ? 'Processing…'
                 : step === 4
-                ? 'Pay ₹2,499 →'
+                ? 'Pay ₹999 →'
                 : 'Next →'}
             </button>
           </div>

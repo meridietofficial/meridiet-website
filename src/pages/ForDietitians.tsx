@@ -72,7 +72,10 @@ const ForDietitians = () => {
           </ul>
 
           <div className="fd-hero-price-chip">
-            <span className="fd-hero-price-amount">₹2,499</span>
+            <span className="fd-hero-price-amount">
+              <span className="fd-price-old">₹2,499</span>
+              <span className="fd-price-new">₹999</span>
+            </span>
             <span className="fd-hero-price-sep" />
             <span className="fd-hero-price-note">One-time fee &nbsp;·&nbsp; ₹500 wallet credit included</span>
           </div>
@@ -101,7 +104,7 @@ const ForDietitians = () => {
           <p className="fd-pricing-eyebrow">Simple & Transparent Pricing</p>
           <h2 className="fd-pricing-title">One-Time Investment to Grow Your Practice</h2>
           <p className="fd-pricing-sub">
-            Pay <strong className="fd-pricing-amount-inline">₹2,499</strong> once — no monthly fees, no hidden charges.
+            Pay <strong className="fd-pricing-amount-inline"><span className="fd-price-old">₹2,499</span> ₹999</strong> once — no monthly fees, no hidden charges.
             Get lifetime access to all MeriDiet features.
           </p>
 
@@ -121,15 +124,16 @@ const ForDietitians = () => {
           <div className="fd-plan-card">
             <div className="fd-plan-badge">One-Time Fee</div>
             <div className="fd-plan-price-row">
+              <span className="fd-plan-old-price">₹2,499</span>
               <span className="fd-plan-currency">₹</span>
-              <span className="fd-plan-amount">2,499</span>
+              <span className="fd-plan-amount">999</span>
             </div>
             <p className="fd-plan-credit-note">
               <i className="fa-solid fa-coins" style={{ color: '#f59e0b', marginRight: 6 }} />
               Includes <strong>₹500 wallet credit</strong> on activation
             </p>
             <div className="fd-plan-divider" />
-            <p className="fd-plan-value-note">Effective cost just <strong>₹1,999</strong> after credit</p>
+            <p className="fd-plan-value-note">Effective cost just <strong>₹499</strong> after credit</p>
             <button className="btn-primary fd-plan-cta" onClick={() => navigate('/for-dietitians/basic-info')}>
               Get Started →
             </button>

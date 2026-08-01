@@ -4843,6 +4843,21 @@
   font-weight: 800;
   color: #16a34a;
   letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Shared strikethrough + new price styles */
+.fd-price-old {
+  text-decoration: line-through;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+.fd-price-new {
+  color: #16a34a;
+  font-weight: 800;
 }
 
 .fd-hero-price-sep {
@@ -6089,6 +6104,25 @@
   justify-content: center;
   gap: 4px;
   margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.fd-plan-old-price {
+  width: 100%;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #9ca3af;
+  text-decoration: line-through;
+  margin-bottom: 2px;
+}
+
+.jd2-pay-old-price {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #9ca3af !important;
+  text-decoration: line-through !important;
+  margin-right: 4px;
 }
 
 .fd-plan-currency {
@@ -15404,6 +15438,60 @@
   margin: 0;
 }
 
+/* ── Hamburger button (hidden on desktop) ── */
+.dd-hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.dd-hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: #333;
+  border-radius: 2px;
+}
+.dd-hamburger:hover {
+  background: #f0f9f4;
+}
+
+/* Sidebar close button (hidden on desktop) */
+.dd-sidebar-close {
+  display: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #888;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  line-height: 1;
+}
+.dd-sidebar-close:hover {
+  background: #f5f5f5;
+  color: #333;
+}
+
+/* Mobile overlay backdrop */
+.dd-sidebar-overlay {
+  display: none;
+}
+
+/* Topbar welcome text wrapper */
+.dd-topbar-welcome {
+  display: contents;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1100px) {
   .dd-stats {
@@ -15420,45 +15508,133 @@
 }
 
 @media (max-width: 768px) {
+  /* Root stays as flex row so sidebar can overlay */
   .dd-root {
-    flex-direction: column;
-    height: auto;
-    overflow: auto;
+    height: 100vh;
+    overflow: hidden;
   }
 
+  /* Sidebar becomes a slide-in drawer */
   .dd-sidebar {
-    width: 100%;
-    height: auto;
-    border-right: none;
-    border-bottom: 1.5px solid #e8f0eb;
+    position: fixed;
+    top: 0;
+    left: -260px;
+    width: 260px;
+    height: 100vh;
+    z-index: 1000;
+    transition: left 0.25s ease;
+    box-shadow: none;
   }
 
+  .dd-sidebar--open {
+    left: 0;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+  }
+
+  /* Semi-transparent overlay behind open sidebar */
+  .dd-sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 999;
+  }
+
+  /* Show sidebar close button on mobile */
+  .dd-sidebar-close {
+    display: block;
+  }
+
+  /* Sidebar logo needs relative positioning for the close button */
+  .dd-sidebar-logo {
+    position: relative;
+  }
+
+  /* Nav keeps vertical layout inside drawer */
   .dd-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 4px;
+    overflow-y: auto;
   }
 
-  .dd-nav-item {
-    flex: 1;
-    min-width: 80px;
-    flex-direction: column;
-    gap: 3px;
-    font-size: 10px;
-    padding: 6px 4px;
-    text-align: center;
-  }
-
+  /* Main takes full width */
   .dd-main {
-    overflow: visible;
+    width: 100%;
+    overflow-y: auto;
   }
 
+  /* Show hamburger in topbar */
+  .dd-hamburger {
+    display: flex;
+  }
+
+  /* Topbar: tighter padding, left has hamburger + text */
+  .dd-topbar {
+    padding: 8px 14px;
+    gap: 10px;
+  }
+
+  .dd-topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .dd-topbar-welcome {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dd-welcome {
+    font-size: 10px;
+  }
+
+  .dd-welcome-name {
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
+  }
+
+  /* Topbar right: hide online label text, keep dot + toggle */
+  .dd-online-label {
+    display: none;
+  }
+
+  /* Hide user full name in chip on mobile */
+  .dd-user-name {
+    display: none;
+  }
+
+  .dd-topbar-right {
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  /* Stats: 2-col on mobile */
   .dd-stats {
     grid-template-columns: repeat(2, 1fr);
+    padding: 14px 14px;
+    gap: 10px;
   }
 
+  .dd-stat-card-val {
+    font-size: 1.25rem;
+  }
+
+  /* Body: single column on mobile */
   .dd-body {
     grid-template-columns: 1fr;
+    padding: 0 14px 20px;
+    gap: 12px;
+  }
+
+  /* Banner wraps on very small screens */
+  .dd-banner {
+    margin: 0 14px 14px;
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
   }
 }
 
@@ -16550,23 +16726,50 @@
 }
 
 @media (max-width: 768px) {
+  /* Banner: tighter margins + stack */
+  .dmp-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin: 10px 14px 0;
+    padding: 14px 16px;
+  }
+  .dmp-banner-name { font-size: 18px; }
+
+  /* Tabs: scrollable single row — preserves tab-bar feel */
+  .dmp-tabs {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    margin: 10px 14px 0;
+    padding: 0 6px;
+  }
+  .dmp-tabs::-webkit-scrollbar { display: none; }
+  .dmp-tab { font-size: 12px; padding: 10px 12px; white-space: nowrap; }
+
+  /* Body: single column, tighter padding */
   .dmp-body {
     grid-template-columns: 1fr;
+    padding: 12px 14px 20px;
   }
+
+  /* Right sidebar: stacked cards */
   .dmp-right {
     grid-column: auto;
     display: flex;
     flex-direction: column;
   }
   .dmp-right .dmp-card { margin-bottom: 16px; }
-  .dmp-banner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 14px;
-  }
-  .dmp-tabs {
-    flex-wrap: wrap;
-  }
+
+  /* Info rows: reduce fixed label column so values don't overflow */
+  .dmp-info-row { grid-template-columns: 20px 90px 1fr; }
+
+  /* Availability grid: single column on narrow screens */
+  .dmp-avail-grid { grid-template-columns: 1fr; }
+
+  /* Social row: narrower platform label */
+  .dmp-social-platform { width: 60px; }
 }
 
 /* ── Edit Profile Drawer ── */
@@ -19753,6 +19956,156 @@
   flex: none;
 }
 
+/* ── My Clients page — responsive ── */
+@media (max-width: 768px) {
+  .mc-root {
+    padding: 14px 14px 28px;
+    gap: 14px;
+  }
+
+  /* Header stacks vertically */
+  .mc-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Stats: 3-column grid, full width */
+  .mc-header-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    width: 100%;
+    flex-shrink: unset;
+  }
+
+  .mc-hstat {
+    padding: 10px 6px;
+    min-width: 0;
+  }
+
+  .mc-hstat-val { font-size: 1.25rem; }
+  .mc-hstat-label { font-size: 10px; margin-top: 4px; text-align: center; }
+
+  /* Toolbar: stack tabs on top, search + toggle below */
+  .mc-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  .mc-tabs { justify-content: space-between; }
+
+  .mc-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 7px 8px;
+    font-size: 12px;
+  }
+
+  .mc-toolbar-right {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .mc-search-wrap { flex: 1; }
+
+  .mc-search {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* List rows: stack into vertical card layout */
+  .mc-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px 14px;
+  }
+
+  /* Left: avatar + name takes natural width */
+  .mc-row-left {
+    flex: none;
+    width: auto;
+  }
+
+  /* Mid: 4 stats in a compact horizontal row */
+  .mc-row-mid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    background: #f8faf9;
+    border: 1px solid #edf2ef;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .mc-row-stat {
+    padding: 8px 4px;
+    border-right: 1px solid #edf2ef;
+    align-items: center;
+    text-align: center;
+    gap: 2px;
+  }
+
+  .mc-row-stat:first-child { padding-left: 4px; }
+  .mc-row-stat:last-child { border-right: none; }
+
+  .mc-row-stat-label {
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  .mc-row-stat-val { font-size: 14px; }
+
+  /* Right: progress + View button stack vertically */
+  .mc-row-right {
+    width: auto;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .mc-progress-wrap { flex: none; }
+
+  .mc-row-actions .mc-btn-outline {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Grid view: 2 columns on tablet, 1 on phone */
+  .mc-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Detail panel: fixed full-screen overlay on mobile */
+  .mc-content--split .mc-list,
+  .mc-content--split .mc-grid {
+    display: none;
+  }
+
+  .mc-detail {
+    position: fixed;
+    top: 57px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+    border: none;
+    border-top: 1.5px solid #e8f0eb;
+    z-index: 500;
+  }
+}
+
+@media (max-width: 420px) {
+  .mc-grid { grid-template-columns: 1fr; }
+  .mc-row-stat-label { font-size: 8px; }
+  .mc-tab { font-size: 11px; padding: 7px 6px; }
+}
+
 /* ============================================================
    APPOINTMENTS PAGE
    ============================================================ */
@@ -20339,6 +20692,147 @@
   color: #6b7280;
 }
 .ap-meta-pill--dp-archived i { color: #9ca3af; }
+
+/* ── Appointments + Clinic Patients pages — responsive ── */
+@media (max-width: 768px) {
+  .ap-root {
+    padding: 14px 14px 28px;
+    gap: 14px;
+  }
+
+  /* Header stacks vertically */
+  .ap-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Right column (stats + add button on clinic page) stretches full width */
+  .ap-header-right {
+    width: 100%;
+    align-items: stretch;
+    flex-shrink: unset;
+  }
+
+  /* Stats: 2×2 grid, full width */
+  .ap-header-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .ap-hstat {
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 8px;
+    min-width: 0;
+  }
+
+  .ap-hstat-val {
+    font-size: 1.3rem;
+    line-height: 1;
+  }
+
+  .ap-hstat-label {
+    font-size: 10px;
+    margin-top: 4px;
+    text-align: center;
+  }
+
+  /* Add Appointment button — full width on mobile */
+  .ap-add-offline-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Toolbar stacks: tabs on top, search below */
+  .ap-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  /* Tabs: 2×2 grid — each tab is 50% width */
+  .ap-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: #eaeded;
+    border-radius: 13px;
+    padding: 4px;
+    gap: 3px;
+  }
+
+  .ap-tab {
+    justify-content: center;
+    padding: 9px 8px;
+    font-size: 12px;
+    gap: 5px;
+    border-radius: 9px;
+  }
+
+  .ap-tab i { font-size: 11px; }
+
+  .ap-tab-count {
+    font-size: 10px;
+    padding: 1px 5px;
+  }
+
+  /* Search becomes full width */
+  .ap-search-wrap { width: 100%; }
+  .ap-search {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Cards: actions drop to their own row below info */
+  .ap-card-top-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .ap-card-actions {
+    width: 100%;
+    padding-left: calc(40px + 10px);
+    flex-wrap: wrap;
+  }
+
+  .ap-card-body { padding: 12px 12px; }
+
+  /* Timebar: slightly narrower on mobile */
+  .ap-card-timebar {
+    min-width: 58px;
+    padding: 12px 8px;
+  }
+
+  .ap-card-time { font-size: 12px; }
+
+  /* Diet plan tracking row */
+  .ap-dp-tracking {
+    padding: 8px 10px 10px;
+    gap: 10px;
+  }
+
+  /* Payment dropdown: open left on mobile so it doesn't clip off screen */
+  .ap-pay-dropdown {
+    right: auto;
+    left: 0;
+  }
+
+  /* Offline add-appointment form modal: single column */
+  .offline-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .offline-field--full {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 420px) {
+  .ap-hstat-val { font-size: 1rem; }
+  .ap-hstat-label { font-size: 10px; }
+  .ap-name { font-size: 13px; }
+  .ap-card-actions { padding-left: 0; }
+}
 
 /* ============================================================
    APPOINTMENT DETAIL PAGE  (apd-*)
@@ -21833,6 +22327,109 @@
 }
 
 .fu-btn-danger:hover { background: #fef2f2; }
+
+/* ── Follow Ups page — responsive ── */
+@media (max-width: 768px) {
+  .fu-root {
+    padding: 14px 14px 28px;
+    gap: 14px;
+  }
+
+  /* Header stacks vertically */
+  .fu-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .fu-header-right {
+    width: 100%;
+    flex-shrink: unset;
+  }
+
+  /* Stats: 2×2 grid — 4 stats (Due Today / Upcoming / Missed / Done) */
+  .fu-header-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .fu-hstat {
+    padding: 10px 8px;
+    min-width: 0;
+  }
+
+  .fu-hstat-val { font-size: 1.25rem; }
+  .fu-hstat-label { font-size: 10px; margin-top: 4px; text-align: center; }
+
+  /* Toolbar: stack tabs on top, search below */
+  .fu-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  /* Tabs: 2-column wrapping grid (5 tabs → 2+2+1) */
+  .fu-tabs {
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .fu-tab {
+    flex: 1 1 calc(50% - 2px);
+    justify-content: center;
+    text-align: center;
+    padding: 9px 6px;
+    font-size: 12px;
+    border-radius: 8px;
+    background: #f0f4f2;
+  }
+
+  .fu-tab--active { background: #e8f5ee; }
+
+  /* Search full width */
+  .fu-search-wrap { width: 100%; }
+  .fu-search { width: 100%; box-sizing: border-box; }
+
+  /* Cards: actions wrap to their own row below info */
+  .fu-card-top {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .fu-card-actions {
+    width: 100%;
+    padding-left: calc(40px + 12px);
+    flex-wrap: wrap;
+  }
+
+  .fu-card-body { padding: 12px 12px; }
+
+  /* Detail: fixed full-screen overlay */
+  .fu-content--split .fu-list {
+    display: none;
+  }
+
+  .fu-detail {
+    position: fixed;
+    top: 57px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    max-height: none;
+    border-radius: 0;
+    border: none;
+    border-top: 1.5px solid #e8f0eb;
+    z-index: 500;
+  }
+}
+
+@media (max-width: 420px) {
+  .fu-hstat-val { font-size: 1rem; }
+  .fu-card-actions { padding-left: 0; }
+}
 
 /* ============================================================
    APD — Follow-up section
@@ -23857,6 +24454,122 @@
 
 .dp-form-textarea { resize: vertical; min-height: 72px; }
 
+/* ── Diet Plans page — responsive ── */
+@media (max-width: 768px) {
+  .dp-root {
+    padding: 14px 14px 28px;
+    gap: 14px;
+  }
+
+  /* Header stacks vertically */
+  .dp-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Right side (stats + create btn) stretches full width */
+  .dp-header-right {
+    width: 100%;
+    flex-shrink: unset;
+    gap: 10px;
+  }
+
+  /* Stats: auto-fit so 2 or 3 boxes each expand to fill the row */
+  .dp-header-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 8px;
+    width: 100%;
+  }
+
+  .dp-hstat {
+    padding: 10px 6px;
+    min-width: 0;
+  }
+
+  .dp-hstat-val { font-size: 1.2rem; }
+  .dp-hstat-label { font-size: 10px; margin-top: 4px; text-align: center; }
+
+  /* Create Plan button full width */
+  .dp-create-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Toolbar: tabs scroll row on top, search below */
+  .dp-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+
+  /* Tabs: 2-column wrapping grid — all 5 visible, no scroll */
+  .dp-tabs {
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+
+  .dp-tab {
+    flex: 1 1 calc(50% - 2px);
+    justify-content: center;
+    text-align: center;
+    padding: 9px 6px;
+    font-size: 12px;
+    border-radius: 8px;
+    background: #f0f4f2;
+  }
+
+  .dp-tab--active {
+    background: #e8f5ee;
+  }
+
+  /* Search full width */
+  .dp-search-wrap { width: 100%; }
+  .dp-search { width: 100%; box-sizing: border-box; }
+
+  /* Card: actions wrap below title */
+  .dp-card-top {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dp-card-actions {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .dp-card-title-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  /* Detail panel: fixed full-screen overlay */
+  .dp-content--split .dp-list {
+    display: none;
+  }
+
+  .dp-detail {
+    position: fixed;
+    top: 57px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+    border: none;
+    border-top: 1.5px solid #e8f0eb;
+    z-index: 500;
+  }
+}
+
+@media (max-width: 420px) {
+  .dp-hstat-val { font-size: 1rem; }
+  .dp-tab { font-size: 11px; padding: 7px 9px; }
+}
+
 /* ============================================================
    EARNINGS PAGE
    ============================================================ */
@@ -24387,6 +25100,46 @@
 }
 
 .ea-tx-dl:hover { background: #e8f5ee; color: var(--green); border-color: var(--green); }
+
+@media (max-width: 768px) {
+  /* Header */
+  .ea-root { padding: 14px 14px 28px; gap: 14px; }
+  .ea-header { flex-direction: column; gap: 12px; }
+  .ea-header-right { width: 100%; flex-shrink: unset; }
+  .ea-period-toggle { width: 100%; }
+  .ea-period-btn { flex: 1; text-align: center; padding: 7px 6px; }
+  .ea-export-btn { width: 100%; justify-content: center; }
+
+  /* KPI cards: 2×2 grid */
+  .ea-kpis { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .ea-kpi { padding: 12px; gap: 10px; flex-direction: column; align-items: flex-start; }
+  .ea-kpi-val { font-size: 1.15rem; white-space: normal; }
+  .ea-kpi-sub--muted { font-size: 10px; }
+
+  /* Charts: stack vertically */
+  .ea-charts-row { flex-direction: column; }
+  .ea-card--wide { flex: none; }
+
+  /* Payout banner: stack */
+  .ea-payout-banner { flex-direction: column; align-items: stretch; gap: 14px; padding: 14px; }
+  .ea-payout-mid { justify-content: space-around; gap: 10px; }
+  .ea-payout-divider { width: 1px; height: 28px; }
+  .ea-payout-btn { width: 100%; justify-content: center; }
+
+  /* Transaction toolbar: stack tabs + search */
+  .ea-tx-toolbar { flex-direction: column; align-items: stretch; gap: 8px; width: 100%; }
+  .ea-tx-tabs { flex-wrap: wrap; gap: 3px; }
+  .ea-tx-tab { flex: 1 1 calc(50% - 2px); justify-content: center; padding: 6px 8px; }
+  .ea-tx-search-wrap { width: 100%; }
+  .ea-tx-search { width: 100%; box-sizing: border-box; }
+
+  /* Transaction rows: hide invoice/date meta on mobile */
+  .ea-tx-meta { display: none; }
+  .ea-tx-amount { font-size: 12px; min-width: 56px; }
+
+  /* Card header should stack when toolbar is wide */
+  .ea-card-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+}
 
 /* ============================================================
    WALLET PAGE
@@ -25145,6 +25898,45 @@
 
 .wa-dl-summary-btn:hover { background: #e8f5ee; }
 
+@media (max-width: 768px) {
+  /* Root + header */
+  .wa-root { padding: 14px 14px 28px; gap: 14px; }
+  .wa-header { flex-direction: column; gap: 12px; }
+  .wa-header-actions { width: 100%; }
+  .wa-btn { flex: 1; justify-content: center; }
+
+  /* Top row: stack balance card + KPIs vertically */
+  .wa-top-row { flex-direction: column; gap: 10px; }
+  .wa-balance-card { flex: none; }
+
+  /* KPIs: 2-per-row when below balance card */
+  .wa-kpis { flex-direction: row; flex-wrap: wrap; gap: 10px; }
+  .wa-kpi  { flex: 1 1 calc(50% - 5px); min-width: 0; }
+
+  /* Action banner (withdraw / add): stack input + buttons */
+  .wa-action-banner-inner { flex-direction: column; gap: 12px; }
+  .wa-action-row { flex-direction: column; align-items: stretch; gap: 8px; }
+  .wa-action-input-wrap { width: 100%; }
+  .wa-action-input { width: 100%; box-sizing: border-box; }
+  .wa-action-confirm { width: 100%; text-align: center; justify-content: center; }
+  .wa-action-cancel  { width: 100%; text-align: center; justify-content: center; }
+
+  /* Content row: stack transactions + right panel */
+  .wa-content-row { flex-direction: column; }
+  .wa-right-col { width: auto; position: static; max-height: none; overflow-y: visible; }
+
+  /* Transaction toolbar */
+  .wa-tx-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .wa-tx-search-wrap { width: 100%; margin-left: 0; }
+  .wa-tx-search { width: 100%; box-sizing: border-box; }
+
+  /* Transaction rows: hide meta + "Completed" method badge */
+  .wa-tx-meta   { display: none; }
+  .wa-tx-method { display: none; }
+  .wa-tx-amount { min-width: 56px; font-size: 13px; }
+  .wa-tx-name   { white-space: normal; }
+}
+
 /* ============================================================
    REVIEWS PAGE
    ============================================================ */
@@ -25666,6 +26458,43 @@
   padding: 20px 0;
   color: #aaa;
   font-size: 18px;
+}
+
+@media (max-width: 768px) {
+  .rv-root { padding: 14px 14px 28px; gap: 14px; }
+
+  /* Body: column layout, right col floats to top */
+  .rv-body { flex-direction: column; align-items: stretch; }
+
+  /* Right col: move above review list, show panels side-by-side */
+  .rv-right-col {
+    order: -1;
+    width: auto;
+    position: static;
+    max-height: none;
+    overflow-y: visible;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* Panels must not overflow their grid columns */
+  .rv-panel { min-width: 0; overflow: hidden; }
+
+  /* Shrink the big rating number so it fits in a narrow column */
+  .rv-rating-big { font-size: 2rem; }
+  .rv-rating-hero { gap: 8px; }
+
+  /* Toolbar: filter tabs wrap, search full-width below */
+  .rv-toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .rv-filter-tabs { flex-wrap: wrap; }
+  .rv-filter-btn { padding: 5px 9px; font-size: 11px; }
+  .rv-search-wrap { width: 100%; margin-left: 0; }
+  .rv-search { width: 100%; box-sizing: border-box; }
+
+  /* Overall badge in header: compact on mobile */
+  .rv-header { flex-direction: column; gap: 10px; }
+  .rv-overall-badge { align-self: flex-start; padding: 10px 14px; }
 }
 
 /* ============================================================
@@ -28631,8 +29460,27 @@
   margin-bottom: 16px;
 }
 .cp-card-price-row { display: flex; align-items: baseline; gap: 12px; margin-bottom: 10px; }
-.cp-card-price { font-size: 42px; font-weight: 900; color: #fff; line-height: 1; }
+.cp-card-price { font-size: 42px; font-weight: 900; color: #fff; line-height: 1; display: flex; flex-direction: column; gap: 2px; }
 .cp-card-emi { font-size: 12px; color: rgba(255,255,255,.65); }
+
+/* Old price strikethrough — shared across hero card + payment panel */
+.cp-old-price {
+  font-size: 16px;
+  font-weight: 600;
+  color: rgba(255,255,255,.45);
+  text-decoration: line-through;
+  line-height: 1;
+}
+
+.cp-panel-old-price {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  color: rgba(255,255,255,.4);
+  text-decoration: line-through;
+  line-height: 1;
+  margin-bottom: 4px;
+}
 .cp-card-meta { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: rgba(255,255,255,.75); font-weight: 500; flex-wrap: wrap; }
 .cp-card-list {
   list-style: none;

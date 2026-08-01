@@ -238,11 +238,19 @@ const dietitianDietPlanApi = {
     return detail
   },
 
-  async generatePlan(id: number): Promise<void> {
-    await apiClient.apiPost<{ success: boolean }>(
+  async generatePlan(id: number): Promise<{ deducted_from: 'plan_credits' | 'earnings' | null; deducted_amount: number | null }> {
+    const res = await apiClient.apiPost<{
+      success: boolean
+      message?: string
+      data?: { deducted_from?: 'plan_credits' | 'earnings' | null; deducted_amount?: number | null }
+    }>(
       `${ENDPOINTS.dietitianDietPlan.single}/${id}/generate`,
       {}
     )
+    return {
+      deducted_from:  res.data?.deducted_from  ?? null,
+      deducted_amount: res.data?.deducted_amount ?? null,
+    }
   },
 
   async updateContent(id: number, body: PlanContent): Promise<void> {

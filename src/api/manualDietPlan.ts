@@ -44,6 +44,8 @@ export type ManualDraftBody = {
   // location
   city?: string
   state?: string
+  // plan
+  plan_type?: number
 }
 
 export type ManualDraftResult = {

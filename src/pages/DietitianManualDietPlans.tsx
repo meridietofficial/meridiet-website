@@ -94,7 +94,7 @@ export default function DietitianManualDietPlans() {
       <div className="dp-header">
         <div>
           <h1 className="dp-title">Manual Diet Plans</h1>
-          <p className="dp-subtitle">Create custom diet plans for any client — AI generates the plan for ₹100</p>
+          <p className="dp-subtitle">Create custom diet plans for any client — AI generates the plan for ₹50 (1 week) or ₹100 (1 month)</p>
         </div>
         <div className="dp-header-right">
           <div className="dp-header-stats">

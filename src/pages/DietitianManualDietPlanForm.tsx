@@ -101,6 +101,7 @@ function buildBody(client: ClientInfo, form: DietPlanFormValues): ManualDraftBod
     digestive_health:  form.digestive_health || undefined,
     smoke_alcohol:     form.smoke_alcohol   || undefined,
     health_notes:      form.health_notes    || undefined,
+    plan_type:         form.plan_type ? Number(form.plan_type) : undefined,
   }
 }
 
@@ -227,7 +228,7 @@ export default function DietitianManualDietPlanForm() {
         <div>
           <h1 className="cdp-title">{isEdit ? 'Edit Manual Plan' : 'Create Manual Diet Plan'}</h1>
           <p className="cdp-subtitle">
-            {isEdit ? 'Update client information and health details' : 'Fill in client details to create a new draft — AI generation costs ₹100 from your wallet'}
+            {isEdit ? 'Update client information and health details' : `Fill in client details to create a new draft — AI generation costs ₹${form.plan_type === '1' ? 50 : 100} from your wallet`}
           </p>
         </div>
       </div>

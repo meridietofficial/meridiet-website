@@ -4,15 +4,10 @@ import { useAuth } from '../context/AuthContext'
 type Props = {
   online: boolean
   onToggleOnline: () => void
+  onMenuClick: () => void
 }
 
-/**
- * The single, shared top bar for every dietitian module page (dashboard,
- * profile, …). It always renders the same thing — the dashboard header — so
- * the experience is identical across pages. Pages only feed in the online
- * status (which some also surface elsewhere); everything else comes from auth.
- */
-export default function DietitianTopbar({ online, onToggleOnline }: Props) {
+export default function DietitianTopbar({ online, onToggleOnline, onMenuClick }: Props) {
   const { user, clearAuth } = useAuth()
   const navigate = useNavigate()
 
@@ -25,8 +20,13 @@ export default function DietitianTopbar({ online, onToggleOnline }: Props) {
   return (
     <header className="dd-topbar">
       <div className="dd-topbar-left">
-        <p className="dd-welcome">Welcome back,</p>
-        <h1 className="dd-welcome-name">{firstName} 👋</h1>
+        <button className="dd-hamburger" onClick={onMenuClick} aria-label="Open menu">
+          <span /><span /><span />
+        </button>
+        <div className="dd-topbar-welcome">
+          <p className="dd-welcome">Welcome back,</p>
+          <h1 className="dd-welcome-name">{firstName} 👋</h1>
+        </div>
       </div>
       <div className="dd-topbar-right">
         <div className="dd-online-toggle">

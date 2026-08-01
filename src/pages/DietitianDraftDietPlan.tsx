@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useLocation, useOutletContext } from 'react-router-dom'
+import { useToast } from '../context/ToastContext'
 import dietitianDietPlanApi, {
   DietPlanDetail, DietPlanStatus, DietWeek, DietFoodItem, FeaturedRecipe,
   HealthFormData, PlanContent, SendPlanResult, SmartSwap,
 } from '../api/dietitianDietPlan'
 import appointmentApi, { AppointmentDietForm } from '../api/appointment'
-import walletApi from '../api/wallet'
 import earningsApi from '../api/earnings'
 import DietPlanFormFields, { DietPlanFormValues, EMPTY_FORM } from '../components/DietPlanFormFields'
 import DietPlanDocument, { PAGE_W, PAGE_H } from '../components/DietPlanDocument'
@@ -252,7 +252,7 @@ function formToBody(form: DietPlanFormValues) {
     health_notes:     form.health_notes || undefined,
     city:             form.city  || undefined,
     state:            form.state || undefined,
-    plan_type:        2,  // always 1 month (4 weeks)
+    plan_type:        form.plan_type ? Number(form.plan_type) : 2,
   }
 }
 
@@ -1023,6 +1023,7 @@ function EditPlanContent({
 export default function DietitianDraftDietPlan() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { showToast } = useToast()
   const { planId } = useParams<{ planId: string }>()
   const { profile } = useOutletContext<DietitianOutletContext>()
   const id = Number(planId)
@@ -1053,7 +1054,8 @@ export default function DietitianDraftDietPlan() {
   const [sendOk, setSendOk]               = useState(false)
   const [showSendModal, setShowSendModal] = useState(false)
   // Wallet balance check for manual plans
-  const [walletBalance, setWalletBalance]         = useState<number | null>(null)
+  const [planCredits, setPlanCredits]             = useState<number | null>(null)   // plan credits wallet
+  const [walletBalance, setWalletBalance]         = useState<number | null>(null)   // earnings wallet
   const [showWalletModal, setShowWalletModal]     = useState(false)
   const [addMoneyAmt, setAddMoneyAmt]             = useState('200')
   const [topping, setTopping]                     = useState(false)
@@ -1110,10 +1112,13 @@ export default function DietitianDraftDietPlan() {
           })
           .catch(() => {})
       }
-      // Pre-load wallet balance for manual plans so the generate CTA can show it
+      // Pre-load wallet balances for manual plans so the generate CTA can show them
       if (isManual) {
         earningsApi.getWalletOverview()
-          .then(res => setWalletBalance(res.available_balance ?? 0))
+          .then(res => {
+            setPlanCredits(res.plan_credits ?? 0)
+            setWalletBalance(res.available_balance ?? 0)
+          })
           .catch(() => {})
       }
     } catch (e: any) {
@@ -1146,36 +1151,48 @@ export default function DietitianDraftDietPlan() {
   async function handleGenerate() {
     setActionErr(null)
     setSavedOk(false)
-    const apptId  = stateApptId ?? plan?.appointment_id
+    const apptId   = stateApptId ?? plan?.appointment_id
     const isManual = stateIsManual || (!apptId && !plan?.user_id)
 
-    // For manual plans: verify wallet balance before proceeding
+    // Refresh balances and recheck — button disabled state covers the common case
     if (isManual) {
       try {
-        const balRes = await earningsApi.getWalletOverview()
-        const bal = balRes.available_balance ?? 0
-        setWalletBalance(bal)
-        if (bal < 100) {
-          setShowWalletModal(true)
-          return
-        }
-      } catch { /* proceed anyway — server will return 402 if balance is insufficient */ }
+        const balRes  = await earningsApi.getWalletOverview()
+        const credits  = balRes.plan_credits    ?? 0
+        const earnings = balRes.available_balance ?? 0
+        setPlanCredits(credits)
+        setWalletBalance(earnings)
+        if (credits + earnings < generationCost) return   // button will show as disabled; 402 is the server fallback
+      } catch { /* server will return 402 if both wallets are insufficient */ }
     }
 
     setGenerating(true)
     try {
       try { await dietitianDietPlanApi.update(id, formToBody(form)) } catch {}
-      await dietitianDietPlanApi.generatePlan(id)
+      const result = await dietitianDietPlanApi.generatePlan(id)
+
+      // Toast confirming which wallet was charged
+      if (result.deducted_from === 'plan_credits') {
+        showToast(`₹${result.deducted_amount} deducted from plan credits. Generation started!`)
+      } else if (result.deducted_from === 'earnings') {
+        showToast(`₹${result.deducted_amount} deducted from earnings wallet (plan credits were insufficient). Generation started!`)
+      } else {
+        showToast('Generation started!')
+      }
+
       if (apptId) {
         navigate(`/dietitian-appointments/${apptId}`)
       } else {
         navigate(returnTo)
       }
     } catch (e: any) {
-      // 402 = insufficient wallet balance
       if (e?.status === 402 || e?.message?.toLowerCase().includes('insufficient')) {
+        // Server confirmed both wallets insufficient — refresh balances and show recharge modal
+        earningsApi.getWalletOverview().then(res => {
+          setPlanCredits(res.plan_credits ?? 0)
+          setWalletBalance(res.available_balance ?? 0)
+        }).catch(() => {})
         setShowWalletModal(true)
-        earningsApi.getWalletOverview().then(res => setWalletBalance(res.available_balance ?? 0)).catch(() => {})
       } else {
         setActionErr(e.message ?? 'Failed to start generation')
       }
@@ -1186,11 +1203,11 @@ export default function DietitianDraftDietPlan() {
 
   async function handleWalletTopup() {
     const amt = Number(addMoneyAmt)
-    if (!amt || amt < 100) { setTopupError('Minimum top-up amount is ₹100'); return }
+    if (!amt || amt < 100) { setTopupError('Minimum recharge amount is ₹100'); return }
     setTopping(true)
     setTopupError(null)
     try {
-      const orderRes = await walletApi.topupCreateOrder(amt)
+      const orderRes = await earningsApi.rechargeCreateOrder(amt)
       const { order_id, key_id, amount, currency } = orderRes.data
       const rzp = new window.Razorpay({
         key:         key_id,
@@ -1198,13 +1215,13 @@ export default function DietitianDraftDietPlan() {
         currency:    currency ?? 'INR',
         order_id,
         name:        'MeriDiet',
-        description: 'Wallet Top-up',
+        description: 'Plan Credits Recharge',
         image:       '/logo.png',
-        theme: { color: '#006B28' },
+        theme: { color: '#6366f1' },
         handler: async (rzpResponse: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
           try {
-            const verifyRes = await walletApi.topupVerify(rzpResponse)
-            setWalletBalance(verifyRes.data?.new_balance ?? (walletBalance ?? 0) + amt)
+            const verifyRes = await earningsApi.rechargeVerify(rzpResponse)
+            setPlanCredits(verifyRes.data?.plan_credits ?? (planCredits ?? 0) + amt)
             setShowWalletModal(false)
             setTopupError(null)
           } catch (err: any) {
@@ -1215,7 +1232,7 @@ export default function DietitianDraftDietPlan() {
         },
         modal: {
           ondismiss: async () => {
-            try { await walletApi.topupFailed(order_id) } catch {}
+            try { await earningsApi.rechargeFailed(order_id) } catch {}
             setTopping(false)
           },
         },
@@ -1338,6 +1355,13 @@ export default function DietitianDraftDietPlan() {
   const isFormValid = isFormComplete(form)
   const apptIdForRender = stateApptId ?? plan.appointment_id
   const isManualPlan = stateIsManual || (!apptIdForRender && !plan.user_id)
+  const generationCost    = form.plan_type === '1' ? 50 : 100
+  const planDurationLabel = form.plan_type === '1' ? '1-week' : '1-month'
+  // 3-state wallet check (only meaningful once balances are loaded)
+  const balancesLoaded    = isManualPlan && planCredits !== null && walletBalance !== null
+  const creditsOk         = !balancesLoaded || (planCredits ?? 0) >= generationCost
+  const earningsOk        = !balancesLoaded || (walletBalance ?? 0) >= generationCost
+  const bothInsufficient  = balancesLoaded && !creditsOk && !earningsOk
 
   const isDirty = editingContent && (
     Object.keys(editedFields).length > 0 ||
@@ -1515,20 +1539,55 @@ export default function DietitianDraftDietPlan() {
               <div>
                 <p className="ddp-generate-cta-title">Ready to generate the diet plan?</p>
                 <p className="ddp-generate-cta-sub">
-                  AI will build a personalised <strong>1-month meal plan</strong> based on the health details above.
+                  AI will build a personalised <strong>{planDurationLabel} meal plan</strong> based on the health details above.
                   Your draft will be saved automatically before generation starts.
                 </p>
                 {isManualPlan && (
-                  <p className="ddp-generate-cta-sub" style={{ marginTop: 4 }}>
-                    <i className="fa-solid fa-wallet" style={{ marginRight: 6, color: '#6366f1' }} />
-                    <strong>₹100</strong> will be deducted from your wallet.
-                    {walletBalance !== null && (
-                      <span style={{ marginLeft: 8, color: walletBalance >= 100 ? '#16a34a' : '#ef4444' }}>
-                        Balance: ₹{walletBalance}
-                        {walletBalance < 100 && ' — insufficient'}
-                      </span>
+                  <>
+                    {/* Balance info row */}
+                    {balancesLoaded && (
+                      <p className="ddp-generate-cta-sub" style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <i className="fa-solid fa-coins" style={{ color: '#6366f1', fontSize: 12 }} />
+                          <span style={{ fontWeight: 600, color: '#4c1d95' }}>Plan Credits:</span>
+                          <span style={{ fontWeight: 700, color: creditsOk ? '#16a34a' : '#f97316' }}>₹{planCredits}</span>
+                        </span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <i className="fa-solid fa-building-columns" style={{ color: '#6b7280', fontSize: 12 }} />
+                          <span style={{ fontWeight: 600, color: '#374151' }}>Earnings:</span>
+                          <span style={{ fontWeight: 700, color: '#374151' }}>₹{walletBalance}</span>
+                        </span>
+                      </p>
                     )}
-                  </p>
+                    {/* State 1: credits ok — no warning */}
+                    {creditsOk && (
+                      <p className="ddp-generate-cta-sub" style={{ marginTop: 4 }}>
+                        <i className="fa-solid fa-coins" style={{ marginRight: 6, color: '#6366f1' }} />
+                        <strong>₹{generationCost}</strong> will be deducted from your plan credits.
+                      </p>
+                    )}
+                    {/* State 2: credits low but earnings can cover */}
+                    {!creditsOk && earningsOk && (
+                      <p className="ddp-generate-cta-sub" style={{ marginTop: 4, color: '#f97316' }}>
+                        <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }} />
+                        Plan credits insufficient — ₹{generationCost} will be deducted from your earnings wallet
+                      </p>
+                    )}
+                    {/* State 3: both insufficient */}
+                    {bothInsufficient && (
+                      <p className="ddp-generate-cta-sub" style={{ marginTop: 4, color: '#ef4444', fontWeight: 600 }}>
+                        <i className="fa-solid fa-circle-exclamation" style={{ marginRight: 6 }} />
+                        Insufficient balance. Add plan credits to generate.{' '}
+                        <button
+                          type="button"
+                          onClick={() => setShowWalletModal(true)}
+                          style={{ background: 'none', border: 'none', color: '#6366f1', fontWeight: 700, cursor: 'pointer', padding: 0, fontSize: 'inherit', textDecoration: 'underline' }}
+                        >
+                          Recharge now
+                        </button>
+                      </p>
+                    )}
+                  </>
                 )}
                 {!isFormValid && (
                   <p className="ddp-generate-cta-warn">
@@ -1540,13 +1599,17 @@ export default function DietitianDraftDietPlan() {
             <button
               className="ddp-generate-cta-btn"
               onClick={handleGenerate}
-              disabled={busy || !isFormValid}
-              title={!isFormValid ? 'Fill all required fields to generate' : undefined}
+              disabled={busy || !isFormValid || bothInsufficient}
+              title={
+                !isFormValid        ? 'Fill all required fields to generate' :
+                bothInsufficient    ? 'Recharge plan credits to generate' :
+                undefined
+              }
             >
               {generating
                 ? <><i className="fa-solid fa-spinner fa-spin" /> Starting…</>
                 : isManualPlan
-                  ? <><i className="fa-solid fa-wand-magic-sparkles" /> Generate — ₹100</>
+                  ? <><i className="fa-solid fa-wand-magic-sparkles" /> Generate — ₹{generationCost}</>
                   : <><i className="fa-solid fa-wand-magic-sparkles" /> Generate Diet Plan</>
               }
             </button>
@@ -1631,21 +1694,31 @@ export default function DietitianDraftDietPlan() {
         onClick={e => { if (e.target === e.currentTarget && !topping) setShowWalletModal(false) }}>
         <div className="epm-modal">
           <div className="epm-modal-title">
-            <i className="fa-solid fa-wallet" style={{ color: '#6366f1', marginRight: 8 }} />
-            Insufficient Wallet Balance
+            <i className="fa-solid fa-coins" style={{ color: '#6366f1', marginRight: 8 }} />
+            Insufficient Balance
           </div>
           <p className="epm-modal-sub">
-            Your current balance is{' '}
-            <strong style={{ color: walletBalance !== null && walletBalance > 0 ? '#f97316' : '#ef4444' }}>
-              ₹{walletBalance ?? 0}
-            </strong>
-            . You need at least <strong>₹100</strong> to generate a manual diet plan.
+            Neither wallet has enough to generate this plan (needs <strong>₹{generationCost}</strong>).
           </p>
+          <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+            <div style={{ flex: 1, background: '#f5f3ff', border: '1.5px solid #c4b5fd', borderRadius: 10, padding: '10px 14px' }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#7c3aed', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Plan Credits</p>
+              <p style={{ margin: '4px 0 0', fontSize: 20, fontWeight: 800, color: (planCredits ?? 0) >= generationCost ? '#16a34a' : '#ef4444' }}>
+                ₹{planCredits ?? 0}
+              </p>
+            </div>
+            <div style={{ flex: 1, background: '#f0fdf4', border: '1.5px solid #bbf7d0', borderRadius: 10, padding: '10px 14px' }}>
+              <p style={{ margin: 0, fontSize: 11, color: '#15803d', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>Earnings Wallet</p>
+              <p style={{ margin: '4px 0 0', fontSize: 20, fontWeight: 800, color: (walletBalance ?? 0) >= generationCost ? '#16a34a' : '#ef4444' }}>
+                ₹{walletBalance ?? 0}
+              </p>
+            </div>
+          </div>
           <div className="epm-modal-warn" style={{ background: '#eff6ff', borderColor: '#bfdbfe', color: '#1d4ed8' }}>
-            <i className="fa-solid fa-circle-info" /> Add money to your wallet to continue.
+            <i className="fa-solid fa-circle-info" /> Recharge plan credits to continue. Plan credits are used first; earnings wallet is the fallback.
           </div>
           <div style={{ marginTop: 16 }}>
-            <label className="epm-field-label">Amount to Add (₹)</label>
+            <label className="epm-field-label">Recharge Plan Credits (₹)</label>
             <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
               {[100, 200, 500].map(a => (
                 <button key={a} type="button"
@@ -1689,7 +1762,7 @@ export default function DietitianDraftDietPlan() {
               onClick={handleWalletTopup}
             >
               <i className="fa-solid fa-credit-card" />
-              {topping ? 'Processing…' : `Pay ₹${addMoneyAmt || 0}`}
+              {topping ? 'Processing…' : `Recharge ₹${addMoneyAmt || 0}`}
             </button>
           </div>
           <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 10, textAlign: 'center' }}>

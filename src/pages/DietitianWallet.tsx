@@ -3,6 +3,7 @@ import earningsApi, { WalletTransaction, WalletOverview, PayoutData } from '../a
 import accountsApi, { LinkedAccount } from '../api/accounts'
 
 type TxTab = 'all' | 'credits' | 'debits'
+type WalletFilter = 'all' | 'plan' | 'earnings'
 
 function formatINR(amount: number) {
   return '₹' + amount.toLocaleString('en-IN')
@@ -19,8 +20,9 @@ function formatSource(source: string) {
 }
 
 export default function DietitianWallet() {
-  const [tab, setTab]       = useState<TxTab>('all')
-  const [search, setSearch] = useState('')
+  const [tab, setTab]               = useState<TxTab>('all')
+  const [walletFilter, setWalletFilter] = useState<WalletFilter>('all')
+  const [search, setSearch]         = useState('')
   const [showAdd, setShowAdd]           = useState(false)
   const [showWithdraw, setShowWithdraw] = useState(false)
   const [withdrawAmt, setWithdrawAmt]   = useState('')
@@ -71,9 +73,18 @@ export default function DietitianWallet() {
   }, [])
 
   useEffect(() => {
+    setPage(1)
+    setTransactions([])
+  }, [walletFilter])
+
+  useEffect(() => {
     if (page === 1) setLoading(true)
     else setLoadingMore(true)
-    earningsApi.getWalletTransactions({ page, limit: 10 })
+    earningsApi.getWalletTransactions({
+      page,
+      limit: 10,
+      wallet: walletFilter !== 'all' ? walletFilter : undefined,
+    })
       .then(res => {
         setTotal(res.data.total)
         setTotalPages(res.meta.totalPages)
@@ -81,7 +92,7 @@ export default function DietitianWallet() {
       })
       .catch(() => {})
       .finally(() => { setLoading(false); setLoadingMore(false) })
-  }, [page, txRefreshTick])
+  }, [page, txRefreshTick, walletFilter])
 
   async function handleAddMoney() {
     const amt = Number(addAmt)
@@ -99,7 +110,7 @@ export default function DietitianWallet() {
         currency:    currency ?? 'INR',
         order_id,
         name:        'MeriDiet',
-        description: 'Wallet Recharge',
+        description: 'Plan Credits Recharge',
         image:       '/logo.png',
         theme: { color: '#006B28' },
         handler: async (rzpResponse: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
@@ -153,7 +164,7 @@ export default function DietitianWallet() {
         </div>
         <div className="wa-header-actions">
           <button className="wa-btn wa-btn--outline" onClick={() => { setShowAdd(true); setShowWithdraw(false) }}>
-            <i className="fa-solid fa-plus" /> Add Money
+            <i className="fa-solid fa-coins" /> Recharge Plan Credits
           </button>
           <button className="wa-btn wa-btn--solid" onClick={() => { setShowWithdraw(true); setShowAdd(false) }}>
             <i className="fa-solid fa-arrow-up-from-bracket" /> Withdraw
@@ -182,16 +193,6 @@ export default function DietitianWallet() {
             <button className="wa-quick-btn" onClick={() => { setShowWithdraw(true); setShowAdd(false) }}>
               <i className="fa-solid fa-arrow-up-from-bracket" />
               <span>Withdraw</span>
-            </button>
-            <div className="wa-balance-divider" />
-            <button className="wa-quick-btn" onClick={() => { setShowAdd(true); setShowWithdraw(false) }}>
-              <i className="fa-solid fa-plus" />
-              <span>Add Money</span>
-            </button>
-            <div className="wa-balance-divider" />
-            <button className="wa-quick-btn">
-              <i className="fa-solid fa-arrow-right-arrow-left" />
-              <span>Transfer</span>
             </button>
             <div className="wa-balance-divider" />
             <button className="wa-quick-btn">
@@ -277,8 +278,8 @@ export default function DietitianWallet() {
           <div className="wa-action-banner-inner">
             <div className="wa-action-icon wa-action-icon--green"><i className="fa-solid fa-plus" /></div>
             <div className="wa-action-body">
-              <p className="wa-action-title">Add Money to Wallet</p>
-              <p className="wa-action-sub">Instantly credit your MeriDiet wallet via UPI, Card or Net Banking</p>
+              <p className="wa-action-title">Recharge Plan Credits</p>
+              <p className="wa-action-sub">Pay via UPI, Card or Net Banking · ₹50 per 1-week plan · ₹100 per 1-month plan</p>
               <div className="wa-action-row">
                 <div className="wa-action-input-wrap">
                   <span className="wa-action-prefix">₹</span>
@@ -312,6 +313,47 @@ export default function DietitianWallet() {
         </div>
       )}
 
+      {/* ── Plan Credits Banner ── */}
+      <div style={{
+        background: 'linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%)',
+        border: '1.5px solid #c4b5fd',
+        borderRadius: 16,
+        padding: '20px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 20,
+        marginBottom: 24,
+        flexWrap: 'wrap',
+      }}>
+        <div style={{
+          background: '#6366f1', borderRadius: 12, width: 48, height: 48,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+        }}>
+          <i className="fa-solid fa-coins" style={{ color: '#fff', fontSize: 20 }} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: '#4c1d95' }}>Plan Credits</p>
+          <p style={{ margin: '3px 0 0', fontSize: 12, color: '#7c3aed' }}>
+            Used for AI diet plan generation · ₹50 per 1-week plan · ₹100 per 1-month plan
+          </p>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ margin: 0, fontSize: 26, fontWeight: 800, color: '#4c1d95' }}>
+            {overviewLoading
+              ? <span className="ea-kpi-skel" style={{ width: 80, height: 26, display: 'inline-block' }} />
+              : formatINR(overview?.plan_credits ?? 0)}
+          </p>
+          <p style={{ margin: '2px 0 0', fontSize: 12, color: '#7c3aed' }}>Available Credits</p>
+        </div>
+        <button
+          className="wa-btn wa-btn--outline"
+          style={{ borderColor: '#6366f1', color: '#6366f1', flexShrink: 0 }}
+          onClick={() => { setShowAdd(true); setShowWithdraw(false) }}
+        >
+          <i className="fa-solid fa-plus" /> Recharge
+        </button>
+      </div>
+
       {/* ── Main content row: Transactions + Linked Accounts ── */}
       <div className="wa-content-row">
 
@@ -320,6 +362,31 @@ export default function DietitianWallet() {
           <div className="wa-card-header">
             <h2 className="wa-card-title">Transactions</h2>
             <span className="wa-card-sub">{loading ? '—' : `${total} total`}</span>
+          </div>
+
+          {/* Wallet filter */}
+          <div style={{ display: 'flex', gap: 8, padding: '0 0 12px', borderBottom: '1px solid #f3f4f6', marginBottom: 12 }}>
+            {([
+              { key: 'all',      label: 'All Wallets', icon: 'fa-layer-group' },
+              { key: 'plan',     label: 'Plan Credits', icon: 'fa-coins' },
+              { key: 'earnings', label: 'Earnings',     icon: 'fa-building-columns' },
+            ] as { key: WalletFilter; label: string; icon: string }[]).map(w => (
+              <button
+                key={w.key}
+                type="button"
+                onClick={() => setWalletFilter(w.key)}
+                style={{
+                  padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 600,
+                  border: `1.5px solid ${walletFilter === w.key ? '#6366f1' : '#e5e7eb'}`,
+                  background: walletFilter === w.key ? '#eef2ff' : '#fff',
+                  color: walletFilter === w.key ? '#4338ca' : '#6b7280',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+                }}
+              >
+                <i className={`fa-solid ${w.icon}`} style={{ fontSize: 11 }} />
+                {w.label}
+              </button>
+            ))}
           </div>
 
           {/* Toolbar */}
@@ -382,7 +449,18 @@ export default function DietitianWallet() {
                   <i className={tx.type === 'credit' ? 'fa-solid fa-arrow-down' : 'fa-solid fa-arrow-up'} />
                 </div>
                 <div className="wa-tx-info">
-                  <p className="wa-tx-name">{tx.description}</p>
+                  <p className="wa-tx-name" style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    {tx.description}
+                    <span style={{
+                      fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 20, letterSpacing: 0.4,
+                      background: tx.wallet === 'plan' ? '#ede9fe' : '#f0fdf4',
+                      color:      tx.wallet === 'plan' ? '#6d28d9'  : '#15803d',
+                      border:     `1px solid ${tx.wallet === 'plan' ? '#c4b5fd' : '#bbf7d0'}`,
+                    }}>
+                      <i className={`fa-solid ${tx.wallet === 'plan' ? 'fa-coins' : 'fa-building-columns'}`} style={{ marginRight: 3, fontSize: 9 }} />
+                      {tx.wallet === 'plan' ? 'Plan Credits' : 'Earnings'}
+                    </span>
+                  </p>
                   <p className="wa-tx-plan">{formatSource(tx.source)}</p>
                 </div>
                 <div className="wa-tx-meta">

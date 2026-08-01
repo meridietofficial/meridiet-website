@@ -39,6 +39,7 @@ export default function DietitianLayout() {
   const [onlineError, setOnlineError] = useState<string | null>(null)
   const [profile, setProfile] = useState<DietitianProfile | null>(null)
   const [profileLoading, setProfileLoading] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Fetch profile once for the whole layout — child pages reuse this via outlet context
   useEffect(() => {
@@ -84,6 +85,7 @@ export default function DietitianLayout() {
         .sort((a, b) => (b.route?.length ?? 0) - (a.route?.length ?? 0))[0]?.label ?? 'Dashboard'
   const handleNavClick = (item: typeof NAV_ITEMS[number]) => {
     if (item.route && item.route !== pathname) navigate(item.route)
+    setSidebarOpen(false)
   }
 
   // Parse "Cannot go online. Please fix the following:\n• item1\n• item2"
@@ -125,10 +127,16 @@ export default function DietitianLayout() {
         </div>
       )}
 
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div className="dd-sidebar-overlay" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* Sidebar */}
-      <aside className="dd-sidebar">
+      <aside className={`dd-sidebar${sidebarOpen ? ' dd-sidebar--open' : ''}`}>
         <div className="dd-sidebar-logo">
-          <Link to="/dietitian-dashboard">
+          <button className="dd-sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Close menu">✕</button>
+          <Link to="/dietitian-dashboard" onClick={() => setSidebarOpen(false)}>
             <img src="/logo-header.png" alt="MeriDiet" className="dd-logo-img" />
           </Link>
           <p className="dd-logo-sub">Dietitian Dashboard</p>
@@ -160,7 +168,7 @@ export default function DietitianLayout() {
 
       {/* Main */}
       <div className="dd-main">
-        <DietitianTopbar online={online} onToggleOnline={toggleOnline} />
+        <DietitianTopbar online={online} onToggleOnline={toggleOnline} onMenuClick={() => setSidebarOpen(true)} />
         <Outlet context={{ online, toggleOnline, profile, profileLoading, setLayoutProfile: setProfile } satisfies DietitianOutletContext} />
       </div>
     </div>

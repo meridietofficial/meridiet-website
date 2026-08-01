@@ -228,8 +228,11 @@ export default function NutritionistCourse() {
               <div className="cp-card-top">
                 <div className="cp-card-badge">MERI DIET CERTIFIED PROGRAM</div>
                 <div className="cp-card-price-row">
-                  <span className="cp-card-price">₹24,999</span>
-                  <span className="cp-card-emi">EMI available</span>
+                  <span className="cp-card-price">
+                    <span className="cp-old-price">₹24,999</span>
+                    ₹14,999
+                  </span>
+                  <span className="cp-card-emi">EMI ₹5,999/month</span>
                 </div>
                 <div className="cp-card-meta">
                   <span>🗓 3 Months</span><span>•</span><span>💻 Online</span><span>•</span><span>🎓 Certificate</span>
@@ -389,8 +392,9 @@ export default function NutritionistCourse() {
               <div className="cp-panel-l cp-panel-l--pay">
                 <p className="cp-panel-eyebrow">What's included</p>
                 <div className="cp-panel-price">
-                  <span className="cp-panel-amount">₹24,999</span>
-                  <span className="cp-panel-note">One-time · EMI available</span>
+                  <span className="cp-panel-old-price">₹24,999</span>
+                  <span className="cp-panel-amount">₹14,999</span>
+                  <span className="cp-panel-note">One-time · EMI ₹5,999/month</span>
                 </div>
                 <ul className="cp-panel-includes">
                   {INCLUDES.map(i => <li key={i}><span>✓</span>{i}</li>)}
@@ -477,7 +481,7 @@ export default function NutritionistCourse() {
                     )}
                     {payStep === 'otp' && (
                       <button type="submit" className="cp-pay-btn" disabled={payLoading}>
-                        {payLoading ? 'Please wait…' : '🔒 Pay ₹24,999 Securely'}
+                        {payLoading ? 'Please wait…' : '🔒 Pay ₹14,999 Securely'}
                       </button>
                     )}
                     <p className="cp-field-note">Powered by Razorpay · 100% secure</p>

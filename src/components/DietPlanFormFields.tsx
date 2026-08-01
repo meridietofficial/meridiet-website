@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import DatePicker from './DatePicker'
 
 export type DietPlanFormValues = {
@@ -36,7 +35,7 @@ export const EMPTY_FORM: DietPlanFormValues = {
   goals: [], goals_other: '', activity_level: '', work_type: '', workout_type: '', diet_type: '',
   cuisine_preference: [], food_allergies: [], foods_dislike: '', favorite_foods: '',
   medical_conditions: [], other_condition: '', on_medication: '', medications: '',
-  digestive_health: '', smoke_alcohol: '', health_notes: '', plan_type: '',
+  digestive_health: '', smoke_alcohol: '', health_notes: '', plan_type: '2',
   city: '', state: '',
 }
 
@@ -175,12 +174,12 @@ function toggleArr(arr: string[], val: string, solo?: boolean): string[] {
   return arr.includes(val) ? without : [...without, val]
 }
 
-export default function DietPlanFormFields({ form, onChange, disabled, afterLifestyle, afterFoodPrefs }: Props) {
-  // Plan is fixed at 1 Month (value 2) for now
-  useEffect(() => {
-    if (form.plan_type !== '2') onChange('plan_type', '2')
-  }, [])
+const PLAN_OPTIONS = [
+  { value: '1', label: '1 Week',  emoji: '📅', desc: '7 days · Quick start plan' },
+  { value: '2', label: '1 Month', emoji: '👑', desc: '4 weeks · Full personalised plan' },
+]
 
+export default function DietPlanFormFields({ form, onChange, disabled, afterLifestyle, afterFoodPrefs }: Props) {
   return (
     <>
       {/* ─── Basic Information ─── */}
@@ -664,18 +663,27 @@ export default function DietPlanFormFields({ form, onChange, disabled, afterLife
         <h3 className="cdp-section-title">
           <span>📅</span> Plan Details
         </h3>
-        <div className="dpf-plan-badge-wrap">
-          <div className="dpf-plan-badge">
-            <span className="dpf-plan-badge-icon">👑</span>
-            <div className="dpf-plan-badge-text">
-              <span className="dpf-plan-badge-title">1 Month Plan</span>
-              <span className="dpf-plan-badge-sub">4 weeks · Personalised daily meals</span>
-            </div>
-            <span className="dpf-plan-badge-tag">Current Plan</span>
+        <div className="cdp-field">
+          <label className="cdp-label">Plan Duration <span className="cdp-req">*</span></label>
+          <div className="dpf-answer-row">
+            {PLAN_OPTIONS.map(p => {
+              const active = form.plan_type === p.value
+              return (
+                <button
+                  key={p.value}
+                  type="button"
+                  disabled={disabled}
+                  className={`dpf-answer-card${active ? ' active' : ''}`}
+                  onClick={() => onChange('plan_type', p.value)}
+                >
+                  {active && <span className="dpf-answer-check">✓</span>}
+                  <span className="dpf-answer-icon">{p.emoji}</span>
+                  <span className="dpf-answer-label">{p.label}</span>
+                  <span className="dpf-answer-desc">{p.desc}</span>
+                </button>
+              )
+            })}
           </div>
-          <p className="dpf-plan-note">
-            <i className="fa-solid fa-circle-info" /> Diet plans are currently generated for <strong>1 month (4 weeks)</strong>. More durations coming soon.
-          </p>
         </div>
         <div className="cdp-field" style={{ marginTop: 16 }}>
           <label className="cdp-label">Health Notes</label>
