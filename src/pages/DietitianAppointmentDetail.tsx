@@ -573,7 +573,7 @@ export default function DietitianAppointmentDetail() {
                 </button>
               )}
               {isClinic ? (
-                <button className="apd-hero-btn" onClick={() => navigate('/dietitian-diet-plans/manual')}>
+                <button className="apd-hero-btn" onClick={() => navigate('/dietitian-diet-plans/manual/new', { state: { prefill: { full_name: clientName, whatsapp: appt.phone ?? '', email: appt.email ?? '' } } })}>
                   <i className="fa-solid fa-pen-to-square" /> Manual Diet Plan
                 </button>
               ) : (
@@ -607,7 +607,7 @@ export default function DietitianAppointmentDetail() {
           {(appt.status === 'completed' || appt.status === 'cancelled') && (
             <>
               {isClinic ? (
-                <button className="apd-hero-btn" onClick={() => navigate('/dietitian-diet-plans/manual')}>
+                <button className="apd-hero-btn" onClick={() => navigate('/dietitian-diet-plans/manual/new', { state: { prefill: { full_name: clientName, whatsapp: appt.phone ?? '', email: appt.email ?? '' } } })}>
                   <i className="fa-solid fa-pen-to-square" /> Manual Diet Plan
                 </button>
               ) : (
@@ -836,7 +836,7 @@ export default function DietitianAppointmentDetail() {
                     </button>
                   )}
                   {isClinic ? (
-                    <button className="apd-action-row" onClick={() => navigate('/dietitian-diet-plans/manual')}>
+                    <button className="apd-action-row" onClick={() => navigate('/dietitian-diet-plans/manual/new', { state: { prefill: { full_name: clientName, whatsapp: appt.phone ?? '', email: appt.email ?? '' } } })}>
                       <span className="apd-action-icon"><i className="fa-solid fa-pen-to-square" /></span>
                       <span className="apd-action-label">Manual Diet Plan</span>
                       <i className="fa-solid fa-chevron-right apd-action-arrow" />
@@ -875,7 +875,7 @@ export default function DietitianAppointmentDetail() {
               {(appt.status === 'completed' || appt.status === 'cancelled') && (
                 <>
                   {isClinic ? (
-                    <button className="apd-action-row" onClick={() => navigate('/dietitian-diet-plans/manual')}>
+                    <button className="apd-action-row" onClick={() => navigate('/dietitian-diet-plans/manual/new', { state: { prefill: { full_name: clientName, whatsapp: appt.phone ?? '', email: appt.email ?? '' } } })}>
                       <span className="apd-action-icon"><i className="fa-solid fa-pen-to-square" /></span>
                       <span className="apd-action-label">Manual Diet Plan</span>
                       <i className="fa-solid fa-chevron-right apd-action-arrow" />

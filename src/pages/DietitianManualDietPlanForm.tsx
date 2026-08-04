@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import manualDietPlanApi, { ManualDraftBody } from '../api/manualDietPlan'
 import dietitianDietPlanApi, { UpdateDraftBody } from '../api/dietitianDietPlan'
 import DietPlanFormFields, { DietPlanFormValues, EMPTY_FORM } from '../components/DietPlanFormFields'
@@ -108,10 +108,15 @@ function buildBody(client: ClientInfo, form: DietPlanFormValues): ManualDraftBod
 export default function DietitianManualDietPlanForm() {
   const navigate  = useNavigate()
   const { planId } = useParams<{ planId: string }>()
+  const location  = useLocation()
   const isEdit    = !!planId
   const id        = Number(planId)
 
-  const [client, setClient] = useState<ClientInfo>(EMPTY_CLIENT)
+  const prefill = (location.state as any)?.prefill as Partial<ClientInfo> | undefined
+
+  const [client, setClient] = useState<ClientInfo>(() =>
+    prefill ? { ...EMPTY_CLIENT, ...prefill } : EMPTY_CLIENT
+  )
   const [form, setForm]     = useState<DietPlanFormValues>(EMPTY_FORM)
   const [loading, setLoading]   = useState(isEdit)
   const [saving, setSaving]     = useState(false)

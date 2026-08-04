@@ -105,6 +105,8 @@ export type DietitianAppointment = {
   dietitian_id: number
   user_id: number
   name: string
+  phone?: string | null
+  email?: string | null
   avatar_url: string | null
   appointment_date: string
   slot: string

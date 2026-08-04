@@ -130,7 +130,7 @@ export default function DietitianClinicPatients() {
   const [addForm, setAddForm] = useState({
     name: '', phone: '', email: '',
     date: new Date().toLocaleDateString('en-CA'),
-    slot: '', duration: '', sessionType: 'in_person',
+    slot: '', duration: '30', sessionType: 'in_person',
     fee: '0', paymentMethod: '', paymentCollected: false, notes: '',
   })
 
@@ -262,7 +262,7 @@ export default function DietitianClinicPatients() {
     setAddForm({
       name: '', phone: '', email: '',
       date: new Date().toLocaleDateString('en-CA'),
-      slot: '', duration: '', sessionType: 'in_person',
+      slot: '', duration: '30', sessionType: 'in_person',
       fee: '0', paymentMethod: '', paymentCollected: false, notes: '',
     })
     setAddError(null)
@@ -271,7 +271,8 @@ export default function DietitianClinicPatients() {
   }
 
   async function handleAddAppointment() {
-    if (!addForm.name.trim() || !addForm.date || !addForm.slot) return
+    if (!addForm.name.trim()) { setAddError('Patient name is required.'); return }
+    if (!addForm.slot)        { setAddError('Please select an appointment time.'); return }
     setAddSubmitting(true)
     setAddError(null)
     try {
@@ -843,17 +844,14 @@ export default function DietitianClinicPatients() {
             <div className="offline-form-grid" style={{ marginTop: 8 }}>
               <div className="offline-field">
                 <label>Session Type</label>
-                <select className="cr-modal-input" value={addForm.sessionType}
-                  onChange={e => setAddForm(f => ({ ...f, sessionType: e.target.value }))}>
-                  <option value="in_person">In-Person</option>
-                  <option value="video_call">Video Call</option>
-                </select>
+                <div className="cr-modal-input" style={{ display: 'flex', alignItems: 'center', gap: 7, color: '#374151', background: '#f9fafb', cursor: 'default' }}>
+                  <i className="fa-solid fa-location-dot" style={{ color: '#6366f1' }} /> In-Person
+                </div>
               </div>
               <div className="offline-field">
                 <label>Duration (mins)</label>
                 <select className="cr-modal-input" value={addForm.duration}
                   onChange={e => setAddForm(f => ({ ...f, duration: e.target.value }))}>
-                  <option value="">Default (30)</option>
                   {['15','30','45','60','90'].map(v => <option key={v} value={v}>{v} min</option>)}
                 </select>
               </div>
@@ -897,7 +895,7 @@ export default function DietitianClinicPatients() {
               <button className="cr-btn-detail" onClick={() => setAddOpen(false)}>Cancel</button>
               <button
                 className="cr-btn-reschedule"
-                disabled={addSubmitting || !addForm.name.trim() || !addForm.date || !addForm.slot}
+                disabled={addSubmitting}
                 onClick={handleAddAppointment}
                 style={{ padding: '9px 20px', fontSize: 13 }}
               >
