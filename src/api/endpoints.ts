@@ -27,7 +27,7 @@ const ENDPOINTS = {
     onlineStatus:      '/dietitian/online-status',
     syncOfflineSlots:  '/dietitian/sync-offline-slots',
     deleteAccount:     '/dietitian/account',
-    awsKeys:           '/aws-keys/',
+    awsKeys:           '/dietitian/aws-keys',
     specializations:   '/dietitians/specializations',
     list:              '/dietitians',
   },

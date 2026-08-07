@@ -23,7 +23,7 @@ const steps = [
     img: '/how-step1.png',
     step: '04',
     title: 'Delivered to You',
-    desc: 'Receive your plan instantly on WhatsApp & email in a neat PDF.',
+    desc: 'Receive your plan within 24 hours on WhatsApp & email in a neat PDF.',
   },
 ]
 

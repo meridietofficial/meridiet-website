@@ -67,7 +67,7 @@ const faqs = [
     items: [
       {
         q: 'Can I talk to a dietitian directly?',
-        a: 'Yes. The 1-month plan includes 1 dietitian consultation, and the 3-month plan includes 1 video consultation with a dedicated nutritionist.',
+        a: 'Yes. You can reach our dietitian team anytime via WhatsApp support included in all plans.',
       },
       {
         q: 'How do I get WhatsApp support?',

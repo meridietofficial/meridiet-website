@@ -1028,7 +1028,7 @@ const UserProfile = () => {
                             <span>✓</span>
                             <div>
                               <p className="usub-success-title">Month {subStatus.months_generated} diet plan is being generated!</p>
-                              <p className="usub-success-sub">You'll receive your plan by email shortly.</p>
+                              <p className="usub-success-sub">You'll receive your plan by email within 24 hours.</p>
                             </div>
                           </div>
                         ) : (walletBalance ?? 0) >= subStatus.per_month_amount ? (

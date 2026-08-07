@@ -2420,9 +2420,38 @@
 }
 
 .footer-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 13.5px;
   color: rgba(255, 255, 255, 0.82);
-  line-height: 1.6;
+  line-height: 1.5;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-contact-item:hover {
+  color: white;
+}
+
+.footer-contact-icon {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6fcf97;
+  font-size: 13px;
+  transition: background 0.2s;
+}
+
+.footer-contact-item:hover .footer-contact-icon {
+  background: rgba(255, 255, 255, 0.18);
+  color: white;
 }
 
 .footer-bottom {

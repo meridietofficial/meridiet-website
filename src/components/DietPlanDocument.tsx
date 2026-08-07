@@ -106,7 +106,7 @@ const PageFooter = ({ page, tagline }: { page: number; tagline?: TaglineShape | 
     )}
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, color: C.sub, borderTop: `1px solid ${C.line}`, paddingTop: 8 }}>
       <span style={{ flex: 1, display: "flex", alignItems: "center", gap: 16 }}>
-        <a href="mailto:support@meridiet.in" style={{ display: "flex", alignItems: "center", gap: 5, color: C.sub, textDecoration: "none" }}><FaEnvelope size={11} color={C.brand} /> support@meridiet.in</a>
+        <a href="mailto:support@meridiet.com" style={{ display: "flex", alignItems: "center", gap: 5, color: C.sub, textDecoration: "none" }}><FaEnvelope size={11} color={C.brand} /> support@meridiet.com</a>
         <a href="tel:+919609606009" style={{ display: "flex", alignItems: "center", gap: 5, color: C.sub, textDecoration: "none" }}><FaPhoneAlt size={11} color={C.brand} /> +91 960 960 6009</a>
       </span>
       <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 700, letterSpacing: 2, color: C.sub }}>{String(page).padStart(2, "0")}</span>
@@ -248,7 +248,7 @@ const CoverPage = ({ plan }: { plan: any }) => {
 
       <div style={{ position: "absolute", left: 40, right: 40, bottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 10.5, color: C.sub }}>
         <span style={{ flex: 1, display: "flex", alignItems: "center", gap: 16 }}>
-          <a href="mailto:support@meridiet.in" style={{ display: "flex", alignItems: "center", gap: 5, color: C.sub, textDecoration: "none" }}><FaEnvelope size={10} color={C.brand} /> support@meridiet.in</a>
+          <a href="mailto:support@meridiet.com" style={{ display: "flex", alignItems: "center", gap: 5, color: C.sub, textDecoration: "none" }}><FaEnvelope size={10} color={C.brand} /> support@meridiet.com</a>
           <a href="tel:+919609606009" style={{ display: "flex", alignItems: "center", gap: 5, color: C.sub, textDecoration: "none" }}><FaPhoneAlt size={10} color={C.brand} /> +91 960 960 6009</a>
         </span>
         <span style={{ flexShrink: 0, fontSize: 12, fontWeight: 700, letterSpacing: 2, color: C.sub }}>01</span>

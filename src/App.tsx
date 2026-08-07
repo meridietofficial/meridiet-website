@@ -66,7 +66,7 @@ function FormPage() {
       <Suspense fallback={null}>
         <SEO
           title="AI Diet Plan Generator | Personalized Indian Diet Chart"
-          description="Generate your personalized AI diet plan in minutes. Tailored for your body, goals, medical conditions, and Indian cuisine preferences. Plans from ₹499."
+          description="Generate your personalized AI diet plan delivered within 24 hours. Tailored for your body, goals, medical conditions, and Indian cuisine preferences. Plans from ₹499."
           keywords="AI diet plan generator, personalized diet chart India, custom diet plan online, Indian diet plan, diet chart for weight loss, AI nutrition plan India, online diet form"
           canonical="/diet-plan"
         />

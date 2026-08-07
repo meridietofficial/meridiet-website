@@ -830,7 +830,7 @@ const PLAN_OPTS = [
 ]
 
 const DELIVERY_OPTS = [
-  { k: 'whatsapp', icon: '💬', lbl: 'WhatsApp', sub: 'Instant delivery on WhatsApp', badge: null },
+  { k: 'whatsapp', icon: '💬', lbl: 'WhatsApp', sub: 'Delivered within 24 hours on WhatsApp', badge: null },
   { k: 'email',    icon: '📧', lbl: 'Email',     sub: 'Delivered to your inbox',      badge: '⚡ Recommended' },
 ]
 

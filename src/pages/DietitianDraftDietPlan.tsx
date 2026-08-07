@@ -281,12 +281,20 @@ function PlanDocPreview({ plan, dietitian, isManual, clientForm }: {
   async function handleDownloadPdf() {
     if (!wrapRef.current || downloading) return
     setDownloading(true)
+
+    // Remove the responsive scale transform so html2canvas captures at full A4 resolution
+    const wrap = wrapRef.current
+    const savedTransform    = wrap.style.transform
+    const savedMarginBottom = wrap.style.marginBottom
+    wrap.style.transform    = 'none'
+    wrap.style.marginBottom = '0'
+
     try {
       const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
         import('html2canvas'),
         import('jspdf'),
       ])
-      const pages = Array.from(wrapRef.current.querySelectorAll<HTMLElement>('.dp-page'))
+      const pages = Array.from(wrap.querySelectorAll<HTMLElement>('.dp-page'))
       if (pages.length === 0) return
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: [PAGE_W, PAGE_H], hotfixes: ['px_scaling'] })
       for (let i = 0; i < pages.length; i++) {
@@ -305,6 +313,8 @@ function PlanDocPreview({ plan, dietitian, isManual, clientForm }: {
       const name = (plan.client_name || 'diet-plan').replace(/\s+/g, '-').toLowerCase()
       pdf.save(`${name}-diet-plan.pdf`)
     } finally {
+      wrap.style.transform    = savedTransform
+      wrap.style.marginBottom = savedMarginBottom
       setDownloading(false)
     }
   }

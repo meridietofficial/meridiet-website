@@ -37,7 +37,6 @@ const plans = [
       'Grocery shopping list',
       'Recipe booklet included',
       'WhatsApp + email support',
-      '1 free dietitian consultation',
     ],
     cta: 'Get 1-Month Plan',
   },
@@ -56,7 +55,6 @@ const plans = [
       '3 months of diet plans',
       'Monthly health check-ins',
       'Priority WhatsApp support',
-      '1 video consultation',
       'Free plan modifications',
     ],
     cta: 'Get 3-Month Plan',
@@ -129,7 +127,7 @@ const Pricing = ({ onOpenForm }: { onOpenForm: () => void }) => {
         </div>
 
         <p className="pricing-note">
-          🔒 Secure payment &nbsp;·&nbsp; 📄 Instant plan delivery &nbsp;·&nbsp; 💬 WhatsApp support included
+          🔒 Secure payment &nbsp;·&nbsp; 📄 Plan delivered within 24 hours &nbsp;·&nbsp; 💬 WhatsApp support included
         </p>
 
       </div>

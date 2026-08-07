@@ -11,7 +11,7 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
           <h1 className="hero-title">
             <span className="hero-title-line">Get Your Personalized</span>
             <span className="hero-title-line highlight">Indian Diet Plan</span>
-            <span className="hero-title-line">in Minutes</span>
+            <span className="hero-title-line">Within 24 Hours</span>
           </h1>
           <p className="hero-desc">
             <span style={{ color: '#1a2e1a', fontWeight: 700 }}>India's First AI-Powered Platform Blending<br />
@@ -97,7 +97,7 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
               <div className="hero-strip-item-inner">
                 <img src="/strip-whatsapp.png" alt="" className="hero-strip-icon-img hero-strip-icon-img--lg" aria-hidden="true" />
                 <div className="hero-strip-text">
-                  <span>Delivered Instantly on<br />Whatsapp & Email</span>
+                  <span>Delivered Within 24 Hours<br />on WhatsApp & Email</span>
                 </div>
               </div>
             </div>
