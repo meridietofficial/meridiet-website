@@ -462,13 +462,13 @@ function EditPlanContent({
 
   // Meal helpers (delegate to module-level immutable helpers)
   function updMealItem(wi: number, di: number, meal: MealKey, fi: number, field: string, val: string) {
-    onWeeksChange(setFoodItem(editWeeks, wi, di, meal, fi, field, val))
+    onWeeksChange(recomputeDayTotals(setFoodItem(editWeeks, wi, di, meal, fi, field, val)))
   }
   function addMealItm(wi: number, di: number, meal: MealKey) {
-    onWeeksChange(addFoodItem(editWeeks, wi, di, meal))
+    onWeeksChange(recomputeDayTotals(addFoodItem(editWeeks, wi, di, meal)))
   }
   function remMealItm(wi: number, di: number, meal: MealKey, fi: number) {
-    onWeeksChange(removeFoodItem(editWeeks, wi, di, meal, fi))
+    onWeeksChange(recomputeDayTotals(removeFoodItem(editWeeks, wi, di, meal, fi)))
   }
 
   // Week helpers
@@ -532,6 +532,10 @@ function EditPlanContent({
   }
 
   function dayTotal(day: any) {
+    // Prefer stored totals (kept live by recomputeDayTotals on every item change)
+    if (day.total_kcal != null || day.total_protein_g != null) {
+      return { kcal: day.total_kcal ?? 0, protein: day.total_protein_g ?? 0 }
+    }
     let kcal = 0, protein = 0
     for (const m of ['breakfast', 'lunch', 'snack', 'dinner'] as MealKey[]) {
       for (const item of (day[m] ?? [])) {
@@ -1258,7 +1262,8 @@ export default function DietitianDraftDietPlan() {
     if (!plan) return
     setEditedFields({})
     setEditTips(plan.general_tips ?? [])
-    setEditWeeks(JSON.parse(JSON.stringify(plan.weeks ?? [])))
+    const weeks = JSON.parse(JSON.stringify(plan.weeks ?? []))
+    setEditWeeks(recomputeDayTotals(weeks))
     setEditRecipes(JSON.parse(JSON.stringify(plan.featured_recipes ?? [])))
     setEditingContent(true)
     setActionErr(null)
