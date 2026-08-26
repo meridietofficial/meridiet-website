@@ -43,6 +43,8 @@ const DietitianSettings       = lazy(() => import('./pages/DietitianSettings'))
 const DietitianClinicPatients = lazy(() => import('./pages/DietitianClinicPatients'))
 const ResetPassword           = lazy(() => import('./pages/ResetPassword'))
 const Calculators             = lazy(() => import('./pages/Calculators'))
+const WomenEmpowerment        = lazy(() => import('./pages/WomenEmpowerment'))
+const SponsorCohort           = lazy(() => import('./pages/SponsorCohort'))
 const NutritionistCourse      = lazy(() => import('./pages/NutritionistCourse'))
 const Blog                    = lazy(() => import('./pages/Blog'))
 const Career                  = lazy(() => import('./pages/Career'))
@@ -81,7 +83,7 @@ function FormPage() {
 }
 
 const NO_NAVBAR_PREFIXES = ['/dietitian-dashboard', '/dietitian-profile', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-clinic-patients', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
-const NO_FOOTER_PREFIXES = ['/diet-plan', '/form', '/for-dietitians/basic-info', '/for-dietitians/qualification', '/for-dietitians/document-upload', '/for-dietitians/payment', '/dietitian/verification-submitted', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-clinic-patients', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
+const NO_FOOTER_PREFIXES = ['/diet-plan', '/form', '/for-dietitians/basic-info', '/for-dietitians/qualification', '/for-dietitians/document-upload', '/dietitian/verification-submitted', '/dietitian-dashboard', '/dietitian-profile', '/dietitian-my-clients', '/dietitian-appointments', '/dietitian-clinic-patients', '/dietitian-diet-plans', '/dietitian-chat', '/dietitian-follow-ups', '/dietitian-reports', '/dietitian-earnings', '/dietitian-wallet', '/dietitian-reviews', '/dietitian-settings', '/reset-password']
 
 function ActiveVideoCall() {
   const { activeCall, clearCall } = useVideoCall()
@@ -121,6 +123,8 @@ function AppInner() {
           <Route path="/blog"                 element={<Blog />} />
           <Route path="/careers"              element={<Career />} />
           <Route path="/calculators"              element={<Calculators />} />
+          <Route path="/women-empowerment"        element={<WomenEmpowerment />} />
+          <Route path="/sponsor-cohort"           element={<SponsorCohort />} />
           <Route path="/nutritionist-course"    element={<NutritionistCourse />} />
           <Route path="/consult-dietitian"         element={<ConsultDietitian />} />
           <Route path="/consult-dietitian/success" element={<ConsultDietitian />} />
@@ -129,7 +133,7 @@ function AppInner() {
           <Route path="/for-dietitians/basic-info"         element={<DietitianOnboarding />} />
           <Route path="/for-dietitians/qualification"      element={<DietitianOnboarding />} />
           <Route path="/for-dietitians/document-upload"    element={<DietitianOnboarding />} />
-          <Route path="/for-dietitians/payment"            element={<DietitianOnboarding />} />
+          <Route path="/for-dietitians/payment"            element={<Navigate to="/for-dietitians/document-upload" replace />} />
           <Route path="/dietitian/verification-submitted"  element={<DietitianVerificationSubmitted />} />
           <Route path="/join-as-dietitian"                 element={<Navigate to="/for-dietitians/basic-info" replace />} />
           <Route path="/reset-password"                    element={<ResetPassword />} />

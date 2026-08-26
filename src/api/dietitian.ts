@@ -205,6 +205,8 @@ export async function uploadDocuments(
 }
 
 // ── Dietitian profile (GET, JWT-protected) ───────────────────
+export type SubscriptionStatus = 'pending_approval' | 'trial' | 'active' | 'expired'
+
 export type DietitianProfile = {
   id: number
   user_id: number
@@ -229,6 +231,10 @@ export type DietitianProfile = {
   availability: Record<string, string[]> | null
   is_verified: number
   is_online: number
+  subscription_status: SubscriptionStatus | null
+  trial_starts_at: string | null
+  trial_ends_at: string | null
+  activated_at: string | null
   documents: {
     profile_photo: string | null
     logo_url: string | null
@@ -343,10 +349,19 @@ type ConsultationFeeResponse = {
   data: { amount?: number; fee?: number; consultation_fee?: number; currency?: string }
 }
 
+type DietitianRegisterResponse = {
+  success: true
+  message: string
+  data: {
+    user: { id: number; full_name: string; email: string; role: string }
+    dietitian: { id: number; is_verified: boolean; subscription_status: SubscriptionStatus }
+  }
+}
+
 // ── Submit registration to your backend ──────────────────────
 const dietitianApi = {
   register(body: DietitianRegistrationBody) {
-    return apiClient.apiPost(ENDPOINTS.dietitian.register, body)
+    return apiClient.apiPost<DietitianRegisterResponse>(ENDPOINTS.dietitian.register, body)
   },
 
   async getSpecializations(): Promise<Specialization[]> {

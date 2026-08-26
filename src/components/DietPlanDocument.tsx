@@ -463,39 +463,65 @@ const MEALS = [
   { key: "dinner",    label: "Dinner",    Icon: FaMoon },
 ];
 
-const DayCard = ({ d }: { d: any }) => (
-  <div style={{ background: C.white, borderRadius: 12, border: `1px solid ${C.line}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-    <div style={{ background: C.brand, color: "#fff", padding: "5px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <span style={{ fontWeight: 800, fontSize: 11, letterSpacing: 0.3 }}>DAY {d.day}</span>
-      {d.total_kcal != null && <span style={{ fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}><FaFireAlt size={8} /> {d.total_kcal} kcal</span>}
-    </div>
-    <div style={{ padding: "7px 9px", flex: 1 }}>
-      {MEALS.map((m) => {
-        const items = list(d[m.key]);
-        if (!items.length) return null;
-        const time = d.meal_timing?.[m.key];
-        return (
-          <div key={m.key} style={{ marginBottom: 7 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 8.5, fontWeight: 800, color: C.brand, letterSpacing: 0.3, marginBottom: 2 }}>
-              <m.Icon size={8} /> <span>{m.label.toUpperCase()}</span>
-              {time && <span style={{ marginLeft: "auto", color: C.faint, fontWeight: 700 }}>{time}</span>}
-            </div>
-            {items.map((it: any, k: number) => (
-              <div key={k} style={{ display: "flex", gap: 5, fontSize: 8.5, color: C.ink, lineHeight: 1.3, paddingLeft: 2 }}>
-                <span style={{ color: C.brand, flexShrink: 0 }}>•</span>
-                <span style={{ flex: 1 }}>{(it.food || "").replace(/\s*\([^)]*\)/g, "").trim()}{it.quantity ? <span style={{ color: C.sub }}> — {it.quantity}</span> : ""}</span>
+const EXTRA_MEAL_COLOR = "#e11d74";
+
+const DayCard = ({ d }: { d: any }) => {
+  const extraMeals: any[] = Array.isArray(d.extra_meals) ? d.extra_meals : [];
+  return (
+    <div style={{ background: C.white, borderRadius: 12, border: `1px solid ${C.line}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ background: C.brand, color: "#fff", padding: "5px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontWeight: 800, fontSize: 11, letterSpacing: 0.3 }}>DAY {d.day}</span>
+        {d.total_kcal != null && <span style={{ fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", gap: 3 }}><FaFireAlt size={8} /> {d.total_kcal} kcal</span>}
+      </div>
+      <div style={{ padding: "7px 9px", flex: 1 }}>
+        {MEALS.map((m) => {
+          const items = list(d[m.key]);
+          if (!items.length) return null;
+          const time = d.meal_timing?.[m.key];
+          return (
+            <div key={m.key} style={{ marginBottom: 7 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 8.5, fontWeight: 800, color: C.brand, letterSpacing: 0.3, marginBottom: 2 }}>
+                <m.Icon size={8} /> <span>{m.label.toUpperCase()}</span>
+                {time && <span style={{ marginLeft: "auto", color: C.faint, fontWeight: 700 }}>{time}</span>}
               </div>
-            ))}
-          </div>
-        );
-      })}
+              {items.map((it: any, k: number) => (
+                <div key={k} style={{ display: "flex", gap: 5, fontSize: 8.5, color: C.ink, lineHeight: 1.3, paddingLeft: 2 }}>
+                  <span style={{ color: C.brand, flexShrink: 0 }}>•</span>
+                  <span style={{ flex: 1 }}>{(it.food || "").replace(/\s*\([^)]*\)/g, "").trim()}{it.quantity ? <span style={{ color: C.sub }}> — {it.quantity}</span> : ""}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+        {/* Extra meals added by dietitian */}
+        {extraMeals.map((em: any, ei: number) => {
+          const items = list(em.items);
+          return (
+            <div key={`em-${ei}`} style={{ marginBottom: 7, borderLeft: `2px solid ${EXTRA_MEAL_COLOR}`, paddingLeft: 5 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 8.5, fontWeight: 800, color: EXTRA_MEAL_COLOR, letterSpacing: 0.3, marginBottom: 2 }}>
+                <FaUtensilSpoon size={8} color={EXTRA_MEAL_COLOR} />
+                <span>{(em.name || "Extra Meal").toUpperCase()}</span>
+                {em.time && <span style={{ marginLeft: "auto", color: C.faint, fontWeight: 700 }}>{em.time}</span>}
+              </div>
+              {items.length === 0 ? (
+                <div style={{ fontSize: 8, color: C.faint, paddingLeft: 2 }}>—</div>
+              ) : items.map((it: any, k: number) => (
+                <div key={k} style={{ display: "flex", gap: 5, fontSize: 8.5, color: C.ink, lineHeight: 1.3, paddingLeft: 2 }}>
+                  <span style={{ color: EXTRA_MEAL_COLOR, flexShrink: 0 }}>•</span>
+                  <span style={{ flex: 1 }}>{(it.food || "").replace(/\s*\([^)]*\)/g, "").trim()}{it.quantity ? <span style={{ color: C.sub }}> — {it.quantity}</span> : ""}</span>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ borderTop: `1px solid ${C.line}`, padding: "5px 9px", display: "flex", justifyContent: "space-between", fontSize: 9, fontWeight: 700 }}>
+        {d.total_protein_g != null && <span style={{ color: C.brand, display: "flex", alignItems: "center", gap: 3 }}><FaDumbbell size={8} /> {d.total_protein_g}g protein</span>}
+        {d.water_liters != null && <span style={{ color: "#2563eb", display: "flex", alignItems: "center", gap: 3 }}><FaTint size={8} /> {d.water_liters}L water</span>}
+      </div>
     </div>
-    <div style={{ borderTop: `1px solid ${C.line}`, padding: "5px 9px", display: "flex", justifyContent: "space-between", fontSize: 9, fontWeight: 700 }}>
-      {d.total_protein_g != null && <span style={{ color: C.brand, display: "flex", alignItems: "center", gap: 3 }}><FaDumbbell size={8} /> {d.total_protein_g}g protein</span>}
-      {d.water_liters != null && <span style={{ color: "#2563eb", display: "flex", alignItems: "center", gap: 3 }}><FaTint size={8} /> {d.water_liters}L water</span>}
-    </div>
-  </div>
-);
+  );
+};
 
 const WeekPage = ({ week, weekIndex, plan, page }: { week: any; weekIndex: number; plan: any; page: number }) => {
   const s = plan?.summary || {};

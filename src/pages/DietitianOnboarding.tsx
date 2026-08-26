@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { uploadDocuments } from '../api/dietitian'
-import { dietitianRegPaymentApi, dietitianRegOtpApi } from '../api/payment'
+import dietitianApi, { uploadDocuments } from '../api/dietitian'
+import { dietitianRegOtpApi } from '../api/payment'
 import { normalizeImageFile, normalizeDocumentFile } from '../utils/imageUtils'
 import { ApiError } from '../api/client'
 import { useToast } from '../context/ToastContext'
@@ -20,21 +20,18 @@ const STEP_MAP: Record<string, number> = {
   '/for-dietitians/basic-info':      1,
   '/for-dietitians/qualification':   2,
   '/for-dietitians/document-upload': 3,
-  '/for-dietitians/payment':         4,
 }
 const STEP_PATHS = [
   '',
   '/for-dietitians/basic-info',
   '/for-dietitians/qualification',
   '/for-dietitians/document-upload',
-  '/for-dietitians/payment',
 ]
 
 const STEPS = [
   { num: 1, label: 'Basic Info' },
   { num: 2, label: 'Qualifications' },
   { num: 3, label: 'Documents' },
-  { num: 4, label: 'Payment' },
 ]
 
 const REG_FEATURES = [
@@ -173,9 +170,6 @@ export default function DietitianOnboarding() {
   const [uploading, setUploading]         = useState(false)
   const [docError, setDocError]           = useState('')
 
-  /* Registration success modal */
-  const [successData, setSuccessData] = useState<{ name: string } | null>(null)
-
   /* OTP state */
   const [phoneVerified, setPhoneVerified]       = useState(false)
   const [phoneVerifiedAt, setPhoneVerifiedAt]   = useState<number | null>(null)
@@ -214,11 +208,8 @@ export default function DietitianOnboarding() {
       navigate('/for-dietitians/basic-info', { replace: true })
     } else if (step > 2 && !data.qualification.trim()) {
       navigate('/for-dietitians/qualification', { replace: true })
-    } else if (step > 3 && !docs.profilePhoto) {
-      // docs live only in component state — if lost (page refresh), send back to upload step
-      navigate('/for-dietitians/document-upload', { replace: true })
     }
-  }, [step, data.fullName, data.qualification, docs.profilePhoto, navigate])
+  }, [step, data.fullName, data.qualification, navigate])
 
   /* Fire funnel tracking event on each step load */
   useEffect(() => {
@@ -226,7 +217,6 @@ export default function DietitianOnboarding() {
       1: 'dietitian_onboarding_step1_basic_info',
       2: 'dietitian_onboarding_step2_qualification',
       3: 'dietitian_onboarding_step3_documents',
-      4: 'dietitian_onboarding_step4_payment',
     }
     if (EVENT_NAMES[step]) trackEvent(EVENT_NAMES[step])
   }, [step])
@@ -323,12 +313,7 @@ export default function DietitianOnboarding() {
       if (!docs.idProof)      { setDocError('ID Proof is required'); return }
       setDocError('')
       setErrors({})
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      navigate(STEP_PATHS[4])
-      return
-    }
 
-    if (step === 4) {
       /* ── Check phone verification hasn't expired ── */
       if (isPhoneVerificationExpired()) {
         setPhoneVerified(false)
@@ -338,14 +323,14 @@ export default function DietitianOnboarding() {
         return
       }
 
-      /* ── Upload docs → create-order (all data in one call) → Razorpay → verify → JWT ── */
+      /* ── Upload docs → register ── */
       setUploading(true)
       try {
         const docUrls = await uploadDocuments(
           docs as Record<'profilePhoto' | 'degreeCert' | 'regCert' | 'idProof', File | null>
         )
 
-        const orderRes = await dietitianRegPaymentApi.createOrder({
+        await dietitianApi.register({
           fullName:           data.fullName,
           email:              data.email,
           phone:              data.phone,
@@ -364,49 +349,11 @@ export default function DietitianOnboarding() {
           },
         })
 
-        const { key_id, order_id, amount, currency } = orderRes.data
-        setUploading(false)
-
-        let paymentSucceeded = false
-
-        const rzp = new window.Razorpay({
-          key:      key_id,
-          order_id,
-          amount:   amount * 100,
-          currency,
-          name:        'MeriDiet',
-          description: 'Dietitian Registration – One-time fee',
-          prefill: { name: data.fullName, email: data.email, contact: data.phone },
-          theme: { color: '#16a34a' },
-          handler: async (rzpRes: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
-            paymentSucceeded = true
-            try {
-              const verifyRes = await dietitianRegPaymentApi.verify({
-                razorpay_order_id:   rzpRes.razorpay_order_id,
-                razorpay_payment_id: rzpRes.razorpay_payment_id,
-                razorpay_signature:  rzpRes.razorpay_signature,
-              })
-              clearSaved()
-              trackEvent('dietitian_onboarding_complete')
-              const { user } = verifyRes.data
-              setSuccessData({ name: user.full_name })
-            } catch {
-              showToast('Payment received but verification failed. Please contact support.', 'error')
-            }
-          },
-          modal: {
-            ondismiss: async () => {
-              if (paymentSucceeded) return   // payment went through — don't mark as failed
-              try { await dietitianRegPaymentApi.failed(order_id) } catch { /* silent */ }
-              showToast('Payment cancelled. Please try again to complete registration.', 'error')
-            },
-          },
-        })
-        rzp.open()
+        clearSaved()
+        trackEvent('dietitian_onboarding_complete')
+        navigate('/dietitian/verification-submitted')
       } catch (err) {
-        setUploading(false)
         const msg = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.'
-        // Backend rejected because phone verification expired/not found — send back to Step 1
         if (msg.toLowerCase().includes('verif') && msg.toLowerCase().includes('phone')) {
           setPhoneVerified(false)
           setPhoneVerifiedAt(null)
@@ -415,6 +362,8 @@ export default function DietitianOnboarding() {
           return
         }
         showToast(msg, 'error')
+      } finally {
+        setUploading(false)
       }
       return
     }
@@ -466,22 +415,18 @@ export default function DietitianOnboarding() {
                 ? <img src="/jd-step1-icon.png" alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} />
                 : step === 2
                 ? <i className="fa-solid fa-briefcase" />
-                : step === 3
-                ? <i className="fa-solid fa-file-arrow-up" />
-                : <i className="fa-solid fa-credit-card" />}
+                : <i className="fa-solid fa-file-arrow-up" />}
             </div>
             <div>
               <h2 className="jd2-card-title">
                 {step === 1 ? 'Basic Information'
                   : step === 2 ? 'Professional Details'
-                  : step === 3 ? 'Document Upload'
-                  : 'Complete Registration'}
+                  : 'Document Upload'}
               </h2>
               <p className="jd2-card-sub">
                 {step === 1 ? "Let's start with some basic details"
                   : step === 2 ? 'Tell us about your professional background'
-                  : step === 3 ? 'Upload your documents for verification'
-                  : 'One-time fee to activate your dietitian account'}
+                  : 'Upload your documents to complete registration'}
               </p>
             </div>
           </div>
@@ -731,38 +676,6 @@ export default function DietitianOnboarding() {
             </div>
           )}
 
-          {/* ── Step 4: Payment ── */}
-          {step === 4 && (
-            <div className="jd2-fields">
-              <div className="jd2-pay-card">
-                <div className="jd2-pay-badge">One-Time Registration Fee</div>
-                <div className="jd2-pay-price-row">
-                  <span className="fd-price-old jd2-pay-old-price">₹2,499</span>
-                  <span className="jd2-pay-currency">₹</span>
-                  <span className="jd2-pay-amount">999</span>
-                </div>
-                <p className="jd2-pay-credit-note">
-                  <i className="fa-solid fa-coins" style={{ color: '#f59e0b', marginRight: 6 }} />
-                  Includes <strong>₹500 wallet credit</strong> added to your account instantly
-                </p>
-
-                <ul className="jd2-pay-features">
-                  {REG_FEATURES.map(f => (
-                    <li key={f.text} className="jd2-pay-feature-item">
-                      <i className={`${f.icon} jd2-pay-feature-icon`} />
-                      {f.text}
-                    </li>
-                  ))}
-                </ul>
-
-                <div className="jd2-pay-secure-note">
-                  <i className="fa-solid fa-lock" style={{ fontSize: 11, marginRight: 5 }} />
-                  Secured by Razorpay · 100% safe & encrypted
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* ── Nav buttons ── */}
           <div className="jd2-nav">
             <button className="jd2-back-btn" onClick={goBack}>
@@ -770,9 +683,9 @@ export default function DietitianOnboarding() {
             </button>
             <button className="jd2-next-btn" disabled={uploading} onClick={goNext}>
               {uploading
-                ? 'Processing…'
-                : step === 4
-                ? 'Pay ₹999 →'
+                ? 'Submitting…'
+                : step === 3
+                ? 'Submit Registration →'
                 : 'Next →'}
             </button>
           </div>
@@ -790,41 +703,6 @@ export default function DietitianOnboarding() {
           initialUserType="dietitian"
           initialTab="login"
         />
-      )}
-
-      {/* ── Registration Success Modal ── */}
-      {successData && (
-        <div className="jd2-success-overlay">
-          <div className="jd2-success-modal">
-            <div className="jd2-success-icon-wrap">
-              <i className="fa-solid fa-circle-check jd2-success-icon" />
-            </div>
-            <h2 className="jd2-success-title">Thank You, {successData.name.split(' ')[0]}!</h2>
-            <p className="jd2-success-welcome">Your registration & payment are confirmed.</p>
-
-            <div className="jd2-success-cards">
-              <div className="jd2-success-card">
-                <i className="fa-solid fa-coins" style={{ color: '#f59e0b' }} />
-                <span>₹500 wallet credit will be added after approval</span>
-              </div>
-              <div className="jd2-success-card">
-                <i className="fa-solid fa-clock" style={{ color: '#3b82f6' }} />
-                <span>Our team will review your documents in 24–48 hours</span>
-              </div>
-              <div className="jd2-success-card">
-                <i className="fa-solid fa-envelope" style={{ color: '#16a34a' }} />
-                <span>You'll receive a login email once your account is approved</span>
-              </div>
-            </div>
-
-            <button
-              className="jd2-success-btn"
-              onClick={() => navigate('/dietitian/verification-submitted')}
-            >
-              OK, Got It →
-            </button>
-          </div>
-        </div>
       )}
 
       {/* ── OTP Modal ── */}

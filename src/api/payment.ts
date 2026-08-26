@@ -83,80 +83,49 @@ const paymentApi = {
 
 export default paymentApi
 
-export type DietitianRegOrderResponse = {
-  success: true
-  message: string
-  data: {
-    order_id: string
-    key_id: string
-    amount: number
-    currency: string
-  }
-}
-
-export type DietitianRegVerifyResponse = {
-  success: true
-  message: string
-  data: {
-    token: string
-    user: {
-      id: number
-      full_name: string
-      email: string
-      phone_number: string
-      role: string
-    }
-    dietitian: {
-      id: number
-      is_verified: boolean
-    }
-  }
-}
-
-export type DietitianRegBody = {
-  fullName: string
-  email: string
-  phone: string
-  password: string
-  state: string
-  city: string
-  experience: string
-  registrationNumber?: string
-  specialization?: string[]
-  degrees?: { degree: string; institute: string; year: string }[]
-  documents: {
-    profilePhoto: string
-    degreeCertificate: string
-    registrationCertificate: string
-    idProof: string
-  }
-}
-
 export const dietitianRegOtpApi = {
   sendOtp: (phone: string) =>
     apiClient.apiPost<{ success: true; message: string }>(
-      ENDPOINTS.dietitianRegistrationPayment.sendOtp, { phone }
+      ENDPOINTS.dietitianRegistrationOtp.sendOtp, { phone }
     ),
 
   verifyOtp: (phone: string, otp: string) =>
     apiClient.apiPost<{ success: true; message: string; data: { phone_verified: true } }>(
-      ENDPOINTS.dietitianRegistrationPayment.verifyOtp, { phone, otp }
+      ENDPOINTS.dietitianRegistrationOtp.verifyOtp, { phone, otp }
     ),
 }
 
-export const dietitianRegPaymentApi = {
-  createOrder: (body: DietitianRegBody) =>
-    apiClient.apiPost<DietitianRegOrderResponse>(ENDPOINTS.dietitianRegistrationPayment.createOrder, body),
+export type RegistrationFeeOrderResponse = {
+  success: true
+  data: {
+    order_id: string
+    amount: number
+    currency: string
+    key_id: string
+  }
+}
+
+export type RegistrationFeeVerifyResponse = {
+  success: true
+  data: {
+    dietitian_id: number
+    subscription_status: string
+  }
+}
+
+export const dietitianRegistrationFeeApi = {
+  createOrder: () =>
+    apiClient.apiPost<RegistrationFeeOrderResponse>(ENDPOINTS.dietitianRegistrationFee.createOrder),
 
   verify: (data: {
     razorpay_order_id: string
     razorpay_payment_id: string
     razorpay_signature: string
   }) =>
-    apiClient.apiPost<DietitianRegVerifyResponse>(ENDPOINTS.dietitianRegistrationPayment.verify, data),
+    apiClient.apiPost<RegistrationFeeVerifyResponse>(ENDPOINTS.dietitianRegistrationFee.verify, data),
 
   failed: (orderId: string) =>
-    apiClient.apiPost<FailedResponse>(ENDPOINTS.dietitianRegistrationPayment.failed, {
+    apiClient.apiPost<FailedResponse>(ENDPOINTS.dietitianRegistrationFee.failed, {
       razorpay_order_id: orderId,
     }),
 }

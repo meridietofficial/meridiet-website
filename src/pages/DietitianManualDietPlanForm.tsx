@@ -3,6 +3,8 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom'
 import manualDietPlanApi, { ManualDraftBody } from '../api/manualDietPlan'
 import dietitianDietPlanApi, { UpdateDraftBody } from '../api/dietitianDietPlan'
 import DietPlanFormFields, { DietPlanFormValues, EMPTY_FORM } from '../components/DietPlanFormFields'
+import SearchableSelect from '../components/SearchableSelect'
+import { IN_STATES } from '../data/indiaCities'
 
 type ClientInfo = {
   full_name: string
@@ -10,6 +12,7 @@ type ClientInfo = {
   whatsapp: string
   city: string
   state: string
+  stateCode: string
   breakfast_time: string
   lunch_time: string
   evening_snack_time: string
@@ -19,7 +22,7 @@ type ClientInfo = {
 
 const EMPTY_CLIENT: ClientInfo = {
   full_name: '', email: '', whatsapp: '',
-  city: '', state: '',
+  city: '', state: '', stateCode: '',
   breakfast_time: '8:00 AM', lunch_time: '1:30 PM', evening_snack_time: '5:00 PM', dinner_time: '8:30 PM',
   whey_protein: '',
 }
@@ -117,11 +120,27 @@ export default function DietitianManualDietPlanForm() {
   const [client, setClient] = useState<ClientInfo>(() =>
     prefill ? { ...EMPTY_CLIENT, ...prefill } : EMPTY_CLIENT
   )
-  const [form, setForm]     = useState<DietPlanFormValues>(EMPTY_FORM)
+  const [form, setForm]         = useState<DietPlanFormValues>(EMPTY_FORM)
   const [loading, setLoading]   = useState(isEdit)
   const [saving, setSaving]     = useState(false)
   const [error, setError]       = useState<string | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [cities, setCities]     = useState<string[]>([])
+  const [citiesLoading, setCitiesLoading] = useState(false)
+
+  useEffect(() => {
+    if (!client.state) { setCities([]); return }
+    setCitiesLoading(true)
+    fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ country: 'India', state: client.state }),
+    })
+      .then(r => r.json())
+      .then(data => setCities(Array.isArray(data?.data) ? data.data : []))
+      .catch(() => setCities([]))
+      .finally(() => setCitiesLoading(false))
+  }, [client.state])
 
   useEffect(() => {
     if (!isEdit) return
@@ -129,17 +148,23 @@ export default function DietitianManualDietPlanForm() {
     dietitianDietPlanApi.get(id)
       .then(plan => {
         const fd = plan.form_data || plan.form || {} as any
+        const p = plan as any
+        const cp = p.client_profile || {}
+        console.log('[Plan loaded]', { plan, fd, cp })
+        const stateName = fd.state ?? cp.state ?? p.state ?? ''
+        const stateCode = fd.state_code ?? cp.state_code ?? IN_STATES.find(s => s.name === stateName)?.isoCode ?? ''
         setClient({
-          full_name:  (plan as any).client_name ?? fd.full_name ?? '',
-          email:      fd.email     ?? '',
-          whatsapp:   fd.whatsapp  ?? '',
-          city:       fd.city      ?? '',
-          state:      fd.state     ?? '',
-          breakfast_time:       fd.breakfast_time       ?? '',
-          lunch_time:           fd.lunch_time           ?? '',
-          evening_snack_time:   fd.evening_snack_time   ?? '',
-          dinner_time:          fd.dinner_time          ?? '',
-          whey_protein:         fd.whey_protein         ?? '',
+          full_name:          p.client_name            ?? fd.full_name            ?? '',
+          email:              fd.email                 ?? cp.email                ?? p.email                ?? '',
+          whatsapp:           fd.whatsapp              ?? cp.whatsapp             ?? p.whatsapp             ?? '',
+          city:               fd.city                  ?? cp.city                 ?? p.city                 ?? '',
+          state:              stateName,
+          stateCode,
+          breakfast_time:     fd.breakfast_time        ?? cp.breakfast_time       ?? p.breakfast_time       ?? '',
+          lunch_time:         fd.lunch_time            ?? cp.lunch_time           ?? p.lunch_time           ?? '',
+          evening_snack_time: fd.evening_snack_time    ?? cp.evening_snack_time   ?? p.evening_snack_time   ?? '',
+          dinner_time:        fd.dinner_time           ?? cp.dinner_time          ?? p.dinner_time          ?? '',
+          whey_protein:       fd.whey_protein          ?? cp.whey_protein         ?? p.whey_protein         ?? '',
         })
         setForm({
           dob:               fd.dob ? fd.dob.split('T')[0] : '',
@@ -167,8 +192,8 @@ export default function DietitianManualDietPlanForm() {
           smoke_alcohol:     fd.smoke_alcohol            ?? '',
           health_notes:      fd.health_notes             ?? '',
           plan_type:         fd.plan_type?.toString()    ?? '',
-          city:              fd.city                     ?? '',
-          state:             fd.state                    ?? '',
+          city:              cp.city  ?? fd.city  ?? p.city  ?? '',
+          state:             cp.state ?? fd.state ?? p.state ?? '',
         })
       })
       .catch(e => setLoadError(e.message ?? 'Failed to load plan'))
@@ -280,11 +305,15 @@ export default function DietitianManualDietPlanForm() {
             </div>
             <div className="cdp-field">
               <label className="cdp-label">State</label>
-              <input
-                className="cdp-input"
-                placeholder="e.g. Gujarat"
-                value={client.state}
-                onChange={e => setClientField('state', e.target.value)}
+              <SearchableSelect
+                options={IN_STATES.map(s => ({ value: s.isoCode, label: s.name }))}
+                value={client.stateCode}
+                onChange={code => {
+                  const name = IN_STATES.find(s => s.isoCode === code)?.name ?? ''
+                  setClient(prev => ({ ...prev, stateCode: code, state: name, city: '' }))
+                }}
+                placeholder="Select state"
+                searchPlaceholder="Search state..."
                 disabled={saving}
               />
             </div>
@@ -292,12 +321,13 @@ export default function DietitianManualDietPlanForm() {
           <div className="cdp-row" style={{ marginTop: 14 }}>
             <div className="cdp-field">
               <label className="cdp-label">City</label>
-              <input
-                className="cdp-input"
-                placeholder="e.g. Surat"
+              <SearchableSelect
+                options={cities.map(c => ({ value: c, label: c }))}
                 value={client.city}
-                onChange={e => setClientField('city', e.target.value)}
-                disabled={saving}
+                onChange={city => setClientField('city', city)}
+                placeholder={citiesLoading ? 'Loading cities…' : !client.state ? 'Select state first' : 'Select city'}
+                searchPlaceholder="Search city..."
+                disabled={!client.state || citiesLoading || saving}
               />
             </div>
             <div className="cdp-field" />

@@ -5,9 +5,11 @@ type Props = {
   online: boolean
   onToggleOnline: () => void
   onMenuClick: () => void
+  trialDaysLeft?: number | null
+  onPayNow?: () => void
 }
 
-export default function DietitianTopbar({ online, onToggleOnline, onMenuClick }: Props) {
+export default function DietitianTopbar({ online, onToggleOnline, onMenuClick, trialDaysLeft, onPayNow }: Props) {
   const { user, clearAuth } = useAuth()
   const navigate = useNavigate()
 
@@ -28,6 +30,19 @@ export default function DietitianTopbar({ online, onToggleOnline, onMenuClick }:
           <h1 className="dd-welcome-name">{firstName} 👋</h1>
         </div>
       </div>
+      {trialDaysLeft !== null && trialDaysLeft !== undefined && (
+        <button
+          className={`dd-trial-badge${trialDaysLeft <= 3 ? ' dd-trial-badge--urgent' : ''}`}
+          onClick={onPayNow}
+          title="Complete your registration"
+        >
+          <i className="fa-solid fa-gift" />
+          <span className="dd-trial-badge-text">
+            {trialDaysLeft === 7 ? '7-Day Free Trial' : `${trialDaysLeft} day${trialDaysLeft !== 1 ? 's' : ''} left`}
+          </span>
+          <span className="dd-trial-badge-sub">Free Trial</span>
+        </button>
+      )}
       <div className="dd-topbar-right">
         <div className="dd-online-toggle">
           <span className={`dd-online-dot${online ? ' dd-online-dot--on' : ''}`} />

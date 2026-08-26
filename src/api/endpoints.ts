@@ -31,12 +31,14 @@ const ENDPOINTS = {
     specializations:   '/dietitians/specializations',
     list:              '/dietitians',
   },
-  dietitianRegistrationPayment: {
-    createOrder: '/dietitian/register/create-order',
-    verify:      '/dietitian/register/verify-payment',
-    failed:      '/dietitian/register/failed',
-    sendOtp:     '/dietitian/register/send-otp',
-    verifyOtp:   '/dietitian/register/verify-otp',
+  dietitianRegistrationOtp: {
+    sendOtp:  '/dietitian/register/send-otp',
+    verifyOtp: '/dietitian/register/verify-otp',
+  },
+  dietitianRegistrationFee: {
+    createOrder: '/dietitian/registration-fee/create-order',
+    verify:      '/dietitian/registration-fee/verify-payment',
+    failed:      '/dietitian/registration-fee/failed',
   },
   consultation: {
     fee: '/consultation-fee',

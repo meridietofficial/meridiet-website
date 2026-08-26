@@ -127,7 +127,7 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
             <li><NavLink to="/nutritionist-course" onClick={() => setMenuOpen(false)} className={({ isActive }) => isActive ? 'active' : ''}>
               Courses <span className="navbar-new-badge">New</span>
             </NavLink></li>
-            <li><NavLink to="/calculators" onClick={() => setMenuOpen(false)}>Calculators</NavLink></li>
+            <li><NavLink to="/women-empowerment" onClick={() => setMenuOpen(false)}>Women Empowerment</NavLink></li>
             <li><NavLink to="/about" onClick={() => setMenuOpen(false)}>About Us</NavLink></li>
             <li><NavLink to="/blog" onClick={() => setMenuOpen(false)}>Blog</NavLink></li>
             <li className="navbar-mobile-actions">

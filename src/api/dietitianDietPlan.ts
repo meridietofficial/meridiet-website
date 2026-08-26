@@ -24,12 +24,19 @@ export type SmartSwap = {
   choose: string
 }
 
+export type ExtraMeal = {
+  name: string
+  time?: string
+  items: DietFoodItem[]
+}
+
 export type DietDay = {
   day: number                  // 1–7 (number, not a string)
   breakfast?: DietFoodItem[]
   lunch?: DietFoodItem[]
   snack?: DietFoodItem[]
   dinner?: DietFoodItem[]
+  extra_meals?: ExtraMeal[]
   meal_timing?: MealTiming
   total_kcal?: number
   total_protein_g?: number

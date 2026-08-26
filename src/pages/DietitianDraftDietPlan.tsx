@@ -9,8 +9,10 @@ import appointmentApi, { AppointmentDietForm } from '../api/appointment'
 import earningsApi from '../api/earnings'
 import DietPlanFormFields, { DietPlanFormValues, EMPTY_FORM } from '../components/DietPlanFormFields'
 import DietPlanDocument, { PAGE_W, PAGE_H } from '../components/DietPlanDocument'
-import WhiteLabelDietPlanDocument from '../components/WhiteLabelDietPlanDocument'
+import ManualDietPlanDocument from '../components/ManualDietPlanDocument'
 import type { DietitianOutletContext } from '../components/DietitianLayout'
+import SearchableSelect from '../components/SearchableSelect'
+import { IN_STATES } from '../data/indiaCities'
 
 /* Map Title Case goal labels from the client booking form → snake_case used by the dietitian form */
 const CLIENT_GOAL_MAP: Record<string, string> = {
@@ -265,10 +267,13 @@ function PlanDocPreview({ plan, dietitian, isManual, clientForm }: {
 }) {
   const wrapRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
+  const [docHeight, setDocHeight] = useState(PAGE_H)
   useEffect(() => {
     function measure() {
       const w = wrapRef.current?.parentElement?.clientWidth ?? PAGE_W
+      const h = wrapRef.current?.scrollHeight ?? PAGE_H
       setScale(Math.min(1, (w - 8) / PAGE_W))
+      setDocHeight(h)
     }
     measure()
     window.addEventListener('resize', measure)
@@ -333,10 +338,10 @@ function PlanDocPreview({ plan, dietitian, isManual, clientForm }: {
           width: PAGE_W,
           transformOrigin: 'top left',
           transform: `scale(${scale})`,
-          marginBottom: `${(PAGE_H * (scale - 1))}px`,
+          marginBottom: `${(docHeight * (scale - 1))}px`,
         }}>
         {isManual
-          ? <WhiteLabelDietPlanDocument plan={docPlan} dietitian={dietitian} />
+          ? <ManualDietPlanDocument plan={docPlan} dietitian={dietitian} />
           : <DietPlanDocument plan={docPlan} />
         }
       </div>
@@ -391,8 +396,102 @@ function recomputeDayTotals(weeks: DietWeek[]): DietWeek[] {
           protein += Number(item.protein_g ?? 0)
         }
       }
+      for (const em of (day.extra_meals ?? [])) {
+        for (const item of (em.items ?? [])) {
+          kcal    += Number(item.kcal      ?? 0)
+          protein += Number(item.protein_g ?? 0)
+        }
+      }
       return { ...day, total_kcal: Math.round(kcal), total_protein_g: Math.round(protein * 10) / 10 }
     }),
+  }))
+}
+
+// Extra meal helpers
+function addExtraMeal(weeks: DietWeek[], wi: number, di: number): DietWeek[] {
+  return weeks.map((w, a) => a !== wi ? w : ({
+    ...w,
+    days: (w.days ?? []).map((d, b) => b !== di ? d : ({
+      ...d,
+      extra_meals: [...(d.extra_meals ?? []), { name: 'Extra Meal', items: [] }],
+    })),
+  }))
+}
+function removeExtraMeal(weeks: DietWeek[], wi: number, di: number, ei: number): DietWeek[] {
+  return weeks.map((w, a) => a !== wi ? w : ({
+    ...w,
+    days: (w.days ?? []).map((d, b) => b !== di ? d : ({
+      ...d,
+      extra_meals: (d.extra_meals ?? []).filter((_, i) => i !== ei),
+    })),
+  }))
+}
+function renameExtraMeal(weeks: DietWeek[], wi: number, di: number, ei: number, name: string): DietWeek[] {
+  return weeks.map((w, a) => a !== wi ? w : ({
+    ...w,
+    days: (w.days ?? []).map((d, b) => b !== di ? d : ({
+      ...d,
+      extra_meals: (d.extra_meals ?? []).map((em, i) => i !== ei ? em : { ...em, name }),
+    })),
+  }))
+}
+function addExtraMealItem(weeks: DietWeek[], wi: number, di: number, ei: number): DietWeek[] {
+  return weeks.map((w, a) => a !== wi ? w : ({
+    ...w,
+    days: (w.days ?? []).map((d, b) => b !== di ? d : ({
+      ...d,
+      extra_meals: (d.extra_meals ?? []).map((em, i) =>
+        i !== ei ? em : { ...em, items: [...(em.items ?? []), { food: '' }] }
+      ),
+    })),
+  }))
+}
+function setExtraMealItem(weeks: DietWeek[], wi: number, di: number, ei: number, fi: number, field: string, val: string): DietWeek[] {
+  return weeks.map((w, a) => a !== wi ? w : ({
+    ...w,
+    days: (w.days ?? []).map((d, b) => b !== di ? d : ({
+      ...d,
+      extra_meals: (d.extra_meals ?? []).map((em, i) =>
+        i !== ei ? em : {
+          ...em,
+          items: (em.items ?? []).map((f, c) => c !== fi ? f : ({
+            ...f,
+            [field]: (field === 'kcal' || field === 'protein_g') ? (val !== '' ? Number(val) : undefined) : val,
+          })),
+        }
+      ),
+    })),
+  }))
+}
+function removeExtraMealItem(weeks: DietWeek[], wi: number, di: number, ei: number, fi: number): DietWeek[] {
+  return weeks.map((w, a) => a !== wi ? w : ({
+    ...w,
+    days: (w.days ?? []).map((d, b) => b !== di ? d : ({
+      ...d,
+      extra_meals: (d.extra_meals ?? []).map((em, i) =>
+        i !== ei ? em : { ...em, items: (em.items ?? []).filter((_, c) => c !== fi) }
+      ),
+    })),
+  }))
+}
+function setMealTiming(weeks: DietWeek[], wi: number, di: number, meal: MealKey, time: string): DietWeek[] {
+  return weeks.map((w, a) => a !== wi ? w : ({
+    ...w,
+    days: (w.days ?? []).map((d, b) => b !== di ? d : ({
+      ...d,
+      meal_timing: { ...(d.meal_timing ?? {}), [meal]: time },
+    })),
+  }))
+}
+function setExtraMealTime(weeks: DietWeek[], wi: number, di: number, ei: number, time: string): DietWeek[] {
+  return weeks.map((w, a) => a !== wi ? w : ({
+    ...w,
+    days: (w.days ?? []).map((d, b) => b !== di ? d : ({
+      ...d,
+      extra_meals: (d.extra_meals ?? []).map((em, i) =>
+        i !== ei ? em : { ...em, time }
+      ),
+    })),
   }))
 }
 
@@ -469,6 +568,32 @@ function EditPlanContent({
   }
   function remMealItm(wi: number, di: number, meal: MealKey, fi: number) {
     onWeeksChange(recomputeDayTotals(removeFoodItem(editWeeks, wi, di, meal, fi)))
+  }
+
+  // Extra meal helpers
+  function addExMeal(wi: number, di: number) {
+    onWeeksChange(recomputeDayTotals(addExtraMeal(editWeeks, wi, di)))
+  }
+  function remExMeal(wi: number, di: number, ei: number) {
+    onWeeksChange(recomputeDayTotals(removeExtraMeal(editWeeks, wi, di, ei)))
+  }
+  function renExMeal(wi: number, di: number, ei: number, name: string) {
+    onWeeksChange(renameExtraMeal(editWeeks, wi, di, ei, name))
+  }
+  function addExMealItm(wi: number, di: number, ei: number) {
+    onWeeksChange(recomputeDayTotals(addExtraMealItem(editWeeks, wi, di, ei)))
+  }
+  function updExMealItm(wi: number, di: number, ei: number, fi: number, field: string, val: string) {
+    onWeeksChange(recomputeDayTotals(setExtraMealItem(editWeeks, wi, di, ei, fi, field, val)))
+  }
+  function remExMealItm(wi: number, di: number, ei: number, fi: number) {
+    onWeeksChange(recomputeDayTotals(removeExtraMealItem(editWeeks, wi, di, ei, fi)))
+  }
+  function updMealTiming(wi: number, di: number, meal: MealKey, time: string) {
+    onWeeksChange(setMealTiming(editWeeks, wi, di, meal, time))
+  }
+  function updExMealTime(wi: number, di: number, ei: number, time: string) {
+    onWeeksChange(setExtraMealTime(editWeeks, wi, di, ei, time))
   }
 
   // Week helpers
@@ -708,7 +833,7 @@ function EditPlanContent({
         </div>
 
         {/* Featured Recipes (Editable) */}
-        {editRecipes.length > 0 && (
+        {(
           <div className="epm-section">
             <div className="epm-section-header">
               <i className="fa-solid fa-bowl-food" /> Featured Recipes
@@ -793,6 +918,7 @@ function EditPlanContent({
                 )}
               </div>
             ))}
+            {editRecipes.length === 0 && <p className="epm-empty-hint">No recipes yet — click Add Recipe to create one.</p>}
             <button className="epm-add-recipe-btn" onClick={addRecipe}>
               <i className="fa-solid fa-plus" /> Add Recipe
             </button>
@@ -840,6 +966,14 @@ function EditPlanContent({
                         <textarea className="epm-field-input epm-field-textarea" rows={2}
                           value={week.description ?? ''}
                           onChange={e => updWeekProp(wi, 'description', e.target.value)} />
+                      </div>
+                      <div className="epm-field-block epm-field-full">
+                        <label className="epm-field-label">
+                          Focus Points <span style={{ fontSize: 10, color: '#9ca3af' }}>(one per line — shown in plan overview)</span>
+                        </label>
+                        <textarea className="epm-field-input epm-field-textarea" rows={2}
+                          value={(week.focus ?? []).join('\n')}
+                          onChange={e => updWeekProp(wi, 'focus', e.target.value.split('\n').filter(Boolean))} />
                       </div>
                       <div className="epm-field-block epm-field-full">
                         <label className="epm-field-label">
@@ -908,6 +1042,13 @@ function EditPlanContent({
                                       <span style={{ color: col, fontWeight: 700 }}>
                                         {MEAL_ICONS[mealKey]} {mealKey.charAt(0).toUpperCase() + mealKey.slice(1)}
                                       </span>
+                                      <input
+                                        className="epm-field-input"
+                                        style={{ maxWidth: 100, padding: '2px 6px', fontSize: 12, color: '#6b7280' }}
+                                        placeholder="e.g. 8:00 AM"
+                                        value={(day.meal_timing as any)?.[mealKey] ?? ''}
+                                        onChange={e => updMealTiming(wi, di, mealKey, e.target.value)}
+                                      />
                                       {mKcal > 0 && (
                                         <span className="epm-meal-kcal" style={{ background: col + '22', color: col }}>
                                           {mKcal} kcal
@@ -950,6 +1091,83 @@ function EditPlanContent({
                                   </div>
                                 )
                               })}
+                              {/* Extra meals */}
+                              {(day.extra_meals ?? []).map((em, ei) => {
+                                const emKcal = (em.items ?? []).reduce((s, f) => s + (f.kcal ?? 0), 0)
+                                return (
+                                  <div key={ei} className="epm-meal-section" style={{ borderLeftColor: '#ec4899' }}>
+                                    <div className="epm-meal-head">
+                                      <input
+                                        className="epm-field-input"
+                                        style={{ fontWeight: 700, color: '#ec4899', maxWidth: 200, padding: '2px 6px' }}
+                                        value={em.name}
+                                        onChange={e => renExMeal(wi, di, ei, e.target.value)}
+                                        placeholder="Meal name…"
+                                      />
+                                      <input
+                                        className="epm-field-input"
+                                        style={{ maxWidth: 100, padding: '2px 6px', fontSize: 12, color: '#6b7280' }}
+                                        placeholder="e.g. 5:00 PM"
+                                        value={em.time ?? ''}
+                                        onChange={e => updExMealTime(wi, di, ei, e.target.value)}
+                                      />
+                                      {emKcal > 0 && (
+                                        <span className="epm-meal-kcal" style={{ background: '#fdf2f8', color: '#ec4899' }}>
+                                          {emKcal} kcal
+                                        </span>
+                                      )}
+                                      <button className="epm-btn-icon-red" style={{ marginLeft: 'auto' }}
+                                        title="Remove this meal"
+                                        onClick={() => remExMeal(wi, di, ei)}>
+                                        <i className="fa-solid fa-trash" />
+                                      </button>
+                                    </div>
+                                    {(em.items ?? []).length > 0 && (
+                                      <div className="epm-food-header-row">
+                                        <span className="epm-fc-food">Food</span>
+                                        <span className="epm-fc-qty">Qty</span>
+                                        <span className="epm-fc-kcal">kcal</span>
+                                        <span className="epm-fc-prot">protein (g)</span>
+                                        <span />
+                                      </div>
+                                    )}
+                                    {(em.items ?? []).map((item, fi) => (
+                                      <div key={fi} className="epm-food-row">
+                                        <input className="epm-food-inp epm-fc-food" placeholder="Food name"
+                                          value={item.food ?? ''}
+                                          onChange={e => updExMealItm(wi, di, ei, fi, 'food', e.target.value)} />
+                                        <input className="epm-food-inp epm-fc-qty" placeholder="e.g. 1 cup"
+                                          value={item.quantity ?? ''}
+                                          onChange={e => updExMealItm(wi, di, ei, fi, 'quantity', e.target.value)} />
+                                        <input className="epm-food-inp epm-fc-kcal" type="number" placeholder="0"
+                                          value={item.kcal ?? ''}
+                                          onChange={e => updExMealItm(wi, di, ei, fi, 'kcal', e.target.value)} />
+                                        <input className="epm-food-inp epm-fc-prot" type="number" placeholder="0"
+                                          value={item.protein_g ?? ''}
+                                          onChange={e => updExMealItm(wi, di, ei, fi, 'protein_g', e.target.value)} />
+                                        <button className="epm-btn-icon-red"
+                                          onClick={() => remExMealItm(wi, di, ei, fi)}>
+                                          <i className="fa-solid fa-xmark" />
+                                        </button>
+                                      </div>
+                                    ))}
+                                    <button className="epm-add-food-btn"
+                                      onClick={() => addExMealItm(wi, di, ei)}>
+                                      <i className="fa-solid fa-plus" /> Add item
+                                    </button>
+                                  </div>
+                                )
+                              })}
+
+                              {/* Add meal button */}
+                              <button
+                                className="epm-add-food-btn"
+                                style={{ marginTop: 8, borderColor: '#ec4899', color: '#ec4899' }}
+                                onClick={() => addExMeal(wi, di)}
+                              >
+                                <i className="fa-solid fa-plus" /> Add Meal
+                              </button>
+
                               {tot.kcal > 0 && (
                                 <div className="epm-day-totals-bar">
                                   <span>Day Total:</span>
@@ -1075,12 +1293,36 @@ export default function DietitianDraftDietPlan() {
   const [topping, setTopping]                     = useState(false)
   const [topupError, setTopupError]               = useState<string | null>(null)
 
+  // Client info inline editing (manual plans)
+  const [clientEmail, setClientEmail]         = useState('')
+  const [clientWhatsapp, setClientWhatsapp]   = useState('')
+  const [clientCity, setClientCity]           = useState('')
+  const [clientState, setClientState]         = useState('')
+  const [clientStateCode, setClientStateCode] = useState('')
+  const [cities, setCities]                   = useState<string[]>([])
+  const [citiesLoading, setCitiesLoading]     = useState(false)
+
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Clear poll on unmount
   useEffect(() => () => { if (pollRef.current) clearInterval(pollRef.current) }, [])
 
   useEffect(() => { loadPlan() }, [id])
+
+  // Fetch cities when state changes
+  useEffect(() => {
+    if (!clientState) { setCities([]); return }
+    setCitiesLoading(true)
+    fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ country: 'India', state: clientState }),
+    })
+      .then(r => r.json())
+      .then(data => setCities(Array.isArray(data?.data) ? data.data : []))
+      .catch(() => setCities([]))
+      .finally(() => setCitiesLoading(false))
+  }, [clientState])
 
   // Auto-enter edit mode when navigated here with startInEdit flag (e.g. from "Edit Plan" button on list)
   useEffect(() => {
@@ -1116,6 +1358,13 @@ export default function DietitianDraftDietPlan() {
       if (!data?.id) throw new Error('Plan not found')
       setPlan(data)
       setForm(planToForm(data.form_data))
+      const fd2 = (data.form || data.form_data || {}) as any
+      const stateName = fd2.state ?? ''
+      setClientEmail(fd2.email ?? '')
+      setClientWhatsapp(fd2.whatsapp ?? '')
+      setClientCity(fd2.city ?? '')
+      setClientState(stateName)
+      setClientStateCode(fd2.state_code ?? IN_STATES.find(s => s.name === stateName)?.isoCode ?? '')
       const apptId = stateApptId ?? data.appointment_id
       const isManual = stateIsManual || (!apptId && !data.user_id)
       if (apptId) {
@@ -1151,7 +1400,13 @@ export default function DietitianDraftDietPlan() {
     setActionErr(null)
     setSavedOk(false)
     try {
-      const updated = await dietitianDietPlanApi.update(id, formToBody(form))
+      const updated = await dietitianDietPlanApi.update(id, {
+        ...formToBody(form),
+        email:    clientEmail.trim()    || undefined,
+        whatsapp: clientWhatsapp.trim() || undefined,
+        city:     clientCity.trim()     || undefined,
+        state:    clientState.trim()    || undefined,
+      })
       if (updated?.id) setPlan(updated)
       setSavedOk(true)
       setTimeout(() => setSavedOk(false), 3000)
@@ -1529,6 +1784,69 @@ export default function DietitianDraftDietPlan() {
           <div className="cdp-prefill-notice">
             <i className="fa-solid fa-circle-check" />
             <span>Health details pre-filled from {clientForm.full_name}'s booking form — review and adjust before saving.</span>
+          </div>
+        )}
+
+        {/* Client Information — manual plans only, always editable */}
+        {isManualPlan && (
+          <div className="cdp-section">
+            <h3 className="cdp-section-title"><span>👤</span> Client Information</h3>
+            <div className="cdp-row">
+              <div className="cdp-field">
+                <label className="cdp-label">Full Name</label>
+                <input className="cdp-input" value={plan.client_name ?? ''} readOnly style={{ background: '#f8faf9', cursor: 'default' }} />
+              </div>
+              <div className="cdp-field">
+                <label className="cdp-label">Email</label>
+                <input
+                  className="cdp-input" type="email" placeholder="rahul@gmail.com"
+                  value={clientEmail}
+                  onChange={e => setClientEmail(e.target.value)}
+                  disabled={busy}
+                />
+              </div>
+            </div>
+            <div className="cdp-row" style={{ marginTop: 14 }}>
+              <div className="cdp-field">
+                <label className="cdp-label">WhatsApp Number</label>
+                <input
+                  className="cdp-input" type="tel" placeholder="9876543210"
+                  value={clientWhatsapp}
+                  onChange={e => setClientWhatsapp(e.target.value)}
+                  disabled={busy}
+                />
+              </div>
+              <div className="cdp-field">
+                <label className="cdp-label">State</label>
+                <SearchableSelect
+                  options={IN_STATES.map(s => ({ value: s.isoCode, label: s.name }))}
+                  value={clientStateCode}
+                  onChange={code => {
+                    const name = IN_STATES.find(s => s.isoCode === code)?.name ?? ''
+                    setClientStateCode(code)
+                    setClientState(name)
+                    setClientCity('')
+                  }}
+                  placeholder="Select state"
+                  searchPlaceholder="Search state..."
+                  disabled={busy}
+                />
+              </div>
+            </div>
+            <div className="cdp-row" style={{ marginTop: 14 }}>
+              <div className="cdp-field">
+                <label className="cdp-label">City</label>
+                <SearchableSelect
+                  options={cities.map(c => ({ value: c, label: c }))}
+                  value={clientCity}
+                  onChange={city => setClientCity(city)}
+                  placeholder={citiesLoading ? 'Loading cities…' : !clientState ? 'Select state first' : 'Select city'}
+                  searchPlaceholder="Search city..."
+                  disabled={!clientState || citiesLoading || busy}
+                />
+              </div>
+              <div className="cdp-field" />
+            </div>
           </div>
         )}
 

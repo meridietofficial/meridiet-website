@@ -1,9 +1,12 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'https://api.meridiet.com/api/v1'
+console.log('[API] Base URL:', BASE_URL)
 
 export class ApiError extends Error {
-  constructor(message: string) {
+  errorCode?: string
+  constructor(message: string, errorCode?: string) {
     super(message)
     this.name = 'ApiError'
+    this.errorCode = errorCode
   }
 }
 
@@ -16,11 +19,30 @@ function getHeaders(extra?: HeadersInit): HeadersInit {
   }
 }
 
+function clearAuthAndRedirect() {
+  localStorage.removeItem('meri_diet_token')
+  localStorage.removeItem('meri_diet_user')
+  sessionStorage.removeItem('meri_diet_dietitian_setup_skipped')
+  window.location.href = '/'
+}
+
 async function request<T>(endpoint: string, options: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${endpoint}`, options)
   const data = await res.json()
   if (!data.success) {
-    throw new ApiError(data.message ?? 'Something went wrong. Please try again.')
+    const msg: string = data.message ?? 'Something went wrong. Please try again.'
+    const errorCode: string | undefined = data.error_code
+    // Only treat 401 as a session expiry when a token is already stored.
+    // A plain login failure also returns 401 (wrong credentials) — no redirect there.
+    const hasSession = !!localStorage.getItem('meri_diet_token')
+    if (/invalid or expired token/i.test(msg) || (res.status === 401 && hasSession)) {
+      clearAuthAndRedirect()
+      throw new ApiError('Session expired. Please log in again.')
+    }
+    if (res.status === 403 && errorCode) {
+      window.dispatchEvent(new CustomEvent('dietitian-access-blocked', { detail: { errorCode } }))
+    }
+    throw new ApiError(msg, errorCode)
   }
   return data as T
 }

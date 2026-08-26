@@ -2,7 +2,7 @@
  * WhiteLabelDietPlanDocument — Minimal prescription-style diet plan PDF.
  * Pages: (1) Cover letterhead + patient summary, (2+) one table per week.
  */
-import { forwardRef, createContext, useContext } from "react";
+import { forwardRef, createContext, useContext, Fragment } from "react";
 import type { DietitianProfile } from "../api/dietitian";
 
 export const PAGE_W = 794;
@@ -291,12 +291,59 @@ const sTd = {
 };
 
 // ── Week page (day × meal table) ─────────────────────────────────────────────
+const sCell = {
+  th: {
+    padding: "6px 8px", color: C.white, fontWeight: 700,
+    fontSize: 10.5, textAlign: "left" as const,
+  } as React.CSSProperties,
+  td: {
+    padding: "6px 8px", borderBottom: `1px solid ${C.border}`,
+    fontSize: 10, verticalAlign: "top" as const,
+  } as React.CSSProperties,
+};
+
 const MEAL_COLS = [
   { key: "breakfast", label: "Breakfast"       },
   { key: "lunch",     label: "Lunch"           },
   { key: "snack",     label: "Snack / Evening" },
   { key: "dinner",    label: "Dinner"          },
 ] as const;
+
+const EXTRA_PINK = "#e11d74";
+const EXTRA_PINK_BG = "#fff0f7";
+
+function MealCell({ items, timing, isLast }: { items: any[]; timing?: string; isLast?: boolean }) {
+  const mKcal = items.reduce((s: number, f: any) => s + (f.kcal ?? 0), 0);
+  return (
+    <td style={{ ...sCell.td, borderRight: isLast ? undefined : `1px solid ${C.border}` }}>
+      {timing && (
+        <div style={{ fontSize: 8, color: C.green, fontWeight: 600, marginBottom: 2, letterSpacing: 0.2 }}>
+          {timing}
+        </div>
+      )}
+      {items.length === 0 ? (
+        <span style={{ color: C.faint }}>—</span>
+      ) : (
+        <>
+          {items.map((item: any, fi: number) => (
+            <div key={fi} style={{ lineHeight: 1.4, marginBottom: 1 }}>
+              <span style={{ color: C.green, marginRight: 2 }}>•</span>
+              {item.food || ""}
+              {item.quantity && (
+                <span style={{ color: C.faint }}> {item.quantity}</span>
+              )}
+            </div>
+          ))}
+          {mKcal > 0 && (
+            <div style={{ fontSize: 8, color: C.faint, marginTop: 3, textAlign: "right" }}>
+              {mKcal} kcal
+            </div>
+          )}
+        </>
+      )}
+    </td>
+  );
+}
 
 function WeekPage({ week, weekIndex, plan, page }: {
   week: any; weekIndex: number; plan: any; page: number;
@@ -309,17 +356,17 @@ function WeekPage({ week, weekIndex, plan, page }: {
 
   return (
     <div className="dp-page" style={{
-      width: PAGE_W, height: PAGE_H, background: C.white, fontFamily: FONT,
+      width: PAGE_W, background: C.white, fontFamily: FONT,
       color: C.dark, boxSizing: "border-box", padding: "28px 36px",
-      position: "relative", overflow: "hidden",
+      position: "relative",
       margin: "0 auto 24px", boxShadow: "0 6px 24px rgba(0,0,0,0.12)",
     }}>
       <Letterhead compact />
 
       {/* Week title row */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
         <div>
-          <span style={{ fontWeight: 800, fontSize: 13, color: C.green }}>
+          <span style={{ fontWeight: 800, fontSize: 14, color: C.green }}>
             WEEK {week?.week || weekIndex + 1}
           </span>
           {week?.title && (
@@ -340,7 +387,7 @@ function WeekPage({ week, weekIndex, plan, page }: {
       </div>
 
       {/* Meal table */}
-      <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", fontSize: 10 }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", tableLayout: "fixed", fontSize: 10.5 }}>
         <colgroup>
           <col style={{ width: "7%" }} />
           <col style={{ width: "24.25%" }} />
@@ -356,66 +403,109 @@ function WeekPage({ week, weekIndex, plan, page }: {
         </thead>
         <tbody>
           {days.map((day: any, di: number) => {
-            const dayKcal = day.total_kcal ?? MEAL_COLS.reduce((sum, m) => {
-              const items = Array.isArray(day[m.key]) ? day[m.key] : [];
-              return sum + items.reduce((s: number, f: any) => s + (f.kcal ?? 0), 0);
-            }, 0);
-            const dayProtein = day.total_protein_g ?? MEAL_COLS.reduce((sum, m) => {
-              const items = Array.isArray(day[m.key]) ? day[m.key] : [];
-              return sum + items.reduce((s: number, f: any) => s + (f.protein_g ?? 0), 0);
-            }, 0);
+            const extraMeals: any[] = Array.isArray(day.extra_meals) ? day.extra_meals : [];
+            const rowSpanCount = 1 + extraMeals.length;
+            const rowBg = di % 2 === 0 ? C.white : C.bg;
+
+            const dayKcal = day.total_kcal ?? (
+              MEAL_COLS.reduce((sum, m) => {
+                const items = Array.isArray(day[m.key]) ? day[m.key] : [];
+                return sum + items.reduce((s: number, f: any) => s + (f.kcal ?? 0), 0);
+              }, 0) +
+              extraMeals.reduce((sum: number, em: any) =>
+                sum + (em.items || []).reduce((s: number, f: any) => s + (f.kcal ?? 0), 0), 0)
+            );
+            const dayProtein = day.total_protein_g ?? (
+              MEAL_COLS.reduce((sum, m) => {
+                const items = Array.isArray(day[m.key]) ? day[m.key] : [];
+                return sum + items.reduce((s: number, f: any) => s + (f.protein_g ?? 0), 0);
+              }, 0) +
+              extraMeals.reduce((sum: number, em: any) =>
+                sum + (em.items || []).reduce((s: number, f: any) => s + (f.protein_g ?? 0), 0), 0)
+            );
 
             return (
-              <tr key={di} style={{ background: di % 2 === 0 ? C.white : C.bg, verticalAlign: "top" }}>
-                {/* Day number */}
-                <td style={{
-                  ...sCell.td, textAlign: "center",
-                  borderRight: `1px solid ${C.border}`, padding: "6px 4px",
-                }}>
-                  <div style={{ fontWeight: 800, color: C.green, fontSize: 12 }}>{day.day}</div>
-                  {dayKcal > 0 && (
-                    <div style={{ fontSize: 7.5, color: C.faint, marginTop: 1 }}>{dayKcal} kcal</div>
-                  )}
-                  {dayProtein > 0 && (
-                    <div style={{ fontSize: 7.5, color: "#3b82f6", marginTop: 1 }}>{Math.round(dayProtein)}g pro</div>
-                  )}
-                </td>
+              <Fragment key={di}>
+                {/* Main meal row */}
+                <tr style={{ background: rowBg, verticalAlign: "top" }}>
+                  {/* Day cell — spans extra meal rows */}
+                  <td rowSpan={rowSpanCount} style={{
+                    ...sCell.td, textAlign: "center",
+                    borderRight: `1px solid ${C.border}`, padding: "8px 4px",
+                    background: rowBg,
+                  }}>
+                    <div style={{ fontWeight: 800, color: C.green, fontSize: 13 }}>{day.day}</div>
+                    {dayKcal > 0 && (
+                      <div style={{ fontSize: 8, color: C.faint, marginTop: 2 }}>{dayKcal} kcal</div>
+                    )}
+                    {dayProtein > 0 && (
+                      <div style={{ fontSize: 8, color: "#3b82f6", marginTop: 1 }}>{Math.round(dayProtein)}g</div>
+                    )}
+                  </td>
 
-                {/* Meal cells */}
-                {MEAL_COLS.map((m, mi) => {
-                  const items: any[] = Array.isArray(day[m.key]) ? day[m.key] : [];
-                  const mKcal = items.reduce((s, f) => s + (f.kcal ?? 0), 0);
+                  {/* Fixed meal cells */}
+                  {MEAL_COLS.map((m, mi) => {
+                    const items: any[] = Array.isArray(day[m.key]) ? day[m.key] : [];
+                    const timing = day.meal_timing?.[m.key as keyof typeof day.meal_timing];
+                    return (
+                      <MealCell key={m.key} items={items} timing={timing} isLast={mi === 3} />
+                    );
+                  })}
+                </tr>
+
+                {/* Extra meal rows */}
+                {extraMeals.map((em: any, ei: number) => {
+                  const emKcal = (em.items || []).reduce((s: number, f: any) => s + (f.kcal ?? 0), 0);
+                  const isLastRow = ei === extraMeals.length - 1;
                   return (
-                    <td key={m.key} style={{ ...sCell.td, borderRight: mi < 3 ? `1px solid ${C.border}` : undefined }}>
-                      {day.meal_timing?.[m.key as keyof typeof day.meal_timing] && (
-                        <div style={{ fontSize: 7, color: C.faint, fontWeight: 600, marginBottom: 2, letterSpacing: 0.2 }}>
-                          {day.meal_timing[m.key as keyof typeof day.meal_timing]}
+                    <tr key={`em-${di}-${ei}`} style={{ background: EXTRA_PINK_BG, verticalAlign: "top" }}>
+                      <td colSpan={4} style={{
+                        ...sCell.td,
+                        borderLeft: `3px solid ${EXTRA_PINK}`,
+                        borderBottom: isLastRow ? `1px solid ${C.border}` : `1px dashed #fce7f3`,
+                        padding: "5px 10px",
+                      }}>
+                        <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                          {/* Meal label */}
+                          <div style={{ minWidth: 110 }}>
+                            <span style={{ fontWeight: 700, color: EXTRA_PINK, fontSize: 10 }}>
+                              {em.name || "Extra Meal"}
+                            </span>
+                            {em.time && (
+                              <span style={{ fontSize: 8, color: C.gray, marginLeft: 4 }}>{em.time}</span>
+                            )}
+                          </div>
+                          {/* Food items */}
+                          <div style={{ flex: 1 }}>
+                            {(em.items || []).length === 0 ? (
+                              <span style={{ color: C.faint }}>—</span>
+                            ) : (
+                              <>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "0 16px" }}>
+                                  {(em.items || []).map((item: any, fi: number) => (
+                                    <div key={fi} style={{ lineHeight: 1.4 }}>
+                                      <span style={{ color: EXTRA_PINK, marginRight: 2 }}>•</span>
+                                      {item.food || ""}
+                                      {item.quantity && (
+                                        <span style={{ color: C.faint }}> {item.quantity}</span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                                {emKcal > 0 && (
+                                  <div style={{ fontSize: 8, color: C.faint, marginTop: 2, textAlign: "right" }}>
+                                    {emKcal} kcal
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
                         </div>
-                      )}
-                      {items.length === 0 ? (
-                        <span style={{ color: C.faint }}>—</span>
-                      ) : (
-                        <>
-                          {items.map((item: any, fi: number) => (
-                            <div key={fi} style={{ lineHeight: 1.35, marginBottom: 1 }}>
-                              <span style={{ color: C.green, marginRight: 2 }}>•</span>
-                              {item.food || ""}
-                              {item.quantity && (
-                                <span style={{ color: C.faint }}> {item.quantity}</span>
-                              )}
-                            </div>
-                          ))}
-                          {mKcal > 0 && (
-                            <div style={{ fontSize: 7.5, color: C.faint, marginTop: 2, textAlign: "right" }}>
-                              {mKcal} kcal
-                            </div>
-                          )}
-                        </>
-                      )}
-                    </td>
+                      </td>
+                    </tr>
                   );
                 })}
-              </tr>
+              </Fragment>
             );
           })}
         </tbody>
@@ -424,8 +514,8 @@ function WeekPage({ week, weekIndex, plan, page }: {
       {/* Weekly note */}
       {week?.what_to_expect && (
         <div style={{
-          marginTop: 7, fontSize: 9.5, color: C.gray,
-          border: `1px solid ${C.border}`, borderRadius: 3, padding: "5px 10px",
+          marginTop: 10, fontSize: 9.5, color: C.gray,
+          border: `1px solid ${C.border}`, borderRadius: 3, padding: "6px 10px",
         }}>
           <b style={{ color: C.dark }}>Note: </b>{week.what_to_expect}
         </div>
@@ -433,7 +523,7 @@ function WeekPage({ week, weekIndex, plan, page }: {
 
       {/* Footer */}
       <div style={{
-        position: "absolute", bottom: 20, left: 36, right: 36,
+        marginTop: 16,
         display: "flex", justifyContent: "space-between",
         borderTop: `1px solid ${C.border}`, paddingTop: 6,
         fontSize: 8.5, color: C.faint,
@@ -444,17 +534,6 @@ function WeekPage({ week, weekIndex, plan, page }: {
     </div>
   );
 }
-
-const sCell = {
-  th: {
-    padding: "6px 8px", color: C.white, fontWeight: 700,
-    fontSize: 10.5, textAlign: "left" as const,
-  } as React.CSSProperties,
-  td: {
-    padding: "6px 8px", borderBottom: `1px solid ${C.border}`,
-    fontSize: 10, verticalAlign: "top" as const,
-  } as React.CSSProperties,
-};
 
 // ── Document assembly ─────────────────────────────────────────────────────────
 const WhiteLabelDietPlanDocument = forwardRef<

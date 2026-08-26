@@ -297,31 +297,6 @@ export default function DietPlanFormFields({ form, onChange, disabled, afterLife
           </div>
         </div>
 
-        {/* City + State */}
-        <div className="cdp-row" style={{ marginTop: 14 }}>
-          <div className="cdp-field">
-            <label className="cdp-label">City</label>
-            <input
-              className="cdp-input"
-              type="text"
-              placeholder="e.g. Mumbai"
-              value={form.city}
-              onChange={e => onChange('city', e.target.value)}
-              disabled={disabled}
-            />
-          </div>
-          <div className="cdp-field">
-            <label className="cdp-label">State</label>
-            <input
-              className="cdp-input"
-              type="text"
-              placeholder="e.g. Maharashtra"
-              value={form.state}
-              onChange={e => onChange('state', e.target.value)}
-              disabled={disabled}
-            />
-          </div>
-        </div>
       </div>
 
       {/* ─── Fitness Goals ─── */}
