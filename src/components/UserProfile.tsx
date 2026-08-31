@@ -11,6 +11,7 @@ import walletApi, { type WalletTransaction } from '../api/wallet'
 import dietPlanApi, { type SubscriptionStatus } from '../api/dietPlan'
 import { ApiError } from '../api/client'
 import { useVideoCall } from '../context/VideoCallContext'
+import SEO from './SEO'
 
 const PHONE_CODES = [
   { code: '+91',  iso: 'in', name: 'India' },
@@ -320,6 +321,7 @@ const UserProfile = () => {
 
   return (
     <div className="up-page">
+      <SEO noIndex={true} title="My Profile" description="Your MeriDiet user profile — private area." />
 
       {/* Hero */}
       <div className="up-hero">

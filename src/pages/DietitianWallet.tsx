@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import earningsApi, { WalletTransaction, WalletOverview, PayoutData } from '../api/earnings'
 import accountsApi, { LinkedAccount } from '../api/accounts'
+import SEO from '../components/SEO'
 
 type TxTab = 'all' | 'credits' | 'debits'
 type WalletFilter = 'all' | 'plan' | 'earnings'
@@ -155,6 +156,7 @@ export default function DietitianWallet() {
 
   return (
     <div className="wa-root">
+      <SEO noIndex={true} title="Wallet" description="Wallet — private dietitian area." />
 
       {/* ── Header ── */}
       <div className="wa-header">

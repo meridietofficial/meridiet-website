@@ -114,9 +114,17 @@ These Terms & Conditions govern your use of:`,
   },
 ]
 
+import SEO from './SEO'
+
 const TermsConditions = () => {
   return (
     <div className="privacy-page">
+      <SEO
+        title="Terms & Conditions – Service Agreement"
+        description="Read MeriDiet's terms and conditions governing the use of our AI diet plans, online dietitian consultations, and nutrition services in India."
+        keywords="MeriDiet terms and conditions, diet app terms of service India"
+        canonical="/terms-conditions"
+      />
       <div className="privacy-hero">
         <div className="container">
           <h1 className="privacy-hero-title">Terms &amp; Conditions</h1>

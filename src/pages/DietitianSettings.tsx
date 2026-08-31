@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import dietitianApi from '../api/dietitian'
+import SEO from '../components/SEO'
 
 type Section = 'profile' | 'notifications' | 'availability' | 'security' | 'preferences'
 
@@ -11,6 +12,7 @@ function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void 
       role="switch"
       aria-checked={checked}
     >
+      <SEO noIndex={true} title="Settings" description="Settings — private dietitian area." />
       <span className="sg-toggle-thumb" />
     </button>
   )

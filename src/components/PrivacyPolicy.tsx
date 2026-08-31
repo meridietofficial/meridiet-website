@@ -115,9 +115,17 @@ In such cases:`,
   },
 ]
 
+import SEO from './SEO'
+
 const PrivacyPolicy = () => {
   return (
     <div className="privacy-page">
+      <SEO
+        title="Privacy Policy – How We Handle Your Data"
+        description="Read MeriDiet's privacy policy to learn how we collect, use, and protect your personal and health data in compliance with Indian data protection laws."
+        keywords="MeriDiet privacy policy, diet app data privacy, health data India"
+        canonical="/privacy-policy"
+      />
       <div className="privacy-hero">
         <div className="container">
           <h1 className="privacy-hero-title">Privacy Policy</h1>

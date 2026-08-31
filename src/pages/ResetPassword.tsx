@@ -4,6 +4,7 @@ import { Eye, EyeOff, Lock, CheckCircle2 } from 'lucide-react'
 import authApi from '../api/auth'
 import { ApiError } from '../api/client'
 import { useToast } from '../context/ToastContext'
+import SEO from '../components/SEO'
 
 const MIN_LENGTH = 6
 
@@ -58,6 +59,7 @@ export default function ResetPassword() {
 
   return (
     <main className="rp-page">
+      <SEO noIndex={true} title="Reset Password" description="Reset your MeriDiet account password." />
       <div className="rp-card">
         <div className="rp-logo">
           <img src="/logo.png" alt="MeriDiet" />

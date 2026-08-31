@@ -1,5 +1,5 @@
 import { StrictMode, Component, type ReactNode, type ErrorInfo } from 'react'
-import { createRoot } from 'react-dom/client'
+import { createRoot, hydrateRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import { GoogleOAuthProvider } from '@react-oauth/google'
@@ -31,7 +31,9 @@ class RootErrorBoundary extends Component<{ children: ReactNode }, { crashed: bo
   }
 }
 
-createRoot(document.getElementById('root')!).render(
+const rootEl = document.getElementById('root')!
+
+const app = (
   <StrictMode>
     <RootErrorBoundary>
       <HelmetProvider>
@@ -46,5 +48,14 @@ createRoot(document.getElementById('root')!).render(
         </GoogleOAuthProvider>
       </HelmetProvider>
     </RootErrorBoundary>
-  </StrictMode>,
+  </StrictMode>
 )
+
+// If the page was pre-rendered at build time the root div already contains HTML.
+// Use hydrateRoot so React attaches event handlers without discarding the DOM.
+// For CSR-only routes (dashboard, diet-plan form, etc.) the root is empty → createRoot.
+if (rootEl.innerHTML.trim().length > 0) {
+  hydrateRoot(rootEl, app)
+} else {
+  createRoot(rootEl).render(app)
+}

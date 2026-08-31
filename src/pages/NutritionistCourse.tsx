@@ -30,8 +30,8 @@ const WHO_CAN_JOIN = [
 ]
 
 const AFTER_COMPLETION = [
-  { icon: '🎓', text: 'Receive your Meri Diet Certified Nutritionist Certificate' },
-  { icon: '👤', text: 'Get listed on the Meri Diet Platform' },
+  { icon: '🎓', text: 'Receive your MeriDiet Certified Nutritionist Certificate' },
+  { icon: '👤', text: 'Get listed on the MeriDiet Platform' },
   { icon: '📋', text: 'Create your professional nutrition profile' },
   { icon: '💰', text: 'Receive ₹5,000 AI Diet Plan Credit Wallet' },
   { icon: '📞', text: 'Start offering nutrition consultations through the platform' },
@@ -42,7 +42,7 @@ const WHY_STANDS_OUT = [
   { icon: '🧪', title: 'Practical Learning',   desc: 'Real-world case studies and consultation-focused training.' },
   { icon: '🎧', title: 'Flexible Learning',    desc: 'Attend live sessions or learn anytime with recorded lectures.' },
   { icon: '🚀', title: 'Career Support',       desc: 'Guidance to help you begin your nutrition consulting journey.' },
-  { icon: '👤', title: 'Professional Profile', desc: 'Create your profile on the Meri Diet Platform after successful completion.' },
+  { icon: '👤', title: 'Professional Profile', desc: 'Create your profile on the MeriDiet Platform after successful completion.' },
   { icon: '🤖', title: 'AI Tools',             desc: 'Use modern AI-powered tools to create personalized diet plans efficiently.' },
 ]
 
@@ -50,9 +50,9 @@ const FAQS = [
   { q: 'Who can apply?',                                   a: 'Anyone who has completed 12th grade can apply.' },
   { q: 'Do I need a medical background?',                  a: 'No. The program is designed for beginners as well as fitness professionals who want to learn nutrition.' },
   { q: 'Is the course online?',                            a: 'Yes. It includes live classes and recorded sessions you can watch anytime.' },
-  { q: 'Will I receive a certificate?',                    a: 'Yes. After successfully completing the program, you\'ll receive the Meri Diet Certified Nutritionist Certificate.' },
-  { q: 'Can I offer consultations after completing?',      a: 'After successful completion and onboarding to the Meri Diet platform, eligible learners can create a professional profile and offer nutrition consultations, subject to platform policies.' },
-  { q: 'What is the ₹5,000 AI Diet Plan Credit Wallet?',  a: 'You\'ll receive AI Diet Plan credits worth ₹5,000 that can be used to generate personalized diet plans through the Meri Diet platform after successful course completion.' },
+  { q: 'Will I receive a certificate?',                    a: 'Yes. After successfully completing the program, you\'ll receive the MeriDiet Certified Nutritionist Certificate.' },
+  { q: 'Can I offer consultations after completing?',      a: 'After successful completion and onboarding to the MeriDiet platform, eligible learners can create a professional profile and offer nutrition consultations, subject to platform policies.' },
+  { q: 'What is the ₹5,000 AI Diet Plan Credit Wallet?',  a: 'You\'ll receive AI Diet Plan credits worth ₹5,000 that can be used to generate personalized diet plans through the MeriDiet platform after successful course completion.' },
 ]
 
 const HIGHLIGHTS = [
@@ -60,13 +60,13 @@ const HIGHLIGHTS = [
   ['Mode',          'Live + Recorded'],
   ['Language',      'English'],
   ['Eligibility',   '12th Pass'],
-  ['Certification', 'Meri Diet Certified Nutritionist'],
+  ['Certification', 'MeriDiet Certified Nutritionist'],
 ]
 
 const INCLUDES = [
   'Live + Recorded lectures — learn at your pace',
-  'Meri Diet Certified Nutritionist Certificate',
-  'Professional profile on Meri Diet Platform',
+  'MeriDiet Certified Nutritionist Certificate',
+  'Professional profile on MeriDiet Platform',
   '₹5,000 AI Diet Plan Credit Wallet',
   'Opportunity to offer consultations',
   'Career support & guidance',
@@ -156,7 +156,7 @@ export default function NutritionistCourse() {
         order_id,
         amount: amount * 100,   // convert to paise
         currency: 'INR',
-        name: 'Meri Diet',
+        name: 'MeriDiet',
         description: 'Certified Nutritionist Program',
         prefill: { name, email, contact: phone },
         theme: { color: '#16a34a' },
@@ -190,9 +190,9 @@ export default function NutritionistCourse() {
   return (
     <main className="cp">
       <SEO
-        title="Certified Nutritionist Course in 3 Months | Meri Diet"
-        description="Become a Meri Diet Certified Nutritionist in just 3 months. Live + recorded classes in English, 12th pass eligible. Get certified, get listed & start your nutrition career from home."
-        keywords="nutritionist course online India, certified nutritionist program, nutrition course 12th pass, Meri Diet course, online nutrition certification India"
+        title="Certified Nutritionist Course in 3 Months"
+        description="Become a MeriDiet Certified Nutritionist in just 3 months. Live + recorded classes in English, 12th pass eligible. Get certified, get listed & start your nutrition career from home."
+        keywords="nutritionist course online India, certified nutritionist program, nutrition course 12th pass, MeriDiet course, online nutrition certification India"
         canonical="/nutritionist-course"
       />
 
@@ -210,9 +210,9 @@ export default function NutritionistCourse() {
             </h1>
             <p className="cp-hero-tagline">Learn. Get Certified. Get Listed. Start Your Nutrition Career.</p>
             <p className="cp-hero-sub">
-              Build a rewarding career in nutrition with the Meri Diet Certified Nutritionist Program.
+              Build a rewarding career in nutrition with the MeriDiet Certified Nutritionist Program.
               Learn through live and recorded classes, earn your certification, and get access to the
-              Meri Diet platform to offer nutrition consultations from home.
+              MeriDiet platform to offer nutrition consultations from home.
             </p>
             <ul className="cp-hero-checks">
               <li><span>✔</span> 3-Month Program</li>
@@ -263,7 +263,7 @@ export default function NutritionistCourse() {
             <span className="cp-key-icon">🎓</span>
             <div className="cp-key-text">
               <strong>Certification</strong>
-              <p>Meri Diet Certified Nutritionist — official certificate after successful course completion</p>
+              <p>MeriDiet Certified Nutritionist — official certificate after successful course completion</p>
             </div>
           </div>
           <div className="cp-key-sep" />
@@ -271,7 +271,7 @@ export default function NutritionistCourse() {
             <span className="cp-key-icon">💰</span>
             <div className="cp-key-text">
               <strong>₹5,000 Free Wallet Credit</strong>
-              <p>Receive ₹5,000 wallet credit after completion to generate AI-powered diet plans on the Meri Diet Platform</p>
+              <p>Receive ₹5,000 wallet credit after completion to generate AI-powered diet plans on the MeriDiet Platform</p>
             </div>
           </div>
         </div>
@@ -281,9 +281,9 @@ export default function NutritionistCourse() {
       <section className="cp-why">
         <div className="container">
           <div className="cp-sec-head">
-            <p className="cp-eyebrow">Why Meri Diet?</p>
+            <p className="cp-eyebrow">Why MeriDiet?</p>
             <h2 className="cp-sec-title">More Than a Certification —<br />A Career Opportunity</h2>
-            <p className="cp-sec-sub">Unlike traditional courses that end with a certificate, the Meri Diet Certified Nutritionist Program helps you take the next step.</p>
+            <p className="cp-sec-sub">Unlike traditional courses that end with a certificate, the MeriDiet Certified Nutritionist Program helps you take the next step.</p>
           </div>
           <div className="cp-why-grid">
             {AFTER_COMPLETION.map(a => (
@@ -407,7 +407,7 @@ export default function NutritionistCourse() {
                   <div className="cp-success">
                     <div className="cp-success-icon">🎉</div>
                     <h3>Payment Successful!</h3>
-                    <p>Welcome to the Meri Diet Certified Nutritionist Program{paidData ? `, ${paidData.name}` : ''}! Check your email for confirmation and next steps.</p>
+                    <p>Welcome to the MeriDiet Certified Nutritionist Program{paidData ? `, ${paidData.name}` : ''}! Check your email for confirmation and next steps.</p>
                     <button onClick={() => { setPayStep('form'); setPayOtpSent(false) }} className="cp-btn-green" style={{ marginTop: 20, border: 'none', cursor: 'pointer' }}>← Go Back</button>
                   </div>
                 )}

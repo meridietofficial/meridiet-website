@@ -5,6 +5,7 @@ import appointmentApi, { type DietitianAppointment, type DashboardStats } from '
 import { useVideoCall } from '../context/VideoCallContext'
 import ProfileSetupModal, { type SetupItem } from '../components/ProfileSetupModal'
 import { type DietitianOutletContext } from '../components/DietitianLayout'
+import SEO from '../components/SEO'
 
 const SETUP_SKIPPED_KEY = 'meri_diet_dietitian_setup_skipped'
 
@@ -164,6 +165,7 @@ export default function DietitianDashboard() {
 
   return (
     <>
+      <SEO noIndex={true} title="Dietitian Dashboard" description="Dietitian dashboard — private area." />
       {setupItems && (
         <ProfileSetupModal
           items={setupItems}

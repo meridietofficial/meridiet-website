@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import appointmentApi, { DietitianAppointment, AppointmentDietForm } from '../api/appointment'
 import dietitianDietPlanApi from '../api/dietitianDietPlan'
 import DietPlanFormFields, { DietPlanFormValues, EMPTY_FORM } from '../components/DietPlanFormFields'
+import SEO from '../components/SEO'
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
@@ -137,6 +138,7 @@ export default function DietitianCreateDietPlan() {
 
   return (
     <div className="cdp-root">
+      <SEO noIndex={true} title="Create Diet Plan" description="Create diet plan — private dietitian area." />
 
       {/* ── Header ── */}
       <div className="cdp-header">

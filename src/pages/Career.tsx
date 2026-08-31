@@ -190,7 +190,7 @@ export default function Career() {
   return (
     <div className="career-page">
       <SEO
-        title="Careers at MeriDiet | Join India's Leading AI Nutrition Platform"
+        title="Careers – Join India's Leading AI Nutrition Platform"
         description="Join the MeriDiet team and help transform nutrition for millions of Indians. Explore open roles across nutrition, tech, design, and more."
         keywords="MeriDiet careers, nutrition startup jobs, health tech jobs India, remote nutrition jobs"
         canonical="/careers"

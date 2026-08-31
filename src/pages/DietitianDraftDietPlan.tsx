@@ -13,6 +13,7 @@ import ManualDietPlanDocument from '../components/ManualDietPlanDocument'
 import type { DietitianOutletContext } from '../components/DietitianLayout'
 import SearchableSelect from '../components/SearchableSelect'
 import { IN_STATES } from '../data/indiaCities'
+import SEO from '../components/SEO'
 
 /* Map Title Case goal labels from the client booking form → snake_case used by the dietitian form */
 const CLIENT_GOAL_MAP: Record<string, string> = {
@@ -326,6 +327,7 @@ function PlanDocPreview({ plan, dietitian, isManual, clientForm }: {
 
   return (
     <div className="dpv-doc-outer">
+      <SEO noIndex={true} title="Draft Diet Plan" description="Draft diet plan — private dietitian area." />
       <div className="dpv-download-bar">
         <button className="dpv-download-btn" onClick={handleDownloadPdf} disabled={downloading}>
           {downloading

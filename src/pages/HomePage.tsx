@@ -18,7 +18,29 @@ const ORG_SCHEMA = {
   url: 'https://meridiet.com',
   logo: 'https://meridiet.com/logo.png',
   description: 'India\'s AI-powered personalized diet plan and online dietitian consultation platform.',
-  sameAs: [],
+  sameAs: [
+    'https://www.instagram.com/meridietofficial/',
+    'https://www.facebook.com/people/MeriDiet/61564942492475/',
+    'https://x.com/Meridietoffical',
+    'https://www.youtube.com/@MeriDiet',
+    'https://www.linkedin.com/company/meridiet/',
+  ],
+}
+
+const WEBSITE_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'MeriDiet',
+  url: 'https://meridiet.com',
+  description: 'India\'s AI-powered personalized diet plan and online dietitian consultation platform.',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: 'https://meridiet.com/consult-dietitian?search={search_term_string}',
+    },
+    'query-input': 'required name=search_term_string',
+  },
 }
 
 const SERVICE_SCHEMA = {
@@ -43,7 +65,7 @@ const HomePage = ({ onOpenForm }: { onOpenForm: () => void }) => (
       description="Get a personalized AI diet plan made for Indians. Consult verified dietitians online for weight loss, PCOS, diabetes & muscle gain. Plans starting ₹499."
       keywords="AI diet plan India, personalized diet plan, online dietitian India, diet chart, Indian diet plan, weight loss diet plan, diet consultation online, AI nutrition plan, custom diet plan"
       canonical="/"
-      jsonLd={[ORG_SCHEMA, SERVICE_SCHEMA]}
+      jsonLd={[ORG_SCHEMA, WEBSITE_SCHEMA, SERVICE_SCHEMA]}
     />
     <Hero onOpenForm={onOpenForm} />
     <StatsCounter />

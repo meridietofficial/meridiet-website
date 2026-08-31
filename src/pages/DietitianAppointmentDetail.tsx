@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import appointmentApi, { DietitianAppointment, DietitianSession, AppointmentSlot, AppointmentReviews, CreateFollowUpBody, FollowUpAppointment, DietPlanRef, FollowUpSlots } from '../api/appointment'
 import { useVideoCall } from '../context/VideoCallContext'
+import SEO from '../components/SEO'
 
 const STATUS_META: Record<string, { label: string; color: string }> = {
   confirmed:  { label: 'Upcoming',  color: 'blue'   },
@@ -95,7 +96,8 @@ function DietPlanButton({
   if (!dp) {
     if (variant === 'hero') return (
       <button className="apd-hero-btn"
-        onClick={() => navigate(`/dietitian-diet-plans/new?appointment_id=${apptId}`, { state: planState })}>
+        onClick={() =>
+        navigate(`/dietitian-diet-plans/new?appointment_id=${apptId}`, { state: planState })}>
         <i className="fa-solid fa-bowl-food" /> Create Diet Plan
       </button>
     )
@@ -526,6 +528,7 @@ export default function DietitianAppointmentDetail() {
 
   return (
     <div className="apd-root">
+      <SEO noIndex={true} title="Appointment Detail" description="Appointment detail — private dietitian area." />
 
       {/* Top nav */}
       <div className="apd-topbar">

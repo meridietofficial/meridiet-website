@@ -11,6 +11,7 @@ import SearchableSelect from '../components/SearchableSelect'
 import type { SelectOption } from '../components/SearchableSelect'
 import SpecializationInput from '../components/SpecializationInput'
 import { trackEvent } from '../utils/analytics'
+import SEO from '../components/SEO'
 
 /* ── Session storage key for form data (text fields only) ── */
 const STORAGE_KEY = 'md_dietitian_onboarding'
@@ -384,6 +385,7 @@ export default function DietitianOnboarding() {
 
   return (
     <div className="jd2-page">
+      <SEO noIndex={true} title="Dietitian Onboarding" description="Onboarding — private dietitian area." />
 
       {/* ── Stepper ── */}
       <div className="jd2-stepper-wrap">

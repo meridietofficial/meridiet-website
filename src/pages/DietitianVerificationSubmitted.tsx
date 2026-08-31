@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthModal from '../components/AuthModal'
+import SEO from '../components/SEO'
 
 export default function DietitianVerificationSubmitted() {
   const navigate = useNavigate()
@@ -8,6 +9,7 @@ export default function DietitianVerificationSubmitted() {
 
   return (
     <div className="jd2-page">
+      <SEO noIndex={true} title="Verification Submitted" description="Verification submitted — private dietitian area." />
       <div className="jd2-card-wrap">
         <div className="jd2-card">
           <div className="jd2-review">

@@ -21,7 +21,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   })
 
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('meri_diet_token'))
+  const [token, setToken] = useState<string | null>(() => {
+    try { return localStorage.getItem('meri_diet_token') } catch { return null }
+  })
 
   function saveAuth(user: AuthUser, token: string) {
     setUser(user)

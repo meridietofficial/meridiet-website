@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import SEO from './SEO'
 import contactApi from '../api/contact'
 import { ApiError } from '../api/client'
 
@@ -74,6 +75,12 @@ const ContactUs = () => {
 
   return (
     <div className="contact-page">
+      <SEO
+        title="Contact Us – Get Support & Diet Plan Help"
+        description="Reach out to MeriDiet for support, diet plan queries, partnership opportunities, or general questions. We reply within 24 hours."
+        keywords="MeriDiet contact, diet plan support, nutrition helpdesk India, MeriDiet help"
+        canonical="/contact"
+      />
       {/* Hero */}
       <div className="privacy-hero">
         <div className="container">

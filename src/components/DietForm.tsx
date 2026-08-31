@@ -11,6 +11,7 @@ import { useToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from './AuthModal'
 import { trackEvent, trackInitiateCheckout, trackPurchase } from '../utils/analytics'
+import { loadRazorpay } from '../utils/loadRazorpay'
 
 const STEPS = [
   { label: 'Basic Details', sub: 'Tell us about yourself' },
@@ -1209,7 +1210,7 @@ const SidebarMain = ({ step, planType, onSelectPlan }: { step: number; planType:
           <p className="df-sb-help-title">Need Help?</p>
           <p className="df-sb-help-sub">
             Chat with our team on{' '}
-            <a href="https://wa.me/919876543210" target="_blank" rel="noreferrer">
+            <a href="https://wa.me/919609606009" target="_blank" rel="noreferrer">
               WhatsApp
             </a>
           </p>
@@ -1374,7 +1375,8 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
   }
 
   const openRazorpay = (currentFormId: number, appliedCoupon?: string) => {
-    paymentApi.createOrder(data.planType, currentFormId, appliedCoupon)
+    loadRazorpay()
+      .then(() => paymentApi.createOrder(data.planType, currentFormId, appliedCoupon))
       .then(orderRes => {
         const { order_id, key_id, amount, final_amount, currency } = orderRes.data
         const chargedAmount = final_amount ?? amount

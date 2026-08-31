@@ -91,7 +91,7 @@ const WomenEmpowerment = () => {
   return (
     <main className="we-page">
       <SEO
-        title="Women Empowerment Program | MeriDiet"
+        title="Women Empowerment Program – Skills from Home for Indian Women"
         description="MeriDiet Women Empowerment Program — Learn Nutrition, Build Digital Skills, Create New Livelihood Opportunities from home."
         keywords="women empowerment, nutrition program, work from home, women livelihood, MeriDiet women"
         canonical="/women-empowerment"

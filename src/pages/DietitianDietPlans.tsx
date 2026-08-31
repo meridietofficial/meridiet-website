@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import dietitianDietPlanApi, {
   DietPlanSummary, DietPlanDetail, DietPlanStatus,
 } from '../api/dietitianDietPlan'
+import SEO from '../components/SEO'
 
 type Tab = 'all' | DietPlanStatus
 
@@ -160,6 +161,7 @@ export default function DietitianDietPlans() {
 
   return (
     <div className="dp-root">
+      <SEO noIndex={true} title="Diet Plans" description="Diet plans — private dietitian area." />
 
       {/* ── Header ── */}
       <div className="dp-header">

@@ -5,6 +5,7 @@ import dietitianDietPlanApi, { UpdateDraftBody } from '../api/dietitianDietPlan'
 import DietPlanFormFields, { DietPlanFormValues, EMPTY_FORM } from '../components/DietPlanFormFields'
 import SearchableSelect from '../components/SearchableSelect'
 import { IN_STATES } from '../data/indiaCities'
+import SEO from '../components/SEO'
 
 type ClientInfo = {
   full_name: string
@@ -232,6 +233,7 @@ export default function DietitianManualDietPlanForm() {
 
   if (loading) return (
     <div className="cdp-root cdp-state-center">
+      <SEO noIndex={true} title="Manual Diet Plan Form" description="Manual diet plan form — private dietitian area." />
       <div className="cdp-spinner" />
       <p>Loading plan…</p>
     </div>

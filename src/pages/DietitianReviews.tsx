@@ -3,6 +3,7 @@ import appointmentApi, {
   DietitianReviewItem,
   DietitianReviewsSummary,
 } from '../api/appointment'
+import SEO from '../components/SEO'
 
 type StarFilter = 'all' | '5' | '4' | '3' | '2' | '1'
 
@@ -21,6 +22,7 @@ function formatDate(iso: string) {
 function Stars({ n, size = 13 }: { n: number; size?: number }) {
   return (
     <span className="rv-stars" style={{ fontSize: size }}>
+      <SEO noIndex={true} title="Reviews" description="Reviews — private dietitian area." />
       {[1,2,3,4,5].map(i => (
         <i
           key={i}

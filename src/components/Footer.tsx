@@ -14,7 +14,7 @@ const Footer = () => {
       <div className="container">
         <div className="footer-top">
           <div className="footer-brand">
-            <a href="#" className="footer-logo">
+            <a href="/" className="footer-logo">
               <img src="/logo-footer.png" alt="MeriDiet" className="footer-logo-img" />
             </a>
             <p className="footer-tagline">
@@ -39,7 +39,8 @@ const Footer = () => {
           <div className="footer-col">
             <h4>Company</h4>
             <Link to="/about">About Us</Link>
-            <Link to="/blog">Blog & Press</Link>
+            <Link to="/blog">Blog</Link>
+            <Link to="/press">Press & Media</Link>
             <Link to="/careers">Careers</Link>
             <Link to="/faq">FAQ</Link>
           </div>
@@ -52,6 +53,15 @@ const Footer = () => {
             <Link to="/#pricing">Pricing</Link>
             <Link to="/calculators">Calculators</Link>
             <Link to="/nutritionist-course">Nutritionist Course</Link>
+          </div>
+
+          <div className="footer-col">
+            <h4>Diet by Condition</h4>
+            <Link to="/weight-loss">Weight Loss</Link>
+            <Link to="/pcos">PCOS Diet</Link>
+            <Link to="/diabetes">Diabetes Diet</Link>
+            <Link to="/thyroid">Thyroid Diet</Link>
+            <Link to="/consult-dietitian">Consult a Dietitian</Link>
           </div>
 
           <div className="footer-col">
@@ -78,6 +88,12 @@ const Footer = () => {
               Uttar Pradesh, India
             </p>
           </div>
+        </div>
+
+        <div className="footer-disclaimer">
+          <p>
+            <strong>Medical Disclaimer:</strong> The content on MeriDiet is for informational purposes only and is not a substitute for professional medical advice, diagnosis or treatment. Always seek the advice of a qualified healthcare provider or registered dietitian with any questions you may have regarding a medical condition or dietary change.
+          </p>
         </div>
 
         <div className="footer-bottom">

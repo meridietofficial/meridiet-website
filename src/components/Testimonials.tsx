@@ -153,7 +153,7 @@ const Testimonials = () => {
         <div className="test-trust">
           <span>⭐ 4.9/5 average rating</span>
           <span>•</span>
-          <span>50,000+ happy clients</span>
+          <span>5,000+ plans delivered</span>
           <span>•</span>
           <span>Verified reviews only</span>
         </div>

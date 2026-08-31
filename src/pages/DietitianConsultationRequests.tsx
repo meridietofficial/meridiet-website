@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import appointmentApi, { DietitianAppointment, RescheduleHistory, AppointmentSlot } from '../api/appointment'
 import { useConsultationCount } from '../context/ConsultationCountContext'
+import SEO from '../components/SEO'
 
 type Tab = 'pending' | 'missed' | 'accepted' | 'rejected'
 
@@ -248,6 +249,7 @@ export default function DietitianConsultationRequests() {
 
   return (
     <div className="cr-root">
+      <SEO noIndex={true} title="Consultation Requests" description="Consultation requests — private dietitian area." />
 
       {/* ── Page Header ── */}
       <div className="cr-header">

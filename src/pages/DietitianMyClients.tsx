@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import appointmentApi, { DietitianClient } from '../api/appointment'
+import SEO from '../components/SEO'
 
 type Tab = 'all' | 'active' | 'inactive'
 type ViewMode = 'list' | 'grid'
@@ -74,6 +75,7 @@ export default function DietitianMyClients() {
 
   return (
     <div className="mc-root">
+      <SEO noIndex={true} title="My Clients" description="My clients — private dietitian area." />
 
       {/* ── Header ── */}
       <div className="mc-header">

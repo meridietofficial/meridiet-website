@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { MessageCircle, Search, SlidersHorizontal, X, UserRound, MessagesSquare, ShieldCheck, Lock, Stethoscope, ClipboardList, Headset } from 'lucide-react'
 import dietitianApi, {
   type Specialization,
@@ -11,6 +11,19 @@ import ConsultModal from '../components/ConsultModal'
 import SearchableSelect from '../components/SearchableSelect'
 import { IN_STATES, getCitiesOfState } from '../data/indiaCities'
 import SEO from '../components/SEO'
+
+const SPECS = [
+  { label: 'Weight Loss',            icon: 'fas fa-weight-scale',    link: '/weight-loss' },
+  { label: 'PCOS & Hormonal Health', icon: 'fas fa-venus',           link: '/pcos' },
+  { label: 'Diabetes Management',    icon: 'fas fa-syringe',         link: '/diabetes' },
+  { label: 'Thyroid Disorders',      icon: 'fas fa-shield-halved',   link: '/thyroid' },
+  { label: 'Heart & Cholesterol',    icon: 'fas fa-heart-pulse' },
+  { label: 'Pregnancy Nutrition',    icon: 'fas fa-person-pregnant' },
+  { label: 'Muscle Gain & Sports',   icon: 'fas fa-dumbbell' },
+  { label: 'Gut & Digestive Health', icon: 'fas fa-apple-whole' },
+  { label: 'Child & Teen Nutrition', icon: 'fas fa-child-reaching' },
+  { label: 'Kidney Disease Diet',    icon: 'fas fa-filter' },
+]
 
 const ALL_CATEGORY = 'All Dietitians'
 const FEE_RANGE_MIN = 999
@@ -215,16 +228,27 @@ export default function ConsultDietitian() {
           '@type': 'MedicalBusiness',
           name: 'MeriDiet – Online Dietitian Consultation',
           url: 'https://meridiet.com/consult-dietitian',
-          description: 'Book 1-on-1 online consultations with verified Indian dietitians for weight loss, PCOS, diabetes and more.',
+          description: 'Book 1-on-1 online consultations with verified Indian dietitians for weight loss, PCOS, diabetes, thyroid, heart health, pregnancy nutrition and more.',
+          telephone: '+919609606009',
+          email: 'support@meridiet.com',
           areaServed: 'IN',
-          availableService: {
-            '@type': 'MedicalTherapy',
-            name: 'Online Dietitian Consultation',
-          },
+          priceRange: '₹999 – ₹4500',
+          medicalSpecialty: [
+            'Diet and Nutrition',
+            'Weight Management',
+            'Diabetes Management',
+            'Sports Nutrition',
+          ],
+          availableService: [
+            { '@type': 'MedicalTherapy', name: 'Online Dietitian Consultation' },
+            { '@type': 'MedicalTherapy', name: 'Personalised Diet Plan' },
+            { '@type': 'MedicalTherapy', name: 'PCOS Diet Consultation' },
+            { '@type': 'MedicalTherapy', name: 'Diabetes Diet Consultation' },
+          ],
         }}
       />
 
-      {/* ── Hero ── */}
+      {/* ── Hero + Specializations (one unified section) ── */}
       <section className="cd-hero">
         <div className="container cd-hero-inner">
           <div className="cd-hero-left">
@@ -275,7 +299,27 @@ export default function ConsultDietitian() {
             <img className="cd-hero-card-img" src="/consult-hero-dietitian.png" alt="Dietitian consultation" />
           </div>
         </div>
+
       </section>
+
+      {/* ── Specialisation infinite scroll strip ── */}
+      <div className="cd-spec-strip" aria-label="Specialisations covered">
+        <div className="cd-spec-strip-inner">
+          {[...SPECS, ...SPECS].map((s, i) =>
+            s.link ? (
+              <Link key={i} to={s.link} className="cd-spec-chip cd-spec-chip--link">
+                <i className={`${s.icon} cd-spec-fa`} />
+                {s.label}
+              </Link>
+            ) : (
+              <span key={i} className="cd-spec-chip">
+                <i className={`${s.icon} cd-spec-fa`} />
+                {s.label}
+              </span>
+            )
+          )}
+        </div>
+      </div>
 
       {/* ── Main Body ── */}
       <div className="container cd-body">
@@ -477,7 +521,7 @@ export default function ConsultDietitian() {
               results.map(d => {
                 const avail = availabilityLabel(d.availability)
                 return (
-                <div key={d.id} className="cd-card">
+                <div key={d.id} className="cd-card cd-card--clickable" onClick={() => navigate(`/dietitian/${d.id}/${d.full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`)}>
 
                   {/* ── Header ── */}
                   <div className="cd-card-top">
@@ -529,9 +573,9 @@ export default function ConsultDietitian() {
                       <div className="cd-tags">
                         {d.specialization.slice(0, 3).map(s => <span key={s} className="cd-tag">{s}</span>)}
                         {d.specialization.length > 3 && (
-                          <button className="cd-tag cd-tag--more" onClick={() => navigate(`/dietitian/${d.id}`)}>
+                          <span className="cd-tag cd-tag--more">
                             +{d.specialization.length - 3} more
-                          </button>
+                          </span>
                         )}
                       </div>
                     </div>
@@ -555,8 +599,8 @@ export default function ConsultDietitian() {
 
                   {/* ── Actions ── */}
                   <div className="cd-card-actions">
-                    <button className="cd-view-btn" onClick={() => navigate(`/dietitian/${d.id}`)}>View Profile</button>
-                    <button className="cd-consult-btn" onClick={() => setConsulting(d)}>
+                    <span className="cd-view-btn">View Profile →</span>
+                    <button className="cd-consult-btn" onClick={e => { e.stopPropagation(); setConsulting(d) }}>
                       <MessageCircle size={15} strokeWidth={2.4} /> Consult Now
                     </button>
                   </div>

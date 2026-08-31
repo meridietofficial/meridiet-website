@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import followUpsApi, { FollowUpItem, FollowUpSummary } from '../api/followups'
+import SEO from '../components/SEO'
 
 type FollowUpStatus = 'due' | 'upcoming' | 'completed' | 'missed'
 
@@ -129,6 +130,7 @@ export default function DietitianFollowUps() {
 
   return (
     <div className="fu-root">
+      <SEO noIndex={true} title="Follow-Ups" description="Follow-ups — private dietitian area." />
 
       {/* ── Header ── */}
       <div className="fu-header">

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import SEO from '../components/SEO'
 
 interface Message {
   id: number
@@ -158,6 +159,7 @@ export default function DietitianChat() {
 
   return (
     <div className="ch-root">
+      <SEO noIndex={true} title="Dietitian Chat" description="Client chat — private dietitian area." />
 
       {/* ── Contact sidebar ── */}
       <div className="ch-sidebar">

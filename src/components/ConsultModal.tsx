@@ -6,6 +6,7 @@ import appointmentApi from '../api/appointment'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from './AuthModal'
 import { trackPurchase, trackConsultationBooked } from '../utils/analytics'
+import { loadRazorpay } from '../utils/loadRazorpay'
 
 const SLOT_MINUTES = 30
 const PLAN_FEATURES = [
@@ -138,6 +139,7 @@ export default function ConsultModal({ dietitian, fee, onClose }: ConsultModalPr
         fee: consultFee,
       })
 
+      await loadRazorpay()
       const rzp = new window.Razorpay({
         key: order.key_id,
         amount: order.amount * 100,

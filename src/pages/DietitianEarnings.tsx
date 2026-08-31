@@ -3,6 +3,7 @@ import earningsApi, {
   EarningsSummary, MonthlyRevenueData, MonthlyRevenueItem,
   EarningsByPlanItem, PayoutData, TransactionItem, TxSummaryCount,
 } from '../api/earnings'
+import SEO from '../components/SEO'
 
 type Period = 'week' | 'month' | 'quarter' | 'year'
 type TxTab  = 'all' | 'paid' | 'pending' | 'refunded'
@@ -35,6 +36,7 @@ function changeBadge(pct: number | null, period: string) {
   const up = pct >= 0
   return (
     <p className={`ea-kpi-sub ${up ? 'ea-sub--up' : 'ea-sub--down'}`}>
+      <SEO noIndex={true} title="Earnings" description="Earnings — private dietitian area." />
       {up ? '↗' : '↘'} {Math.abs(pct)}% vs last {period}
     </p>
   )

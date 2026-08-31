@@ -8,6 +8,7 @@ import appointmentApi, {
   DietPlanRef,
 } from '../api/appointment'
 import { useVideoCall } from '../context/VideoCallContext'
+import SEO from '../components/SEO'
 
 type Tab = 'upcoming' | 'missed' | 'completed' | 'cancelled'
 
@@ -274,6 +275,7 @@ export default function DietitianAppointments() {
 
   return (
     <div className="ap-root">
+      <SEO noIndex={true} title="Dietitian Appointments" description="Manage your dietitian appointments." />
 
       {/* ── Header ── */}
       <div className="ap-header">

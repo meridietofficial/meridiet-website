@@ -1,5 +1,18 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import SEO from '../components/SEO'
+
+function CalcCTA({ message }: { message: string }) {
+  return (
+    <div className="calc-cta">
+      <p className="calc-cta-msg">{message}</p>
+      <div className="calc-cta-btns">
+        <Link to="/diet-plan" className="calc-cta-primary">Get My Diet Plan →</Link>
+        <Link to="/consult-dietitian" className="calc-cta-secondary">Talk to a Dietitian</Link>
+      </div>
+    </div>
+  )
+}
 
 /* ── BMI ─────────────────────────────────────────────── */
 function BMICalc() {
@@ -62,6 +75,11 @@ function BMICalc() {
               <span>Obese</span>
             </div>
           </div>
+          <CalcCTA message={
+            result.label === 'Underweight' ? 'A dietitian can help you gain weight healthily with an Indian diet plan.' :
+            result.label === 'Normal weight' ? 'Maintain your healthy weight with a personalised Indian diet plan.' :
+            'A personalised diet plan can help you reach a healthy BMI.'
+          } />
         </div>
       )}
     </div>
@@ -121,6 +139,7 @@ function BMRCalc() {
           <div className="calc-result-number">{result.toLocaleString('en-IN')}</div>
           <div className="calc-result-unit">calories / day</div>
           <p className="calc-result-note">This is how many calories your body needs just to stay alive at rest.</p>
+          <CalcCTA message="Get a meal plan built around your exact calorie needs." />
         </div>
       )}
     </div>
@@ -217,6 +236,7 @@ function TDEECalc() {
               <span className="calc-tdee-goal-hint">+300 cal/day</span>
             </div>
           </div>
+          <CalcCTA message="Get a personalised Indian diet plan matched to your daily calorie target." />
         </div>
       )}
     </div>
@@ -283,6 +303,7 @@ function WaterCalc() {
             </div>
           </div>
           <p className="calc-result-note">Drink more if it's hot, you're sick, or after intense exercise.</p>
+          <CalcCTA message="Pair your hydration goal with a complete nutrition plan from a dietitian." />
         </div>
       )}
     </div>
@@ -294,7 +315,7 @@ export default function Calculators() {
   return (
     <main className="calcp-page">
       <SEO
-        title="Free Health Calculators — BMI, BMR, TDEE, Water Intake | MeriDiet"
+        title="Free Health Calculators — BMI, BMR, TDEE & Water Intake"
         description="Use MeriDiet's free health calculators to find your BMI, BMR, daily calorie needs (TDEE), and water intake. Simple, instant results."
         keywords="BMI calculator India, BMR calculator, TDEE calculator, water intake calculator, calorie calculator India"
         canonical="/calculators"

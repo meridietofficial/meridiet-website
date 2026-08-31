@@ -164,7 +164,7 @@ const ForDietitians = () => {
   return (
   <main className="fd-page">
     <SEO
-      title="Join MeriDiet as a Dietitian | Grow Your Online Practice"
+      title="Join as a Dietitian – Grow Your Online Nutrition Practice in India"
       description="Are you a dietitian or nutritionist? Join MeriDiet to connect with thousands of clients seeking personalized diet plans. Build your online practice and earn more."
       keywords="join as dietitian India, online dietitian platform, nutritionist jobs India, dietitian registration, grow dietitian practice online, diet consultation platform India"
       canonical="/for-dietitians"
@@ -186,7 +186,7 @@ const ForDietitians = () => {
         {/* Left */}
         <div className="fd-hero-left">
           <p className="fd-hero-eyebrow">Join MeriDiet as a</p>
-          <h1 className="fd-hero-title">Dietitian</h1>
+          <h1 className="fd-hero-title">Grow Your Dietitian Practice Online</h1>
           <p className="fd-hero-desc">
             Build your online + offline practice with powerful tools designed for dietitians.<br />
             Manage clients, appointments, and diet plans — all in one place.

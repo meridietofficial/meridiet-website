@@ -71,7 +71,7 @@ const faqs = [
       },
       {
         q: 'How do I get WhatsApp support?',
-        a: 'All plans include WhatsApp plan delivery. Monthly and annual plans also include ongoing WhatsApp support where you can ask questions and get guidance from our dietitian team.',
+        a: 'All plans include WhatsApp plan delivery. The 1-month and 3-month plans also include ongoing WhatsApp support where you can ask questions and get guidance from our dietitian team.',
       },
       {
         q: 'Can I request changes to my plan?',
@@ -101,7 +101,7 @@ const FAQ = () => {
           mainEntity: [
             { '@type': 'Question', name: 'What is MeriDiet?', acceptedAnswer: { '@type': 'Answer', text: "MeriDiet is India's personalized diet plan platform. You fill a short health assessment and receive a complete Indian diet plan tailored to your body, goals, and food preferences." } },
             { '@type': 'Question', name: 'How long does it take to get my plan?', acceptedAnswer: { '@type': 'Answer', text: 'The entire process takes under 3 minutes. Once you submit your assessment, your personalized plan is delivered within a few hours.' } },
-            { '@type': 'Question', name: 'What are the pricing plans?', acceptedAnswer: { '@type': 'Answer', text: 'We offer three plans: ₹199 for a 1-week plan, ₹499 for a 1-month plan (most popular), and ₹3,999 for an annual plan.' } },
+            { '@type': 'Question', name: 'What are the pricing plans?', acceptedAnswer: { '@type': 'Answer', text: 'We offer three plans: ₹199 for a 1-week plan, ₹499 for a 1-month plan (most popular), and ₹999 for a 3-month plan (best value).' } },
             { '@type': 'Question', name: 'Can I get a plan for a specific health condition?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. We create plans for diabetes, PCOS, thyroid issues, heart health, weight loss, muscle gain, and more.' } },
             { '@type': 'Question', name: 'Do you offer refunds?', acceptedAnswer: { '@type': 'Answer', text: "If you're not satisfied, contact us within 24 hours and we'll revise your plan free of charge or issue a full refund." } },
           ],
@@ -111,10 +111,11 @@ const FAQ = () => {
 
         <div className="faq-header">
           <span className="section-tag">FAQ</span>
+          <h1 className="about-page-title">FAQ – Diet Plans & Online Dietitian Consultations | MeriDiet</h1>
           <h2 className="section-title">Frequently Asked <span className="faq-green">Questions</span></h2>
           <p className="section-sub">
             Everything you need to know about MeriDiet. Can't find an answer?{' '}
-            <a href="https://wa.me/919876543210" className="faq-contact-link">Chat with us on WhatsApp →</a>
+            <a href="https://wa.me/919609606009" className="faq-contact-link">Chat with us on WhatsApp →</a>
           </p>
         </div>
 

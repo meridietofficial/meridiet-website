@@ -129,10 +129,10 @@ export default function Blog() {
   return (
     <main className="blog-page">
       <SEO
-        title="Press & Media Coverage | MeriDiet"
-        description="Read what leading media outlets are saying about MeriDiet's AI-powered nutrition platform and women empowerment initiative for dietitians across India."
+        title="Press & Media Coverage – In the News"
+        description="Read the latest press coverage and media features about MeriDiet's AI-powered nutrition platform and dietitian empowerment initiatives across India."
         keywords="MeriDiet press, MeriDiet news, MeriDiet media coverage, AI diet plan India news, dietitian platform India"
-        canonical="/blog"
+        canonical="/press"
       />
 
       <div className="blog-hero">

@@ -11,6 +11,7 @@ import SearchableSelect from '../components/SearchableSelect'
 import SpecializationInput from '../components/SpecializationInput'
 import { IN_STATES } from '../data/indiaCities'
 import { type DietitianOutletContext } from '../components/DietitianLayout'
+import SEO from '../components/SEO'
 
 /* ─── Helpers ────────────────────────────────────────────── */
 /* Normalize any backend date/datetime to a calendar date 'YYYY-MM-DD'.
@@ -117,6 +118,7 @@ function CircularProgress({ pct }: { pct: number }) {
   const r = 36, circ = 2 * Math.PI * r, dash = (pct / 100) * circ
   return (
     <svg width="90" height="90" viewBox="0 0 90 90">
+      <SEO noIndex={true} title="My Profile" description="My profile — private dietitian area." />
       <circle cx="45" cy="45" r={r} fill="none" stroke="#e8f0eb" strokeWidth="8" />
       <circle cx="45" cy="45" r={r} fill="none" stroke="#1E8E3E" strokeWidth="8"
         strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" transform="rotate(-90 45 45)" />

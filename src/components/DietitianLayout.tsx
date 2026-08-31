@@ -6,6 +6,7 @@ import { ApiError } from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { dietitianRegistrationFeeApi } from '../api/payment'
 import { useToast } from '../context/ToastContext'
+import { loadRazorpay } from '../utils/loadRazorpay'
 
 export type DietitianOutletContext = {
   online: boolean
@@ -88,6 +89,7 @@ export default function DietitianLayout() {
       const { order_id, amount, currency, key_id } = orderRes.data
       setPaymentLoading(false)
 
+      await loadRazorpay()
       let paymentSucceeded = false
       const rzp = new window.Razorpay({
         key:      key_id,

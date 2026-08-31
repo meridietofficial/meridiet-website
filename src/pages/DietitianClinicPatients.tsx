@@ -8,6 +8,7 @@ import appointmentApi, {
   CreateOfflineAppointmentBody,
 } from '../api/appointment'
 import { type DietitianOutletContext } from '../components/DietitianLayout'
+import SEO from '../components/SEO'
 
 type Tab = 'upcoming' | 'completed' | 'missed' | 'cancelled'
 
@@ -324,6 +325,7 @@ export default function DietitianClinicPatients() {
 
   return (
     <div className="ap-root">
+      <SEO noIndex={true} title="Clinic Patients" description="Clinic patients — private dietitian area." />
 
       {/* ── Header ── */}
       <div className="ap-header">

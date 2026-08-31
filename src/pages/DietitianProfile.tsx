@@ -5,6 +5,7 @@ import type { DietitianCard } from '../api/dietitian'
 import appointmentApi from '../api/appointment'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from '../components/AuthModal'
+import SEO from '../components/SEO'
 
 function getInitials(name: string) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -207,6 +208,7 @@ export default function DietitianProfile() {
   if (notFound || !d) {
     return (
       <main className="dp-page">
+        <SEO noIndex={true} title="Dietitian Profile" description="Dietitian profile — private area." />
         <div className="container dp-not-found">
           <p>Dietitian not found.</p>
           <button className="dp-back-btn" onClick={() => navigate('/consult-dietitian')}>← Back to Dietitians</button>

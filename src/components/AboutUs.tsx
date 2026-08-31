@@ -52,7 +52,7 @@ const AboutUs = () => {
   return (
     <section className="about-section" id="about">
       <SEO
-        title="About MeriDiet – India's AI Diet Plan & Nutrition Platform"
+        title="About Us – India's AI Diet Plan & Nutrition Platform"
         description="MeriDiet is India's leading platform for AI-powered personalized diet plans and online dietitian consultations. Science-backed nutrition made affordable for every Indian."
         keywords="about MeriDiet, Indian diet platform, AI nutrition India, personalized diet India, online dietitian platform India"
         canonical="/about"
@@ -62,6 +62,7 @@ const AboutUs = () => {
         {/* ── Header ── */}
         <div className="about-header">
           <span className="section-tag">Our Story</span>
+          <h1 className="about-page-title">About MeriDiet – India's AI-Powered Nutrition Platform</h1>
           <h2 className="section-title">The Mind Behind <span className="about-green">MeriDiet</span></h2>
           <p className="section-sub">
             Born out of a simple belief — every Indian deserves personalized nutrition advice, not

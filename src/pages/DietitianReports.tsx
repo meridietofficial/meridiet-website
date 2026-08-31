@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import SEO from '../components/SEO'
 
 type Period = 'week' | 'month' | 'quarter' | 'year'
 
@@ -54,6 +55,7 @@ export default function DietitianReports() {
 
   return (
     <div className="rep-root">
+      <SEO noIndex={true} title="Reports" description="Reports — private dietitian area." />
 
       {/* ── Header ── */}
       <div className="rep-header">

@@ -47,7 +47,10 @@ const WomenEmpowerment        = lazy(() => import('./pages/WomenEmpowerment'))
 const SponsorCohort           = lazy(() => import('./pages/SponsorCohort'))
 const NutritionistCourse      = lazy(() => import('./pages/NutritionistCourse'))
 const Blog                    = lazy(() => import('./pages/Blog'))
+const BlogList                = lazy(() => import('./pages/BlogList'))
+const BlogPost                = lazy(() => import('./pages/BlogPost'))
 const Career                  = lazy(() => import('./pages/Career'))
+const ConditionPage           = lazy(() => import('./pages/ConditionPage'))
 
 function PageLoader() {
   return (
@@ -120,7 +123,13 @@ function AppInner() {
           <Route path="/terms-conditions"     element={<main><TermsConditions /></main>} />
           <Route path="/refund-policy"        element={<main><RefundPolicy /></main>} />
           <Route path="/contact"              element={<main><ContactUs /></main>} />
-          <Route path="/blog"                 element={<Blog />} />
+          <Route path="/press"                element={<Blog />} />
+          <Route path="/blog"               element={<BlogList />} />
+          <Route path="/blog/:slug"         element={<BlogPost />} />
+          <Route path="/weight-loss"        element={<ConditionPage slug="weight-loss" />} />
+          <Route path="/pcos"               element={<ConditionPage slug="pcos" />} />
+          <Route path="/diabetes"           element={<ConditionPage slug="diabetes" />} />
+          <Route path="/thyroid"            element={<ConditionPage slug="thyroid" />} />
           <Route path="/careers"              element={<Career />} />
           <Route path="/calculators"              element={<Calculators />} />
           <Route path="/women-empowerment"        element={<WomenEmpowerment />} />
@@ -128,6 +137,7 @@ function AppInner() {
           <Route path="/nutritionist-course"    element={<NutritionistCourse />} />
           <Route path="/consult-dietitian"         element={<ConsultDietitian />} />
           <Route path="/consult-dietitian/success" element={<ConsultDietitian />} />
+          <Route path="/dietitian/:id/:slug"   element={<DietitianProfile />} />
           <Route path="/dietitian/:id"        element={<DietitianProfile />} />
           <Route path="/for-dietitians"                    element={<ForDietitians />} />
           <Route path="/for-dietitians/basic-info"         element={<DietitianOnboarding />} />
