@@ -16,7 +16,7 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
           <p className="hero-desc">
             <span style={{ color: '#1a2e1a', fontWeight: 700 }}>India's First AI-Powered Platform Blending<br />
             Intelligent Technology with Expert Dietitians.</span><br />
-            <span style={{ opacity: 0.8 }}>Smarter, personalized nutrition — thoughtfully crafted for complete well-being.</span>
+            <span style={{ opacity: 0.8 }}>Your personalized Indian diet plan is crafted and delivered within 24 hours — backed by AI dietitian consultation tailored to your body, goals, and food preferences.</span>
           </p>
 
           <div className="hero-actions">
@@ -79,7 +79,7 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
           <div className="hero-strip-grid">
             <div className="hero-strip-item">
               <div className="hero-strip-item-inner">
-                <img src="/strip-meal-plans.png" alt="" className="hero-strip-icon-img" aria-hidden="true" />
+                <img src="/strip-meal-plans.png" alt="Personalized meal plans icon" className="hero-strip-icon-img" />
                 <div className="hero-strip-text">
                   <span>Personalized<br />Meal Plans</span>
                 </div>
@@ -87,7 +87,7 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
             </div>
             <div className="hero-strip-item">
               <div className="hero-strip-item-inner">
-                <img src="/strip-region.png" alt="" className="hero-strip-icon-img" aria-hidden="true" />
+                <img src="/strip-region.png" alt="Regional food preferences icon" className="hero-strip-icon-img" />
                 <div className="hero-strip-text">
                   <span>Based on Your Region<br />& Food Preferences</span>
                 </div>
@@ -95,7 +95,7 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
             </div>
             <div className="hero-strip-item">
               <div className="hero-strip-item-inner">
-                <img src="/strip-whatsapp.png" alt="" className="hero-strip-icon-img hero-strip-icon-img--lg" aria-hidden="true" />
+                <img src="/strip-whatsapp.png" alt="Diet plan delivered on WhatsApp icon" className="hero-strip-icon-img hero-strip-icon-img--lg" />
                 <div className="hero-strip-text">
                   <span>Delivered Within 24 Hours<br />on WhatsApp & Email</span>
                 </div>
@@ -103,7 +103,7 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
             </div>
             <div className="hero-strip-item">
               <div className="hero-strip-item-inner">
-                <img src="/strip-dietitian.png" alt="" className="hero-strip-icon-img" aria-hidden="true" />
+                <img src="/strip-dietitian.png" alt="AI-assisted nutrition planning icon" className="hero-strip-icon-img" />
                 <div className="hero-strip-text">
                   <span>AI-Assisted<br />Nutrition Planning</span>
                 </div>

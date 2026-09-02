@@ -104,9 +104,6 @@ const Testimonials = () => {
   const handleMouseEnter = () => { pausedRef.current = true }
   const handleMouseLeave = () => { pausedRef.current = false }
 
-  // Duplicate cards for seamless infinite loop
-  const allCards = [...reviews, ...reviews]
-
   return (
     <section className="testimonials-section" id="testimonials">
       <div className="container">
@@ -127,8 +124,28 @@ const Testimonials = () => {
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
         >
-          {allCards.map((r, i) => (
+          {reviews.map((r, i) => (
             <div key={i} className="review-card">
+              <div className="review-top">
+                <div className="reviewer-avatar" style={{ background: r.color }}>
+                  {r.initials}
+                </div>
+                <div className="reviewer-info">
+                  <div className="reviewer-name">{r.name}</div>
+                  <div className="reviewer-loc">
+                    <MapPin size={11} strokeWidth={2} />
+                    {r.location}
+                  </div>
+                </div>
+                <span className="reviewer-goal">{r.goal}</span>
+              </div>
+              <div className="review-stars">{'★'.repeat(r.rating)}</div>
+              <p className="review-text">"{r.text}"</p>
+            </div>
+          ))}
+          {/* Duplicate set for seamless infinite scroll — hidden from crawlers */}
+          {reviews.map((r, i) => (
+            <div key={`dup-${i}`} className="review-card" aria-hidden="true">
               <div className="review-top">
                 <div className="reviewer-avatar" style={{ background: r.color }}>
                   {r.initials}

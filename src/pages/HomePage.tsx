@@ -61,7 +61,7 @@ const SERVICE_SCHEMA = {
 const HomePage = ({ onOpenForm }: { onOpenForm: () => void }) => (
   <main>
     <SEO
-      title="AI Diet Plans & Online Dietitian Consultation India"
+      title="Personalized Indian Diet Plan in 24 Hours | AI Dietitian Consultation"
       description="Get a personalized AI diet plan made for Indians. Consult verified dietitians online for weight loss, PCOS, diabetes & muscle gain. Plans starting ₹499."
       keywords="AI diet plan India, personalized diet plan, online dietitian India, diet chart, Indian diet plan, weight loss diet plan, diet consultation online, AI nutrition plan, custom diet plan"
       canonical="/"

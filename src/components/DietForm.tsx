@@ -10,7 +10,7 @@ import { mapStep1ToPayload, mapStep2ToPayload, mapStep3ToPayload, mapStep4ToPayl
 import { useToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from './AuthModal'
-import { trackEvent, trackInitiateCheckout, trackPurchase } from '../utils/analytics'
+import { trackEvent, trackFormOpened, trackStepComplete, trackInitiateCheckout, trackPurchase, trackPlanSelected, trackValidationError, trackAuthGateShown, trackAuthGateComplete, trackPaymentDismissed } from '../utils/analytics'
 import { loadRazorpay } from '../utils/loadRazorpay'
 
 const STEPS = [
@@ -1301,6 +1301,7 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     navigate('/diet-plan/step-1', { replace: true })
+    trackFormOpened()
     return () => { document.body.style.overflow = '' }
   }, [])
 
@@ -1338,6 +1339,7 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
   const set: SetFn = (k, v) => {
     setData((p) => ({ ...p, [k]: v }))
     setErrors((p) => { const n = { ...p }; delete n[k]; return n })
+    if (k === 'planType') trackPlanSelected(String(v))
   }
   const tog: ToglFn = (k, v) => {
     setData(prev => {
@@ -1418,6 +1420,7 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
           modal: {
             ondismiss: async () => {
               try { await paymentApi.failed(order_id) } catch { /* ignore */ }
+              trackPaymentDismissed(data.planType, chargedAmount)
               showToast('Payment cancelled. Your form details are saved — try again anytime.', 'error')
               navigate('/diet-plan', { replace: true })
               setSubmitting(false)
@@ -1462,9 +1465,12 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
       const e = validateStep(step, data)
       if (Object.keys(e).length > 0) {
         setErrors(e)
+        trackValidationError(step, Object.keys(e))
         overlayRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
+
+      trackStepComplete(step)
 
       // Step 1 → 2: create draft if not yet created, otherwise update existing entry
       if (step === 1) {
@@ -1590,8 +1596,9 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
                   disabled={submitting}
                   onClick={() => {
                     const e = validateStep(5, data)
-                    if (Object.keys(e).length > 0) { setErrors(e); return }
-                    if (!user) { setShowAuthGate(true); return }
+                    if (Object.keys(e).length > 0) { setErrors(e); trackValidationError(5, Object.keys(e)); return }
+                    trackStepComplete(5)
+                    if (!user) { trackAuthGateShown(); setShowAuthGate(true); return }
                     if (!formId) {
                       showToast('Something went wrong. Please go back to Step 1 and try again.', 'error')
                       return
@@ -1620,6 +1627,7 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
           prefillPhone={data.whatsapp}
           onAuthSuccess={() => {
             setShowAuthGate(false)
+            trackAuthGateComplete()
             if (formId) handlePayAndSubmit(formId)
           }}
         />

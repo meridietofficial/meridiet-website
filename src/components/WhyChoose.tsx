@@ -44,11 +44,11 @@ const WhyChoose = ({ onOpenForm }: { onOpenForm: () => void }) => {
     <section className="why-section" id="why">
 
       {/* decorative food images */}
-      <img src="/rainbow-buddha-bowl.png"   alt="" className="why-deco why-deco--tl" aria-hidden="true" />
-      <img src="/fruit-plate-colorful.png"  alt="" className="why-deco why-deco--tr" aria-hidden="true" />
-      <img src="/grilled-chicken-salad.png" alt="" className="why-deco why-deco--bl" aria-hidden="true" />
-      <img src="/salmon-avocado-bowl.png"   alt="" className="why-deco why-deco--br" aria-hidden="true" />
-      <img src="/avocado-egg-bowl.png"      alt="" className="why-deco why-deco--mc" aria-hidden="true" />
+      <img src="/rainbow-buddha-bowl.png"   alt="Rainbow Buddha bowl healthy meal" className="why-deco why-deco--tl" />
+      <img src="/fruit-plate-colorful.png"  alt="Colorful fruit plate"             className="why-deco why-deco--tr" />
+      <img src="/grilled-chicken-salad.png" alt="Grilled chicken salad"            className="why-deco why-deco--bl" />
+      <img src="/salmon-avocado-bowl.png"   alt="Salmon avocado bowl"              className="why-deco why-deco--br" />
+      <img src="/avocado-egg-bowl.png"      alt="Avocado egg bowl"                 className="why-deco why-deco--mc" />
 
       <div className="container">
 

@@ -53,6 +53,10 @@ function resolveTitle(path: string): string {
   return 'MeriDiet'
 }
 
+// index.html fires fbq('track', 'PageView') on initial load.
+// We skip the first Meta PageView call here to avoid a duplicate on app mount.
+let _initialMetaPageViewFired = false
+
 export function trackEvent(eventName: string, params?: Record<string, unknown>) {
   if (typeof gtag !== 'undefined') {
     gtag('event', eventName, params ?? {})
@@ -93,6 +97,7 @@ export function trackPageView(path: string) {
   document.title = title
 
   // GA4 — fire a page_view event so every route change is counted
+  // (gtag auto page_view is disabled via send_page_view: false in index.html)
   if (typeof gtag !== 'undefined') {
     gtag('event', 'page_view', {
       page_path:  path,
@@ -101,8 +106,56 @@ export function trackPageView(path: string) {
     })
   }
 
-  // Meta Pixel — fire PageView on every route change
+  // Meta Pixel — skip the first call because index.html already fired PageView on load.
+  // Fire normally for all subsequent SPA navigations.
   if (window.fbq) {
-    window.fbq('track', 'PageView')
+    if (_initialMetaPageViewFired) {
+      window.fbq('track', 'PageView')
+    } else {
+      _initialMetaPageViewFired = true
+    }
   }
+}
+
+// ── Funnel-specific events ───────────────────────────────────
+
+/** Fires when the diet form overlay opens (user begins the funnel). */
+export function trackFormOpened() {
+  trackEvent('form_opened')
+}
+
+/**
+ * Fires when a user passes validation and advances to the next step.
+ * Step 1 also fires Meta's standard Lead event (contact info captured).
+ */
+export function trackStepComplete(step: number, params?: Record<string, unknown>) {
+  trackEvent(`step_${step}_complete`, params)
+  if (step === 1 && window.fbq) {
+    window.fbq('track', 'Lead')
+  }
+}
+
+/** Fires when the Razorpay modal is dismissed without payment. */
+export function trackPaymentDismissed(plan_name: string, amount: number) {
+  trackEvent('payment_dismissed', { plan_name, amount })
+}
+
+/** Fires when the user explicitly selects a plan (sidebar or Step 5 cards). */
+export function trackPlanSelected(plan_name: string) {
+  trackEvent('plan_selected', { plan_name })
+}
+
+/** Fires when a step's validation fails, listing which fields failed. */
+export function trackValidationError(step: number, fields: string[]) {
+  trackEvent('validation_error', { step, failed_fields: fields })
+}
+
+/** Fires when the auth/login modal appears at the Step 5 payment gate. */
+export function trackAuthGateShown() {
+  trackEvent('auth_gate_shown')
+}
+
+/** Fires after the user successfully logs in at the payment gate. */
+export function trackAuthGateComplete() {
+  trackEvent('auth_gate_complete')
 }

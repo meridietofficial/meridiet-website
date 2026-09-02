@@ -18,7 +18,7 @@ const Footer = () => {
               <img src="/logo-footer.png" alt="MeriDiet" className="footer-logo-img" />
             </a>
             <p className="footer-tagline">
-              India's First AI-Powered Platform Blending Intelligent Technology with Expert Dietitians. Smarter, personalized nutrition — thoughtfully crafted for complete well-being.
+              MeriDiet offers personalized Indian diet plans and AI dietitian consultation — making expert nutrition accessible, affordable, and tailored to every Indian.
             </p>
             <div className="footer-social">
               {socialLinks.map((s, i) => (
@@ -38,11 +38,11 @@ const Footer = () => {
 
           <div className="footer-col">
             <h4>Company</h4>
-            <Link to="/about">About Us</Link>
+            <Link to="/about">About MeriDiet</Link>
             <Link to="/blog">Blog</Link>
             <Link to="/press">Press & Media</Link>
             <Link to="/careers">Careers</Link>
-            <Link to="/faq">FAQ</Link>
+            <Link to="/women-empowerment">Women Empowerment</Link>
           </div>
 
           <div className="footer-col">
@@ -61,7 +61,7 @@ const Footer = () => {
             <Link to="/pcos">PCOS Diet</Link>
             <Link to="/diabetes">Diabetes Diet</Link>
             <Link to="/thyroid">Thyroid Diet</Link>
-            <Link to="/consult-dietitian">Consult a Dietitian</Link>
+            <Link to="/consult-dietitian">Book Dietitian Session</Link>
           </div>
 
           <div className="footer-col">
