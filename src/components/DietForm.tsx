@@ -1406,6 +1406,10 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
               await paymentApi.verify(rzpResponse)
               // Track confirmed purchase then show success
               trackPurchase(chargedAmount, currency ?? 'INR', data.planType)
+              // OpenAI Pixel — diet plan order confirmed
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              const oaiq = (window as any).oaiq
+              if (typeof oaiq === 'function') oaiq('measure', 'order_created', { type: 'contents' })
               navigate('/diet-plan/success', { replace: true })
               setSubmitted(true)
             } catch (err) {
