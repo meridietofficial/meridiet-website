@@ -219,33 +219,42 @@ export default function ConsultDietitian() {
   return (
     <main className="cd-page">
       <SEO
-        title="Consult a Dietitian Online | Expert Nutrition Advice"
-        description="Book a 1-on-1 online consultation with verified Indian dietitians. Get expert diet advice for weight loss, PCOS, diabetes, thyroid & muscle gain. Book your slot now."
-        keywords="consult dietitian online India, online nutritionist India, book dietitian appointment, nutrition consultation India, diet consultation online, best dietitian India, online diet advice"
+        title="Consult a Dietitian Online | Nutrition Advice"
+        description="Book a 1-on-1 consultation with verified Indian dietitians. Get expert diet advice for weight loss, PCOS, diabetes, thyroid & muscle gain."
         canonical="/consult-dietitian"
-        jsonLd={{
-          '@context': 'https://schema.org',
-          '@type': 'MedicalBusiness',
-          name: 'MeriDiet – Online Dietitian Consultation',
-          url: 'https://meridiet.com/consult-dietitian',
-          description: 'Book 1-on-1 online consultations with verified Indian dietitians for weight loss, PCOS, diabetes, thyroid, heart health, pregnancy nutrition and more.',
-          telephone: '+919609606009',
-          email: 'support@meridiet.com',
-          areaServed: 'IN',
-          priceRange: '₹999 – ₹4500',
-          medicalSpecialty: [
-            'Diet and Nutrition',
-            'Weight Management',
-            'Diabetes Management',
-            'Sports Nutrition',
-          ],
-          availableService: [
-            { '@type': 'MedicalTherapy', name: 'Online Dietitian Consultation' },
-            { '@type': 'MedicalTherapy', name: 'Personalised Diet Plan' },
-            { '@type': 'MedicalTherapy', name: 'PCOS Diet Consultation' },
-            { '@type': 'MedicalTherapy', name: 'Diabetes Diet Consultation' },
-          ],
-        }}
+        jsonLd={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'MedicalBusiness',
+            name: 'MeriDiet – Online Dietitian Consultation',
+            url: 'https://meridiet.com/consult-dietitian',
+            description: 'Book 1-on-1 online consultations with verified Indian dietitians for weight loss, PCOS, diabetes, thyroid, heart health, pregnancy nutrition and more.',
+            telephone: '+919609606009',
+            email: 'support@meridiet.com',
+            areaServed: 'IN',
+            priceRange: '₹999 – ₹4500',
+            medicalSpecialty: [
+              'Diet and Nutrition',
+              'Weight Management',
+              'Diabetes Management',
+              'Sports Nutrition',
+            ],
+            availableService: [
+              { '@type': 'MedicalTherapy', name: 'Online Dietitian Consultation' },
+              { '@type': 'MedicalTherapy', name: 'Personalised Diet Plan' },
+              { '@type': 'MedicalTherapy', name: 'PCOS Diet Consultation' },
+              { '@type': 'MedicalTherapy', name: 'Diabetes Diet Consultation' },
+            ],
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://meridiet.com/' },
+              { '@type': 'ListItem', position: 2, name: 'Consult a Dietitian', item: 'https://meridiet.com/consult-dietitian' },
+            ],
+          },
+        ]}
       />
 
       {/* ── Hero + Specializations (one unified section) ── */}

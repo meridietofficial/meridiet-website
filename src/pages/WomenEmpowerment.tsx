@@ -2,6 +2,31 @@ import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SEO from '../components/SEO'
 
+const PROGRAM_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'Course',
+  name: 'MeriDiet Women Empowerment Nutrition Program',
+  description: 'A structured nutrition and wellness training program for women to learn skills they can use from home, build livelihood opportunities, and become financially independent.',
+  url: 'https://meridiet.com/women-empowerment',
+  provider: { '@type': 'Organization', name: 'MeriDiet', url: 'https://meridiet.com' },
+  hasCourseInstance: {
+    '@type': 'CourseInstance',
+    courseMode: 'online',
+    inLanguage: 'hi',
+  },
+  teaches: ['Nutrition Fundamentals', 'Indian Meal Plans', 'Client Communication', 'Digital & AI Skills', 'Livelihood & Entrepreneurship'],
+  educationalCredentialAwarded: 'MeriDiet Nutrition Program Certificate',
+}
+
+const BREADCRUMB_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://meridiet.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Women\'s Empowerment', item: 'https://meridiet.com/women-empowerment' },
+  ],
+}
+
 const WHY_MATTERS = [
   { img: '/why-matters-1.png', text: 'Many women want to become financially independent.' },
   { img: '/why-matters-2.png', text: 'But barriers like lack of training, mobility, time and money hold them back.' },
@@ -91,10 +116,10 @@ const WomenEmpowerment = () => {
   return (
     <main className="we-page">
       <SEO
-        title="Women Empowerment Program – Skills from Home for Indian Women"
+        title="Women's Empowerment – Nutrition Skills from Home"
         description="MeriDiet Women Empowerment Program — Learn Nutrition, Build Digital Skills, Create New Livelihood Opportunities from home."
-        keywords="women empowerment, nutrition program, work from home, women livelihood, MeriDiet women"
         canonical="/women-empowerment"
+        jsonLd={[PROGRAM_SCHEMA, BREADCRUMB_SCHEMA]}
       />
 
       {/* ── Hero ── */}

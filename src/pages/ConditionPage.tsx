@@ -38,7 +38,6 @@ export default function ConditionPage({ slug }: Props) {
       <SEO
         title={data.seoTitle}
         description={data.seoDescription}
-        keywords={data.keywords}
         canonical={`/${data.slug}`}
         jsonLd={[data.schema, faqSchema, breadcrumbSchema]}
       />

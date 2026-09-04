@@ -78,7 +78,6 @@ const RefundPolicy = () => {
       <SEO
         title="Refund & Cancellation Policy"
         description="Understand MeriDiet's refund and cancellation policy for AI diet plans, dietitian consultations, and course fees. Digital services are non-refundable."
-        keywords="MeriDiet refund policy, diet plan cancellation policy India"
         canonical="/refund-policy"
       />
       <div className="privacy-hero">

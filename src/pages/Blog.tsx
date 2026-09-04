@@ -131,7 +131,6 @@ export default function Blog() {
       <SEO
         title="Press & Media Coverage – In the News"
         description="Read the latest press coverage and media features about MeriDiet's AI-powered nutrition platform and dietitian empowerment initiatives across India."
-        keywords="MeriDiet press, MeriDiet news, MeriDiet media coverage, AI diet plan India news, dietitian platform India"
         canonical="/press"
       />
 

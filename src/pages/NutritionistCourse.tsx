@@ -2,6 +2,40 @@ import { useState } from 'react'
 import SEO from '../components/SEO'
 import courseApi from '../api/course'
 
+const COURSE_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'Course',
+  name: 'MeriDiet Certified Nutritionist Course',
+  description: 'Become a certified nutritionist in 3 months. Online live + recorded classes in English, open to 12th pass candidates. Earn a professional certificate and get listed on the MeriDiet platform.',
+  url: 'https://meridiet.com/nutritionist-course',
+  provider: { '@type': 'Organization', name: 'MeriDiet', url: 'https://meridiet.com' },
+  hasCourseInstance: {
+    '@type': 'CourseInstance',
+    courseMode: 'online',
+    duration: 'P3M',
+    inLanguage: 'en',
+    courseSchedule: { '@type': 'Schedule', repeatFrequency: 'P1D' },
+  },
+  offers: {
+    '@type': 'Offer',
+    price: '14999',
+    priceCurrency: 'INR',
+    availability: 'https://schema.org/InStock',
+    url: 'https://meridiet.com/nutritionist-course',
+  },
+  educationalCredentialAwarded: 'MeriDiet Certified Nutritionist Certificate',
+  teaches: ['Nutrition Fundamentals', 'Indian Meal Planning', 'Weight Management', 'PCOS Nutrition', 'Diabetes Nutrition', 'AI-Based Diet Plan Creation'],
+}
+
+const BREADCRUMB_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://meridiet.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Nutritionist Course', item: 'https://meridiet.com/nutritionist-course' },
+  ],
+}
+
 const CURRICULUM = [
   'Fundamentals of Nutrition',
   'Weight Loss & Weight Management',
@@ -191,9 +225,9 @@ export default function NutritionistCourse() {
     <main className="cp">
       <SEO
         title="Certified Nutritionist Course in 3 Months"
-        description="Become a MeriDiet Certified Nutritionist in just 3 months. Live + recorded classes in English, 12th pass eligible. Get certified, get listed & start your nutrition career from home."
-        keywords="nutritionist course online India, certified nutritionist program, nutrition course 12th pass, MeriDiet course, online nutrition certification India"
+        description="Become a Certified Nutritionist in 3 months with MeriDiet. Online classes, 12th pass eligible. Get certified, listed & start your nutrition career from home."
         canonical="/nutritionist-course"
+        jsonLd={[COURSE_SCHEMA, BREADCRUMB_SCHEMA]}
       />
 
       {/* ── HERO ── */}

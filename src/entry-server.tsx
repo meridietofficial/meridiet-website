@@ -33,6 +33,11 @@ import WomenEmpowerment from './pages/WomenEmpowerment'
 import NutritionistCourse from './pages/NutritionistCourse'
 import Career from './pages/Career'
 import ConsultDietitian from './pages/ConsultDietitian'
+import BlogList from './pages/BlogList'
+import BlogPost from './pages/BlogPost'
+import ConditionPage from './pages/ConditionPage'
+import SponsorCohort from './pages/SponsorCohort'
+import NotFoundPage from './pages/NotFoundPage'
 
 // Contexts that are SSR-safe (no window/document at init)
 import { AuthProvider } from './context/AuthContext'
@@ -82,6 +87,15 @@ function ServerApp({ url }: { url: string }) {
         <Route path="/nutritionist-course" element={<NutritionistCourse />} />
         <Route path="/careers"           element={<Career />} />
         <Route path="/consult-dietitian" element={<ConsultDietitian />} />
+        <Route path="/blog"              element={<BlogList />} />
+        <Route path="/blog/:slug"        element={<BlogPost />} />
+        <Route path="/weight-loss"       element={<ConditionPage slug="weight-loss" />} />
+        <Route path="/pcos"              element={<ConditionPage slug="pcos" />} />
+        <Route path="/diabetes"          element={<ConditionPage slug="diabetes" />} />
+        <Route path="/thyroid"           element={<ConditionPage slug="thyroid" />} />
+        <Route path="/sponsor-cohort"    element={<SponsorCohort />} />
+        {/* /404 renders the not-found page; prerender writes it to dist/404.html */}
+        <Route path="/404"               element={<NotFoundPage />} />
         {/* Unrecognised routes: render nothing — prerender script skips these */}
         <Route path="*" element={<></>} />
       </Routes>

@@ -66,7 +66,6 @@ const SponsorCohort = () => {
       <SEO
         title="Sponsor a Women's Cohort – CSR & NGO Partnership for Nutrition"
         description="Sponsor a cohort of women and help them learn nutrition, digital skills and entrepreneurship. Partner with MeriDiet to create generational impact."
-        keywords="sponsor women cohort, CSR women empowerment, NGO nutrition program, MeriDiet sponsor"
         canonical="/sponsor-cohort"
       />
 

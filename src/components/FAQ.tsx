@@ -93,7 +93,6 @@ const FAQ = () => {
       <SEO
         title="FAQ – Diet Plans & Online Dietitian Consultations"
         description="Have questions about MeriDiet's AI diet plans, dietitian consultations, pricing, or delivery? Find all answers in our FAQ."
-        keywords="MeriDiet FAQ, diet plan questions, online dietitian FAQ, diet chart India questions, nutrition plan help"
         canonical="/faq"
         jsonLd={{
           '@context': 'https://schema.org',

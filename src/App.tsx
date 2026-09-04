@@ -51,6 +51,7 @@ const BlogList                = lazy(() => import('./pages/BlogList'))
 const BlogPost                = lazy(() => import('./pages/BlogPost'))
 const Career                  = lazy(() => import('./pages/Career'))
 const ConditionPage           = lazy(() => import('./pages/ConditionPage'))
+const NotFoundPage            = lazy(() => import('./pages/NotFoundPage'))
 
 function PageLoader() {
   return (
@@ -70,9 +71,8 @@ function FormPage() {
     <>
       <Suspense fallback={null}>
         <SEO
-          title="AI Diet Plan Generator | Personalized Indian Diet Chart"
-          description="Generate your personalized AI diet plan delivered within 24 hours. Tailored for your body, goals, medical conditions, and Indian cuisine preferences. Plans from ₹499."
-          keywords="AI diet plan generator, personalized diet chart India, custom diet plan online, Indian diet plan, diet chart for weight loss, AI nutrition plan India, online diet form"
+          title="AI Diet Plan Generator – Personalized Indian Diet Chart"
+          description="Generate your personalized AI diet plan in 24 hours. Tailored for your body, goals, medical conditions, and Indian food preferences. Plans from ₹199."
           canonical="/diet-plan"
         />
       </Suspense>
@@ -169,6 +169,7 @@ function AppInner() {
             <Route path="/dietitian-reviews"              element={<DietitianReviews />} />
             <Route path="/dietitian-settings"             element={<DietitianSettings />} />
           </Route>
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
       {showFooter && <Footer />}

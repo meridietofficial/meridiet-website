@@ -78,7 +78,6 @@ const ContactUs = () => {
       <SEO
         title="Contact Us – Get Support & Diet Plan Help"
         description="Reach out to MeriDiet for support, diet plan queries, partnership opportunities, or general questions. We reply within 24 hours."
-        keywords="MeriDiet contact, diet plan support, nutrition helpdesk India, MeriDiet help"
         canonical="/contact"
       />
       {/* Hero */}

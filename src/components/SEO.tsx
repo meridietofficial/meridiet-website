@@ -7,7 +7,6 @@ const DEFAULT_IMAGE = `${SITE_URL}/logo.png`
 interface SEOProps {
   title: string
   description: string
-  keywords?: string
   canonical?: string
   ogImage?: string
   ogType?: 'website' | 'article'
@@ -18,7 +17,6 @@ interface SEOProps {
 export default function SEO({
   title,
   description,
-  keywords,
   canonical,
   ogImage = DEFAULT_IMAGE,
   ogType = 'website',
@@ -35,7 +33,6 @@ export default function SEO({
       <meta name="description" content={description} />
       <meta name="robots" content={noIndex ? 'noindex, nofollow' : 'index, follow'} />
       <meta name="author" content={SITE_NAME} />
-      {keywords && <meta name="keywords" content={keywords} />}
       {canonicalUrl && <link rel="canonical"                href={canonicalUrl} />}
       {canonicalUrl && <link rel="alternate" hrefLang="en-IN" href={canonicalUrl} />}
       {canonicalUrl && <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />}
@@ -46,8 +43,6 @@ export default function SEO({
       <meta property="og:title"       content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:image"        content={ogImage} />
-      <meta property="og:image:width"  content="1200" />
-      <meta property="og:image:height" content="630" />
       <meta property="og:locale"      content="en_IN" />
       {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
 

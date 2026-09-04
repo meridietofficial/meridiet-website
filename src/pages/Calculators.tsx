@@ -2,6 +2,27 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import SEO from '../components/SEO'
 
+const CALCULATORS_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'WebApplication',
+  name: 'MeriDiet Free Health Calculators',
+  url: 'https://meridiet.com/calculators',
+  applicationCategory: 'HealthApplication',
+  operatingSystem: 'Any',
+  description: 'Free online health calculators — BMI, BMR, TDEE and daily water intake — built for Indians.',
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'INR' },
+  provider: { '@type': 'Organization', name: 'MeriDiet', url: 'https://meridiet.com' },
+}
+
+const BREADCRUMB_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://meridiet.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Health Calculators', item: 'https://meridiet.com/calculators' },
+  ],
+}
+
 function CalcCTA({ message }: { message: string }) {
   return (
     <div className="calc-cta">
@@ -315,10 +336,10 @@ export default function Calculators() {
   return (
     <main className="calcp-page">
       <SEO
-        title="Free Health Calculators — BMI, BMR, TDEE & Water Intake"
+        title="Free Health Calculators – BMI, BMR, TDEE & Water"
         description="Use MeriDiet's free health calculators to find your BMI, BMR, daily calorie needs (TDEE), and water intake. Simple, instant results."
-        keywords="BMI calculator India, BMR calculator, TDEE calculator, water intake calculator, calorie calculator India"
         canonical="/calculators"
+        jsonLd={[CALCULATORS_SCHEMA, BREADCRUMB_SCHEMA]}
       />
 
       <div className="calcp-hero">

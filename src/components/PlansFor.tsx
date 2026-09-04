@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 
 const plans = [
-  { icon: 'fa-solid fa-scale-balanced', label: 'Weight Loss',    desc: 'Lose weight sustainably',            color: '#3b82f6', bg: '#eff6ff', img: '/salad-plate-top-view.png' },
-  { icon: 'fa-solid fa-droplet',        label: 'Diabetes',       desc: 'Control blood sugar naturally',      color: '#ef4444', bg: '#fef2f2', img: '/veggie-salad-bowl.png' },
-  { icon: 'fa-solid fa-venus',          label: 'PCOS',           desc: 'Balance hormones with food',         color: '#ec4899', bg: '#fdf2f8', img: '/fruit-bowl.png' },
-  { icon: 'fa-solid fa-stethoscope',    label: 'Thyroid',        desc: 'Support thyroid function',           color: '#8b5cf6', bg: '#f5f3ff', img: '/salad-glass-bowl.png' },
+  { icon: 'fa-solid fa-scale-balanced', label: 'Weight Loss',    desc: 'Lose weight sustainably',            color: '#3b82f6', bg: '#eff6ff', img: '/salad-plate-top-view.png',   href: '/weight-loss' },
+  { icon: 'fa-solid fa-droplet',        label: 'Diabetes',       desc: 'Control blood sugar naturally',      color: '#ef4444', bg: '#fef2f2', img: '/veggie-salad-bowl.png',       href: '/diabetes' },
+  { icon: 'fa-solid fa-venus',          label: 'PCOS',           desc: 'Balance hormones with food',         color: '#ec4899', bg: '#fdf2f8', img: '/fruit-bowl.png',              href: '/pcos' },
+  { icon: 'fa-solid fa-stethoscope',    label: 'Thyroid',        desc: 'Support thyroid function',           color: '#8b5cf6', bg: '#f5f3ff', img: '/salad-glass-bowl.png',        href: '/thyroid' },
   { icon: 'fa-solid fa-heart',          label: 'Healthy Living', desc: 'Build lifelong healthy habits',      color: '#1E8E3E', bg: '#EEF4E8', img: '/rainbow-buddha-bowl.png' },
   { icon: 'fa-solid fa-leaf',           label: 'Vegetarian',     desc: '100% plant-based nutrition',         color: '#16a34a', bg: '#f0fdf4', img: '/salad-brown-bowl-left-view.png' },
   { icon: 'fa-solid fa-seedling',       label: 'Vegan',          desc: 'Dairy-free & plant-powered',         color: '#0d9488', bg: '#f0fdfa', img: '/fruit-bowl-side-view.png' },
@@ -64,31 +65,49 @@ const PlansFor = () => {
         onMouseLeave={() => { pausedRef.current = false }}
       >
         <div className="plans-marquee-track" ref={trackRef}>
-          {allCards.map((p, i) => (
-            <div
-              key={i}
-              className="plan-card"
-              style={{ '--pc': p.color, '--pb': p.bg } as React.CSSProperties}
-            >
-              <div
-                className="plan-card-top"
-                style={{
-                  backgroundImage: `url(${p.img})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                } as React.CSSProperties}
-              >
-                <div className="plan-card-top-overlay" style={{ '--pc': p.color } as React.CSSProperties} />
-                <div className="plan-icon-wrap">
-                  <i className={p.icon} />
+          {allCards.map((p, i) => {
+            const cardInner = (
+              <>
+                <div
+                  className="plan-card-top"
+                  style={{
+                    backgroundImage: `url(${p.img})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  } as React.CSSProperties}
+                >
+                  <div className="plan-card-top-overlay" style={{ '--pc': p.color } as React.CSSProperties} />
+                  <div className="plan-icon-wrap">
+                    <i className={p.icon} />
+                  </div>
                 </div>
+                <div className="plan-card-body">
+                  <span className="plan-label">{p.label}</span>
+                  <span className="plan-desc">{p.desc}</span>
+                </div>
+              </>
+            )
+            const isDuplicate = i >= plans.length
+            return p.href && !isDuplicate ? (
+              <Link
+                key={i}
+                to={p.href}
+                className="plan-card"
+                style={{ '--pc': p.color, '--pb': p.bg } as React.CSSProperties}
+              >
+                {cardInner}
+              </Link>
+            ) : (
+              <div
+                key={i}
+                className="plan-card"
+                style={{ '--pc': p.color, '--pb': p.bg } as React.CSSProperties}
+                aria-hidden={isDuplicate ? true : undefined}
+              >
+                {cardInner}
               </div>
-              <div className="plan-card-body">
-                <span className="plan-label">{p.label}</span>
-                <span className="plan-desc">{p.desc}</span>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 

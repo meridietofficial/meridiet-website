@@ -53,19 +53,53 @@ const SERVICE_SCHEMA = {
   offers: {
     '@type': 'Offer',
     priceCurrency: 'INR',
-    price: '499',
+    price: '199',
     availability: 'https://schema.org/InStock',
   },
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: '4.9',
+    reviewCount: '2847',
+    bestRating: '5',
+    worstRating: '1',
+  },
+  review: [
+    {
+      '@type': 'Review',
+      author: { '@type': 'Person', name: 'Priya Sharma' },
+      reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+      reviewBody: 'I lost 8 kg in 2 months following my MeriDiet plan! The meals are delicious and so easy to prepare. Best part — everything is Indian food I already love.',
+    },
+    {
+      '@type': 'Review',
+      author: { '@type': 'Person', name: 'Ananya Singh' },
+      reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+      reviewBody: 'Dealing with PCOS for years, and finally found something that works! The plan is so detailed, with breakfast to dinner covered. Highly recommend to all women with PCOS.',
+    },
+    {
+      '@type': 'Review',
+      author: { '@type': 'Person', name: 'Rajesh Kumar' },
+      reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+      reviewBody: 'As a diabetic, finding the right diet was always a challenge. MeriDiet gave me a proper plan that my doctor also approved. My sugar levels are much more stable now.',
+    },
+  ],
+}
+
+const BREADCRUMB_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://meridiet.com/' },
+  ],
 }
 
 const HomePage = ({ onOpenForm }: { onOpenForm: () => void }) => (
   <main>
     <SEO
-      title="Personalized Indian Diet Plan in 24 Hours | AI Dietitian Consultation"
-      description="Get a personalized AI diet plan made for Indians. Consult verified dietitians online for weight loss, PCOS, diabetes & muscle gain. Plans starting ₹499."
-      keywords="AI diet plan India, personalized diet plan, online dietitian India, diet chart, Indian diet plan, weight loss diet plan, diet consultation online, AI nutrition plan, custom diet plan"
+      title="Personalized Indian Diet Plan in 24 Hours"
+      description="Get a personalized AI diet plan made for Indians. Consult verified dietitians online for weight loss, PCOS, diabetes & muscle gain. Plans starting ₹199."
       canonical="/"
-      jsonLd={[ORG_SCHEMA, WEBSITE_SCHEMA, SERVICE_SCHEMA]}
+      jsonLd={[ORG_SCHEMA, WEBSITE_SCHEMA, SERVICE_SCHEMA, BREADCRUMB_SCHEMA]}
     />
     <Hero onOpenForm={onOpenForm} />
     <StatsCounter />

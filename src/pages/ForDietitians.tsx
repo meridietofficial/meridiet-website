@@ -164,19 +164,28 @@ const ForDietitians = () => {
   return (
   <main className="fd-page">
     <SEO
-      title="Join as a Dietitian – Grow Your Online Nutrition Practice in India"
-      description="Are you a dietitian or nutritionist? Join MeriDiet to connect with thousands of clients seeking personalized diet plans. Build your online practice and earn more."
-      keywords="join as dietitian India, online dietitian platform, nutritionist jobs India, dietitian registration, grow dietitian practice online, diet consultation platform India"
+      title="Join as a Dietitian | Grow Your Practice Online"
+      description="Join MeriDiet to connect with clients seeking personalised diet plans. Build your online nutrition practice and grow your income from home."
       canonical="/for-dietitians"
-      jsonLd={{
-        '@context': 'https://schema.org',
-        '@type': 'JobPosting',
-        title: 'Online Dietitian / Nutritionist',
-        description: 'Join MeriDiet as a verified dietitian. Connect with clients across India, provide online consultations, and grow your nutrition practice.',
-        hiringOrganization: { '@type': 'Organization', name: 'MeriDiet', sameAs: 'https://meridiet.com' },
-        jobLocation: { '@type': 'Place', address: { '@type': 'PostalAddress', addressCountry: 'IN' } },
-        employmentType: 'CONTRACTOR',
-      }}
+      jsonLd={[
+        {
+          '@context': 'https://schema.org',
+          '@type': 'JobPosting',
+          title: 'Online Dietitian / Nutritionist',
+          description: 'Join MeriDiet as a verified dietitian. Connect with clients across India, provide online consultations, and grow your nutrition practice.',
+          hiringOrganization: { '@type': 'Organization', name: 'MeriDiet', sameAs: 'https://meridiet.com' },
+          jobLocation: { '@type': 'Place', address: { '@type': 'PostalAddress', addressCountry: 'IN' } },
+          employmentType: 'CONTRACTOR',
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://meridiet.com/' },
+            { '@type': 'ListItem', position: 2, name: 'For Dietitians', item: 'https://meridiet.com/for-dietitians' },
+          ],
+        },
+      ]}
     />
 
     {/* ── Hero ── */}

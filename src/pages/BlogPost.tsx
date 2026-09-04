@@ -128,7 +128,6 @@ export default function BlogPost() {
       <SEO
         title={post.title}
         description={post.description}
-        keywords={`${post.title}, ${post.category}, Indian diet, nutrition India, MeriDiet`}
         canonical={`/blog/${post.slug}`}
         ogType="article"
         jsonLd={schemas}

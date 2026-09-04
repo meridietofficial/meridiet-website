@@ -15,6 +15,7 @@ Disallow: /dietitian-earnings
 Disallow: /dietitian-wallet
 Disallow: /dietitian-reviews
 Disallow: /dietitian-settings
+Disallow: /diet-plan
 Disallow: /profile
 Disallow: /reset-password
 

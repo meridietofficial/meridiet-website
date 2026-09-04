@@ -78,6 +78,7 @@ const ROUTES = [
   '/privacy-policy',
   '/terms-conditions',
   '/refund-policy',
+  '/404',
 ]
 
 // ─── Guards ──────────────────────────────────────────────────────────────────
@@ -154,17 +155,23 @@ async function main() {
         .replace(/\n?\s*<meta name="description"[^>]*>/g, '')
         // Remove static <meta name="keywords" ...>
         .replace(/\n?\s*<meta name="keywords"[^>]*>/g, '')
+        // Remove static canonical (Helmet provides the per-route one)
+        .replace(/\n?\s*<link rel="canonical"[^>]*>/g, '')
         // Remove static Open Graph tags
         .replace(/\n?\s*<meta property="og:[^>]*>/g, '')
         // Remove static Twitter Card tags
         .replace(/\n?\s*<meta name="twitter:[^>]*>/g, '')
 
       // Write dist/<route>/index.html  (or dist/index.html for "/")
-      const slug   = route === '/' ? '' : route.slice(1)   // e.g. "about"
-      const outDir = path.join(DIST, slug)
-
-      fs.mkdirSync(outDir, { recursive: true })
-      fs.writeFileSync(path.join(outDir, 'index.html'), html, 'utf-8')
+      // Special case: /404 writes to dist/404.html for nginx error_page
+      if (route === '/404') {
+        fs.writeFileSync(path.join(DIST, '404.html'), html, 'utf-8')
+      } else {
+        const slug   = route === '/' ? '' : route.slice(1)   // e.g. "about"
+        const outDir = path.join(DIST, slug)
+        fs.mkdirSync(outDir, { recursive: true })
+        fs.writeFileSync(path.join(outDir, 'index.html'), html, 'utf-8')
+      }
 
       console.log(`[prerender] ✓  ${route}`)
       ok++
@@ -181,6 +188,40 @@ async function main() {
     console.error('[prerender] No routes pre-rendered — check errors above.')
     process.exit(1)
   }
+
+  // ── Generate sitemap.xml ──────────────────────────────────────────────────
+  const today = new Date().toISOString().slice(0, 10)
+
+  const priority = (route) => {
+    if (route === '/')                         return '1.0'
+    if (['/consult-dietitian', '/blog', '/weight-loss', '/pcos', '/diabetes', '/thyroid'].includes(route)) return '0.9'
+    if (['/calculators', '/for-dietitians', '/nutritionist-course', '/faq'].includes(route)) return '0.8'
+    if (route.startsWith('/blog/'))            return '0.7'
+    if (['/about', '/contact', '/press', '/women-empowerment', '/careers', '/sponsor-cohort'].includes(route)) return '0.7'
+    return '0.4'
+  }
+
+  const changefreq = (route) => {
+    if (route === '/' || route === '/blog' || route.startsWith('/blog/')) return 'weekly'
+    if (['/consult-dietitian', '/calculators', '/weight-loss', '/pcos', '/diabetes', '/thyroid'].includes(route)) return 'weekly'
+    return 'monthly'
+  }
+
+  const sitemapRoutes = ROUTES.filter(r => r !== '/404')
+  const urlset = sitemapRoutes.map(route => `
+  <url>
+    <loc>https://meridiet.com${route}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>${changefreq(route)}</changefreq>
+    <priority>${priority(route)}</priority>
+  </url>`).join('')
+
+  const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urlset}
+</urlset>`
+
+  fs.writeFileSync(path.join(DIST, 'sitemap.xml'), sitemap, 'utf-8')
+  console.log(`[prerender] sitemap.xml written (${sitemapRoutes.length} URLs)\n`)
 }
 
 main().catch(err => {

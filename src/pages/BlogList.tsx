@@ -2,6 +2,24 @@ import { Link } from 'react-router-dom'
 import SEO from '../components/SEO'
 import BLOGS from '../data/blogs'
 
+const BLOG_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: 'MeriDiet Nutrition Blog',
+  url: 'https://meridiet.com/blog',
+  description: 'Expert articles on personalized nutrition, weight loss, Indian diet planning and healthy eating from the MeriDiet team.',
+  publisher: { '@type': 'Organization', name: 'MeriDiet', url: 'https://meridiet.com', logo: 'https://meridiet.com/logo.png' },
+}
+
+const BREADCRUMB_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://meridiet.com/' },
+    { '@type': 'ListItem', position: 2, name: 'Blog', item: 'https://meridiet.com/blog' },
+  ],
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
 }
@@ -10,10 +28,10 @@ export default function BlogList() {
   return (
     <main className="blog-list-page">
       <SEO
-        title="Blog – Nutrition Tips, Diet Advice & Wellness Guides"
+        title="Nutrition Blog – Diet Tips & Wellness Guides"
         description="Read expert articles on personalized nutrition, weight loss, Indian diet planning and healthy eating from the MeriDiet team."
-        keywords="nutrition blog India, diet tips, weight loss articles, Indian diet advice, healthy eating blog"
         canonical="/blog"
+        jsonLd={[BLOG_SCHEMA, BREADCRUMB_SCHEMA]}
       />
 
       <div className="blog-list-hero">
