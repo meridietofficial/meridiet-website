@@ -11,6 +11,13 @@ function getInitials(name: string) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 }
 
+function genderIcon(gender: string) {
+  const g = gender.toLowerCase().trim()
+  if (g === 'female' || g === 'f') return 'fa-venus'
+  if (g === 'male' || g === 'm') return 'fa-mars'
+  return 'fa-venus-mars'
+}
+
 function fmtTime(t: string) {
   const [h, m] = t.split(':').map(Number)
   const ampm = h >= 12 ? 'PM' : 'AM'
@@ -267,81 +274,145 @@ export default function DietitianProfile() {
 
             {/* Profile header card */}
             <div className="dp-profile-card">
-              <div className="dp-avatar">
-                {d.avatar_url
-                  ? <img src={d.avatar_url} alt={d.full_name} />
-                  : <span className="dp-initials">{getInitials(d.full_name)}</span>
-                }
+              <div className="dp-profile-top">
+                <div className="dp-avatar">
+                  {d.avatar_url
+                    ? <img src={d.avatar_url} alt={d.full_name} />
+                    : <span className="dp-initials">{getInitials(d.full_name)}</span>
+                  }
+                </div>
+                <div className="dp-header-info">
+                  <div className="dp-name-row">
+                    <h1 className="dp-name">
+                      {d.full_name}
+                      {isVerified && <span className="dp-verified">✓</span>}
+                    </h1>
+                    <span className={`cd-avail-badge ${d.availability === 'online' ? 'ds-avail--online' : 'ds-avail--offline'}`}>
+                      {d.availability === 'online' ? 'Available Online' : 'Available Offline'}
+                    </span>
+                  </div>
+                  <p className="dp-profile-title">{d.title}</p>
+                  {d.rating > 0 && (
+                    <div className="dp-rating-row">
+                      <span className="dp-stars">
+                        {'★'.repeat(Math.round(d.rating))}{'☆'.repeat(5 - Math.round(d.rating))}
+                      </span>
+                      <span className="dp-rating-num">{d.rating.toFixed(1)}</span>
+                      {d.reviews > 0 && <span className="dp-rating-count">({d.reviews} reviews)</span>}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="dp-header-info">
-                <div className="dp-name-row">
-                  <h1 className="dp-name">
-                    {d.full_name}
-                    {isVerified && <span className="dp-verified">✓</span>}
-                  </h1>
-                  <span className={`cd-avail-badge ${d.availability === 'online' ? 'ds-avail--online' : 'ds-avail--offline'}`}>
-                    {d.availability === 'online' ? 'Available Online' : 'Available Offline'}
-                  </span>
-                </div>
-                <p className="dp-title">{d.title}</p>
-                <div className="dp-rating-row">
-                  <span className="dp-stars">
-                    {'★'.repeat(Math.round(d.rating))}{'☆'.repeat(5 - Math.round(d.rating))}
-                  </span>
-                  <span className="dp-rating-num">{d.rating > 0 ? d.rating.toFixed(1) : '—'}</span>
-                  {d.reviews > 0 && <span className="dp-rating-count">({d.reviews} reviews)</span>}
-                </div>
-                <div className="dp-quick-stats">
-                  <div className="dp-stat">
-                    <span className="dp-stat-icon">⏱</span>
-                    <div>
-                      <p className="dp-stat-val">{d.experience ?? '—'}</p>
-                      <p className="dp-stat-label">Experience</p>
-                    </div>
+              <div className="dp-stats-top-line" />
+              <div className="dp-quick-stats">
+                <div className="dp-stat">
+                  <i className="fa-regular fa-clock dp-stat-icon" />
+                  <div>
+                    <p className="dp-stat-val">{d.experience ?? '—'}</p>
+                    <p className="dp-stat-label">Experience</p>
                   </div>
-                  <div className="dp-stat-divider" />
-                  <div className="dp-stat">
-                    <span className="dp-stat-icon">📍</span>
-                    <div>
-                      <p className="dp-stat-val">{d.city ?? d.location?.split(',')[0] ?? '—'}</p>
-                      <p className="dp-stat-label">{d.state ?? 'Location'}</p>
-                    </div>
-                  </div>
-                  {d.gender && (
-                    <>
-                      <div className="dp-stat-divider" />
-                      <div className="dp-stat">
-                        <span className="dp-stat-icon">👤</span>
-                        <div>
-                          <p className="dp-stat-val">{d.gender}</p>
-                          <p className="dp-stat-label">Gender</p>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                  {(d.consultations ?? 0) > 0 && (
-                    <>
-                      <div className="dp-stat-divider" />
-                      <div className="dp-stat">
-                        <span className="dp-stat-icon">🩺</span>
-                        <div>
-                          <p className="dp-stat-val">{d.consultations}+</p>
-                          <p className="dp-stat-label">Consultations</p>
-                        </div>
-                      </div>
-                    </>
-                  )}
                 </div>
+                <div className="dp-stat-divider" />
+                <div className="dp-stat">
+                  <i className="fa-solid fa-location-dot dp-stat-icon" />
+                  <div>
+                    <p className="dp-stat-val">
+                      {d.city ?? d.location?.split(',')[0] ?? '—'}
+                      {(d.state ?? '') && `, ${d.state}`}
+                    </p>
+                  </div>
+                </div>
+                {d.gender && (
+                  <>
+                    <div className="dp-stat-divider" />
+                    <div className="dp-stat">
+                      <i className={`fa-solid ${genderIcon(d.gender)} dp-stat-icon`} />
+                      <div>
+                        <p className="dp-stat-val">{d.gender}</p>
+                      </div>
+                    </div>
+                  </>
+                )}
+                {(d.consultations ?? 0) > 0 && (
+                  <>
+                    <div className="dp-stat-divider" />
+                    <div className="dp-stat">
+                      <i className="fa-solid fa-stethoscope dp-stat-icon" />
+                      <div>
+                        <p className="dp-stat-val">{d.consultations}+</p>
+                        <p className="dp-stat-label">Consultations</p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
             {/* About */}
             {d.about && (
-              <div className="dp-section">
-                <h2 className="dp-section-title">About</h2>
-                <p className="dp-about-text">{d.about}</p>
+              <div className="dp-section dp-about-section">
+                <div className="dp-about-content">
+                  <h2 className="dp-section-title dp-about-title">About the <span className="dp-about-title-accent">Dietitian</span></h2>
+                  <p className="dp-about-text">{d.about}</p>
+                </div>
+                <img src="/salad-bowl-outline.png" alt="" className="dp-about-img" aria-hidden="true" />
               </div>
             )}
+
+            {/* Why Choose MeriDiet */}
+            <div className="dp-section dp-why-section">
+              <h2 className="dp-section-title dp-why-title">Why Choose <span className="dp-about-title-accent">MeriDiet?</span></h2>
+              <div className="dp-why-grid">
+                {[
+                  { icon: 'fa-shield-halved', title: 'Verified Dietitians', desc: 'Connect with qualified nutrition professionals you can trust.' },
+                  { icon: 'fa-user',          title: 'Personalised Approach', desc: 'Guidance based on your goals, lifestyle and food preferences.' },
+                  { icon: 'fa-calendar-check',title: 'Easy Online Consultation', desc: 'Book a consultation at a time that\'s convenient for you.' },
+                  { icon: 'fa-seedling',      title: 'Practical & Sustainable', desc: 'Get realistic nutrition guidance that fits into your everyday life.' },
+                ].map(item => (
+                  <div key={item.title} className="dp-why-card">
+                    <i className={`fa-solid ${item.icon} dp-why-icon`} />
+                    <div>
+                      <p className="dp-why-card-title">{item.title}</p>
+                      <p className="dp-why-card-desc">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* What You Get */}
+            <div className="dp-section dp-get-section">
+              <h2 className="dp-section-title dp-why-title">What You Get With The <span className="dp-about-title-accent">Consultation</span></h2>
+              <div className="dp-get-row">
+                {[
+                  { icon: 'fa-bullseye',       label: 'Understand', bold: 'Your Goals' },
+                  { icon: 'fa-user',           label: 'Personalised', bold: 'Guidance' },
+                  { icon: 'fa-bowl-food',      label: 'Practical Nutrition', bold: 'Advice' },
+                  { icon: 'fa-message',        label: 'Your Questions', bold: 'Answered' },
+                  { icon: 'fa-clipboard-list', label: 'Clear Next', bold: 'Steps' },
+                ].map(item => (
+                  <div key={item.bold} className="dp-get-item">
+                    <i className={`fa-solid ${item.icon} dp-get-icon`} />
+                    <div>
+                      <p className="dp-get-label">{item.label}</p>
+                      <p className="dp-get-bold">{item.bold}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* CTA Banner */}
+            <div className="dp-cta-banner">
+              <img src="/hero-leaf.png" alt="" className="dp-cta-leaf" aria-hidden="true" />
+              <div className="dp-cta-text">
+                <p className="dp-cta-heading">Ready to take the first step towards better nutrition?</p>
+                <p className="dp-cta-sub">Book a consultation with our expert dietitians and get guidance tailored just for you.</p>
+              </div>
+              <button className="dp-cta-btn" onClick={() => document.querySelector('.dp-booking-card')?.scrollIntoView({ behavior: 'smooth' })}>
+                Book My Consultation →
+              </button>
+            </div>
 
             {/* Specializations */}
             {d.specialization?.length > 0 && (
@@ -538,6 +609,18 @@ export default function DietitianProfile() {
                 <span>↩ Easy Reschedule</span>
                 <span>✓ Verified Expert</span>
               </div>
+            </div>
+
+            {/* Confidential box */}
+            <div className="dp-confidential-box">
+              <div className="dp-confidential-content">
+                <div className="dp-confidential-header">
+                  <i className="fa-solid fa-circle-check dp-confidential-check" />
+                  <p className="dp-confidential-title">100% Confidential</p>
+                </div>
+                <p className="dp-confidential-desc">Your information is safe<br />and secure with us.</p>
+              </div>
+              <img src="/padlock-shield.svg" alt="" className="dp-confidential-svg" aria-hidden="true" />
             </div>
           </aside>
 

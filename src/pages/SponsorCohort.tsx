@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SEO from '../components/SEO'
+import apiClient from '../api/client'
+import ENDPOINTS from '../api/endpoints'
 
 const WHY_SPONSOR = [
   { icon: 'fa-graduation-cap', title: 'Transform Lives', desc: 'Give women access to education and practical skills for a better life.' },
@@ -22,10 +24,10 @@ const INCLUDED = [
 ]
 
 const COHORTS = [
-  { size: '25', label: 'Women', tag: 'PILOT COHORT', desc: 'Start small and see the impact.', price: '₹25,000', popular: false, contact: false },
-  { size: '50', label: 'Women', tag: 'COMMUNITY COHORT', desc: 'Build skills at scale in your community.', price: '₹40,000', popular: true, contact: false },
-  { size: '100', label: 'Women', tag: 'IMPACT COHORT', desc: 'Create meaningful change together.', price: '₹60,000', popular: false, contact: false },
-  { size: '500+', label: 'Women', tag: 'TRANSFORM COMMUNITIES', desc: 'Large scale impact across regions.', price: 'Custom Pricing', popular: false, contact: true },
+  { size: '25', label: 'Women', tag: 'PILOT COHORT', desc: 'Start small, see the impact, build confidence.', price: '₹3,75,000', perHead: '₹15,000 / woman', popular: false, contact: false },
+  { size: '50', label: 'Women', tag: 'COMMUNITY COHORT', desc: 'Build skills at scale across your community.', price: '₹7,50,000', perHead: '₹15,000 / woman', popular: true, contact: false },
+  { size: '100', label: 'Women', tag: 'IMPACT COHORT', desc: 'Create deep, measurable change together.', price: '₹15,00,000', perHead: '₹15,000 / woman', popular: false, contact: false },
+  { size: '500+', label: 'Women', tag: 'TRANSFORM COMMUNITIES', desc: 'Large-scale regional impact with custom support.', price: 'Custom Pricing', perHead: 'Contact us for bulk rates', popular: false, contact: true },
 ]
 
 const IMPACT = [
@@ -52,13 +54,24 @@ const SponsorCohort = () => {
   const [selectedCohort, setSelectedCohort] = useState(1)
   const [form, setForm] = useState({ org: '', designation: '', contact: '', orgType: '', email: '', state: '', phone: '', city: '', cohortSize: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
   const set = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm(f => ({ ...f, [k]: e.target.value }))
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitted(true)
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      await apiClient.apiPost(ENDPOINTS.sponsorCohort.submit, form)
+      setSubmitted(true)
+    } catch (err: unknown) {
+      setSubmitError((err as { message?: string })?.message ?? 'Something went wrong. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -70,26 +83,32 @@ const SponsorCohort = () => {
       />
 
       {/* ── Hero ── */}
-      <section className="sc-hero">
-        <div className="sc-hero-inner">
-          <div className="sc-hero-left">
-            <p className="sc-eyebrow">WOMEN EMPOWERMENT PROGRAM</p>
-            <h1 className="sc-hero-title">Sponsor a<br /><span className="sc-green">Women's<br />Cohort</span></h1>
-            <p className="sc-hero-sub">Empower women with skills. Enable livelihoods. Create generational impact.</p>
-            <p className="sc-hero-body">Sponsor a cohort of women from underserved communities and help them learn nutrition, digital skills and entrepreneurship to build a better future for themselves and their families.</p>
-            <div className="sc-hero-chips">
-              <span className="sc-chip"><i className="fa-solid fa-seedling" /> Practical skills for real life</span>
-              <span className="sc-chip"><i className="fa-solid fa-laptop-house" /> Work-from-home opportunities</span>
-              <span className="sc-chip"><i className="fa-solid fa-people-group" /> Stronger families, stronger communities</span>
-            </div>
+      <section className="we-hero">
+        <div className="we-hero-left">
+          <p className="we-hero-eyebrow">MERI DIET WOMEN EMPOWERMENT PROGRAM</p>
+          <h1 className="we-hero-title">
+            Sponsor a<br />
+            Women's<br />
+            <span className="we-hero-title--green">Cohort</span>
+          </h1>
+          <p className="we-hero-desc">
+            Empower Women. Enable Livelihoods.<br />Create Generational Impact.
+          </p>
+          <p className="we-hero-sub">
+            Sponsor a cohort of women from underserved communities and help them learn nutrition, digital skills and entrepreneurship to build a better future for themselves and their families.
+          </p>
+          <div className="we-hero-btns">
+            <button className="btn-primary we-hero-btn" onClick={() => document.querySelector('.sc-form-section')?.scrollIntoView({ behavior: 'smooth' })}>Sponsor a Cohort →</button>
           </div>
-          <div className="sc-hero-right">
-            <img src="/women-hero.svg" alt="Sponsor a Women's Cohort" className="sc-hero-img" />
-            <div className="sc-hero-badge">
-              <i className="fa-solid fa-infinity sc-badge-icon" />
-              <p className="sc-badge-text">One Cohort.<br />Many Futures.<br />Lasting Change.</p>
-            </div>
+          <div className="we-hero-chips-inline">
+            <span className="we-chip"><i className="fa-solid fa-seedling" /> Practical Skills</span>
+            <span className="we-chip"><i className="fa-solid fa-laptop-house" /> Work From Home</span>
+            <span className="we-chip"><i className="fa-solid fa-people-group" /> Stronger Communities</span>
+            <span className="we-chip"><i className="fa-solid fa-star" /> Lasting Impact</span>
           </div>
+        </div>
+        <div className="we-hero-right">
+          <img src="/sponsor-hero.svg" alt="Sponsor a Women's Cohort" className="we-hero-img" />
         </div>
       </section>
 
@@ -132,14 +151,21 @@ const SponsorCohort = () => {
               {COHORTS.map((c, idx) => (
                 <div key={c.tag} className={`sc-cohort-card ${selectedCohort === idx ? 'sc-cohort-card--active' : ''} ${c.popular ? 'sc-cohort-card--popular' : ''}`} onClick={() => setSelectedCohort(idx)}>
                   {c.popular && <div className="sc-cohort-popular">Most Popular</div>}
-                  <div className="sc-cohort-num">{c.size}</div>
-                  <div className="sc-cohort-label">{c.label}</div>
+                  <div className="sc-cohort-top">
+                    <div className="sc-cohort-num">{c.size}</div>
+                    <div className="sc-cohort-label">{c.label}</div>
+                  </div>
                   <div className="sc-cohort-tag">{c.tag}</div>
                   <p className="sc-cohort-desc">{c.desc}</p>
-                  <div className="sc-cohort-price">{c.price}</div>
+                  <div className="sc-cohort-price-block">
+                    <div className="sc-cohort-price">{c.price}</div>
+                    <div className="sc-cohort-perhead">{c.perHead}</div>
+                  </div>
                   {c.contact
                     ? <button className="sc-cohort-btn sc-cohort-btn--outline" onClick={e => { e.stopPropagation(); navigate('/women-empowerment') }}>Contact Us</button>
-                    : <button className={`sc-cohort-btn ${selectedCohort === idx ? 'sc-cohort-btn--selected' : ''}`} onClick={e => { e.stopPropagation(); setSelectedCohort(idx) }}>Select</button>
+                    : <button className={`sc-cohort-btn ${selectedCohort === idx ? 'sc-cohort-btn--selected' : ''}`} onClick={e => { e.stopPropagation(); setSelectedCohort(idx) }}>
+                        {selectedCohort === idx ? '✓ Selected' : 'Select'}
+                      </button>
                   }
                 </div>
               ))}
@@ -259,7 +285,10 @@ const SponsorCohort = () => {
                 <label>Message / Additional Requirements</label>
                 <textarea rows={4} placeholder="Tell us about your goals, location, target group, timeline or any other requirement." value={form.message} onChange={set('message')} />
               </div>
-              <button type="submit" className="sc-form-submit">Submit Sponsorship Request <i className="fa-solid fa-arrow-right" /></button>
+              {submitError && <p className="sc-form-error">{submitError}</p>}
+              <button type="submit" className="sc-form-submit" disabled={submitting}>
+                {submitting ? 'Submitting…' : <> Submit Sponsorship Request <i className="fa-solid fa-arrow-right" /></>}
+              </button>
               <p className="sc-form-privacy"><i className="fa-solid fa-lock" /> Your information is safe with us. We respect your privacy.</p>
             </form>
           )}

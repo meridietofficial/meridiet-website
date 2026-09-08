@@ -4,30 +4,30 @@ const steps = [
   {
     img: '/how-step2.png',
     step: '01',
-    title: 'Fill Assessment',
-    desc: 'Answer simple questions about your health, lifestyle, and food preferences.',
+    title: 'Tell Us About You',
+    desc: 'Share your lifestyle, body details, food preferences, routine and goals.',
   },
   {
     img: '/how-step3.png',
     step: '02',
-    title: 'AI Analyzes Data',
-    desc: 'Our AI analyzes your information to understand your unique nutrition needs.',
+    title: 'Your Plan Is Created',
+    desc: 'Smart nutrition technology creates a personalized diet plan based on your information.',
   },
   {
     img: '/how-step4.png',
     step: '03',
-    title: 'Diet Plan Generated',
-    desc: 'A personalized Indian diet plan is created specifically for your goal.',
+    title: 'Expert Dietitian Review',
+    desc: 'A qualified dietitian reviews and refines your plan according to your individual needs.',
   },
   {
     img: '/how-step1.png',
     step: '04',
-    title: 'Delivered to You',
-    desc: 'Receive your plan within 24 hours on WhatsApp & email in a neat PDF.',
+    title: 'Get Your Final Plan',
+    desc: 'Receive your personalized diet plan via WhatsApp and Email.',
   },
 ]
 
-const HowItWorks = () => {
+const HowItWorks = ({ onOpenForm }: { onOpenForm?: () => void }) => {
   return (
     <section className="how-section" id="how-it-works">
       <div className="container">
@@ -35,8 +35,7 @@ const HowItWorks = () => {
           <span className="section-tag">Simple Process</span>
           <h2 className="section-title">How MeriDiet Works</h2>
           <p className="section-sub">
-            From sign-up to personalized plan in under 3 minutes. No complicated forms, no
-            confusion.
+            From Your Information to Your Personalized Diet Plan
           </p>
         </div>
 
@@ -62,6 +61,12 @@ const HowItWorks = () => {
             </React.Fragment>
           ))}
         </div>
+
+        {onOpenForm && (
+          <div className="how-cta-wrap">
+            <button className="how-cta-btn" onClick={onOpenForm}>Create My Diet Plan →</button>
+          </div>
+        )}
       </div>
     </section>
   )

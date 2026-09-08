@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import SEO from '../components/SEO'
+import apiClient from '../api/client'
+import ENDPOINTS from '../api/endpoints'
 
 const PROGRAM_SCHEMA = {
   '@context': 'https://schema.org',
@@ -107,10 +109,21 @@ const WomenEmpowerment = () => {
     org: '', name: '', email: '', phone: '', city: '', state: '', area: '', message: '',
   })
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitted(true)
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      await apiClient.apiPost(ENDPOINTS.partnership.submit, form)
+      setSubmitted(true)
+    } catch (err: unknown) {
+      setSubmitError((err as { message?: string })?.message ?? 'Something went wrong. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
@@ -298,7 +311,10 @@ const WomenEmpowerment = () => {
                   <label>Message (Optional)</label>
                   <textarea placeholder="Tell us more about your interest..." rows={3} value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} />
                 </div>
-                <button type="submit" className="btn-primary we-form-submit">Request Partnership Discussion →</button>
+                {submitError && <p className="we-form-error">{submitError}</p>}
+                <button type="submit" className="btn-primary we-form-submit" disabled={submitting}>
+                  {submitting ? 'Submitting…' : 'Request Partnership Discussion →'}
+                </button>
               </form>
             )}
           </div>

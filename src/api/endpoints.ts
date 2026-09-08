@@ -126,6 +126,12 @@ const ENDPOINTS = {
     verify:      '/dietitian/wallet/recharge/verify-payment',
     failed:      '/dietitian/wallet/recharge/failed',
   },
+  partnership: {
+    submit: '/partnership-inquiry',
+  },
+  sponsorCohort: {
+    submit: '/sponsor-cohort',
+  },
 } as const
 
 export default ENDPOINTS

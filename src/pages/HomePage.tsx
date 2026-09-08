@@ -1,11 +1,16 @@
 import Hero from '../components/Hero'
 import StatsCounter from '../components/StatsCounter'
-import DietitianShowcase from '../components/DietitianShowcase'
 import HowItWorks from '../components/HowItWorks'
+import GetStarted from '../components/GetStarted'
+import TechPlusDietitian from '../components/TechPlusDietitian'
+import DietitianShowcase from '../components/DietitianShowcase'
+import FindDietitian from '../components/FindDietitian'
+import ConsultJourney from '../components/ConsultJourney'
 import PlansFor from '../components/PlansFor'
 import SamplePlan from '../components/SamplePlan'
 import Pricing from '../components/Pricing'
 import WhyChoose from '../components/WhyChoose'
+import HomeFAQ from '../components/HomeFAQ'
 import Testimonials from '../components/Testimonials'
 import MediaPress from '../components/MediaPress'
 import CTA from '../components/CTA'
@@ -103,12 +108,17 @@ const HomePage = ({ onOpenForm }: { onOpenForm: () => void }) => (
     />
     <Hero onOpenForm={onOpenForm} />
     <StatsCounter />
+    <HowItWorks onOpenForm={onOpenForm} />
+    <GetStarted onOpenForm={onOpenForm} />
+    <TechPlusDietitian />
     <DietitianShowcase />
-    <HowItWorks />
+    <FindDietitian />
+    <ConsultJourney />
     <PlansFor />
     <SamplePlan onOpenForm={onOpenForm} />
     <Pricing onOpenForm={onOpenForm} />
     <WhyChoose onOpenForm={onOpenForm} />
+    <HomeFAQ />
     <Testimonials />
     <MediaPress />
     <CTA onOpenForm={onOpenForm} />
