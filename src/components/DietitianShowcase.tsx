@@ -107,7 +107,7 @@ export default function DietitianShowcase() {
             {loading
               ? Array(6).fill(null).map((_, i) => <SkeletonCard key={i} />)
               : dietitians.map(d => (
-                <div key={d.id} className="ds-card">
+                <div key={d.id} className={`ds-card${d.is_under_offer ? ' ds-card--offer' : ''}`}>
                   <span className={`ds-avail ${d.availability === 'online' ? 'ds-avail--online' : 'ds-avail--offline'}`}>
                     {d.availability === 'online' ? 'Available Online' : 'Available Offline'}
                   </span>
@@ -136,11 +136,23 @@ export default function DietitianShowcase() {
                     <span>📍 {d.location?.split(',')[0] ?? '—'}</span>
                   </div>
 
+                  {d.is_under_offer && (
+                    <span className="ds-offer-badge">🏷 Nutrition Month Offer</span>
+                  )}
+
                   {formatFee(d.appointment_fee, d.appointment_currency) && (
-                    <div className="ds-fee">
-                      <span className="ds-fee-label">Consultation Fee</span>
-                      <span className="ds-fee-amount">{formatFee(d.appointment_fee, d.appointment_currency)}</span>
-                    </div>
+                    d.is_under_offer ? (
+                      <div className="ds-fee ds-fee--offer">
+                        <span className="ds-fee-offer-price">₹99</span>
+                        <span className="ds-fee-orig">{formatFee(d.appointment_fee, d.appointment_currency)}</span>
+                        <span className="ds-fee-label">per session</span>
+                      </div>
+                    ) : (
+                      <div className="ds-fee">
+                        <span className="ds-fee-label">Consultation Fee</span>
+                        <span className="ds-fee-amount">{formatFee(d.appointment_fee, d.appointment_currency)}</span>
+                      </div>
+                    )
                   )}
 
                   <div className="ds-tags">

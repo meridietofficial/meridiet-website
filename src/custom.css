@@ -12361,6 +12361,22 @@
   text-align: center;
   position: relative;
   transition: box-shadow 0.2s, transform 0.2s;
+  overflow: hidden;
+}
+.ds-card--offer {
+  border-color: #fcd34d;
+}
+.ds-offer-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  color: #d97706;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 20px;
+  padding: 3px 10px;
+  margin-bottom: 6px;
+  white-space: nowrap;
 }
 
 .ds-card:hover {
@@ -12494,6 +12510,10 @@
   gap: 6px;
   margin-bottom: 10px;
 }
+.ds-fee--offer {
+  flex-direction: column;
+  gap: 2px;
+}
 
 .ds-fee-label {
   font-size: 11px;
@@ -12504,6 +12524,18 @@
   font-size: 14px;
   font-weight: 700;
   color: var(--green);
+}
+.ds-fee-offer-price {
+  font-size: 18px;
+  font-weight: 800;
+  color: #d97706;
+  line-height: 1.2;
+}
+.ds-fee-orig {
+  font-size: 12px;
+  font-weight: 500;
+  color: #9ca3af;
+  text-decoration: line-through;
 }
 
 .ds-tags {
