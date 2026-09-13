@@ -17,11 +17,52 @@
 }
 
 /* ============================================================
+   OFFER TICKER
+   ============================================================ */
+.offer-ticker {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1100;
+  background: linear-gradient(90deg, #155c2c 0%, #1e8e3e 50%, #155c2c 100%);
+  color: #fff;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.offer-ticker-track {
+  display: flex;
+  white-space: nowrap;
+  animation: ticker-scroll 28s linear infinite;
+}
+
+.offer-ticker-text {
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding-right: 0;
+  display: inline-block;
+}
+
+.offer-ticker-text strong {
+  font-weight: 800;
+  color: #ffe84d;
+}
+
+@keyframes ticker-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ============================================================
    NAVBAR
    ============================================================ */
 .navbar {
   position: fixed;
-  top: 0;
+  top: 32px;
   left: 0;
   right: 0;
   z-index: 2001;
@@ -84,6 +125,30 @@
   border-radius: 6px;
   background: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 55%);
   pointer-events: none;
+}
+
+/* "₹99" offer badge on Consult Dietitian nav link */
+@keyframes navbar-offer-pulse {
+  0%, 100% { transform: rotate(-10deg) scale(1); }
+  50%       { transform: rotate(-10deg) scale(1.08); }
+}
+.navbar-offer-badge {
+  display: inline-block;
+  background: linear-gradient(145deg, #e6a800, #f5c200);
+  color: #3b2700;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 3px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  margin-left: 0px;
+  line-height: 1;
+  transform: rotate(-10deg);
+  box-shadow: -2px 3px 0 rgba(0,0,0,0.18), 0 3px 10px rgba(230, 168, 0, 0.45);
+  animation: navbar-offer-pulse 2s ease-in-out infinite;
+  position: relative;
+  top: -7px;
 }
 
 /* spacer that compensates for fixed navbar */
@@ -12597,7 +12662,7 @@
 .cd-hero {
   background: linear-gradient(180deg, #eaf7f0 0%, #f2faf6 100%);
   border-bottom: 1px solid #c4e0d0;
-  padding: 32px 0 32px;
+  padding: 0;
 }
 
 .cd-hero-inner {
@@ -12819,6 +12884,102 @@
 
 .cd-book-btn:hover {
   background: #166d32;
+}
+
+/* ── Hero Carousel ── */
+.cd-carousel {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+}
+
+.cd-carousel-track {
+  display: flex;
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.cd-carousel-slide {
+  min-width: 100%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.cd-carousel-slide--banner {
+  display: flex;
+  align-items: stretch;
+}
+
+.cd-carousel-banner-img {
+  width: 100%;
+  height: auto;
+  display: block;
+  cursor: pointer;
+  object-fit: cover;
+}
+
+/* Prev / Next arrow buttons */
+.cd-carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1.5px solid #d0e9d8;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  font-size: 22px;
+  line-height: 1;
+  color: #1e8e3e;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  transition: background 0.2s, color 0.2s;
+  z-index: 10;
+  padding: 0;
+}
+
+.cd-carousel-btn:hover {
+  background: #1e8e3e;
+  color: #fff;
+  border-color: #1e8e3e;
+}
+
+.cd-carousel-btn--prev {
+  left: 12px;
+}
+
+.cd-carousel-btn--next {
+  right: 12px;
+}
+
+/* Dot indicators */
+.cd-carousel-dots {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 7px;
+  z-index: 10;
+}
+
+.cd-carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(30, 142, 62, 0.28);
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.25s, transform 0.25s;
+}
+
+.cd-carousel-dot--active {
+  background: #1e8e3e;
+  transform: scale(1.3);
 }
 
 /* ── Specialisation infinite marquee strip ── */
@@ -13484,6 +13645,24 @@
   color: #2f7a4d;
 }
 .cm-side-price span { font-size: 12px; font-weight: 600; color: #889; }
+.cm-side-price-orig {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: #9ca3af !important;
+  text-decoration: line-through;
+  margin-left: 4px;
+}
+.cm-offer-badge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #d97706;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 20px;
+  padding: 2px 8px;
+  margin: 4px 0 2px;
+}
 .cm-plan-name { margin: 0; font-weight: 700; color: #1c2b22; font-size: 14px; }
 .cm-plan-feats { margin: 0; font-size: 11.5px; line-height: 1.5; color: #6a7a71; }
 
@@ -13805,6 +13984,23 @@
   transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.35s ease, border-color 0.35s ease;
 }
 
+/* Offer card — warm amber background for Nutrition Month dietitians */
+.cd-card--offer {
+  background: linear-gradient(145deg, #fffbeb 0%, #fff8f0 100%);
+  border-color: #fcd34d;
+  box-shadow: 0 2px 12px rgba(217, 119, 6, 0.1);
+}
+
+.cd-card--offer:hover {
+  border-color: #f59e0b;
+  box-shadow: 0 8px 28px rgba(217, 119, 6, 0.18);
+}
+
+/* Replace the green top accent with amber for offer cards */
+.cd-card--offer::before {
+  background: linear-gradient(90deg, #f59e0b, #fcd34d, #f59e0b);
+}
+
 /* Top accent bar that slides in on hover */
 .cd-card::before {
   content: '';
@@ -14115,6 +14311,36 @@
   font-size: 11px;
   color: #5a8a6a;
 }
+.cd-card-fee-row--offer {
+  background: #fff8f0;
+  border-color: #f5c58a;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.cd-offer-badge {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #d97706;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 20px;
+  padding: 2px 8px;
+  letter-spacing: 0.2px;
+}
+.cd-offer-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.cd-offer-price-row .cd-card-fee-amt {
+  color: #d97706;
+}
+.cd-card-fee-orig {
+  font-size: 12px;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
 
 .cd-card-actions {
   display: flex;
@@ -14335,8 +14561,22 @@
 }
 
 @media (max-width: 600px) {
+  .cd-carousel-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+
+  .cd-carousel-btn--prev {
+    left: 6px;
+  }
+
+  .cd-carousel-btn--next {
+    right: 6px;
+  }
+
   .cd-hero {
-    padding: 22px 0 20px;
+    padding: 0;
   }
 
   .cd-hero-title {
@@ -14618,6 +14858,40 @@
 .dp-fee-label { margin: 0; font-size: 11px; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
 .dp-fee-amount { margin: 2px 0 0; font-size: 26px; font-weight: 800; color: #006B28; }
 .dp-fee-validity { font-size: 11.5px; color: #6b7280; background: #f3f4f6; border-radius: 20px; padding: 4px 10px; }
+.dp-fee-row--offer {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+.dp-offer-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #d97706;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+.dp-offer-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.dp-offer-price-row .dp-fee-amount {
+  color: #d97706;
+  margin: 0;
+}
+.dp-fee-orig {
+  font-size: 15px;
+  font-weight: 500;
+  color: #9ca3af;
+  text-decoration: line-through;
+  margin: 0;
+}
 
 .dp-back-btn {
   display: inline-flex;

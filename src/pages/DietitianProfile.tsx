@@ -137,7 +137,7 @@ export default function DietitianProfile() {
     if (!user) { setShowAuthGate(true); return }
     setSubmitting(true)
     setBookingError('')
-    const consultFee = (currentD.appointment_fee != null && currentD.appointment_fee > 0) ? currentD.appointment_fee : fee
+    const consultFee = currentD.is_under_offer ? 99 : ((currentD.appointment_fee != null && currentD.appointment_fee > 0) ? currentD.appointment_fee : fee)
     try {
       const expanded = expandSlots(date.slots)
       const slotObj = expanded.find(s => s.start === slot)
@@ -499,13 +499,24 @@ export default function DietitianProfile() {
 
               {/* Fee */}
               {(d.appointment_fee ?? 0) > 0 && (
-                <div className="dp-fee-row">
-                  <div>
-                    <p className="dp-fee-label">Consultation Fee</p>
-                    <p className="dp-fee-amount">₹{d.appointment_fee!.toLocaleString('en-IN')}</p>
+                d.is_under_offer ? (
+                  <div className="dp-fee-row dp-fee-row--offer">
+                    <div className="dp-offer-badge">🏷 Nutrition Month Offer</div>
+                    <div className="dp-offer-price-row">
+                      <p className="dp-fee-amount">₹99</p>
+                      <p className="dp-fee-orig">₹{d.appointment_fee!.toLocaleString('en-IN')}</p>
+                    </div>
+                    <span className="dp-fee-validity">Valid 30 days</span>
                   </div>
-                  <span className="dp-fee-validity">Valid 30 days</span>
-                </div>
+                ) : (
+                  <div className="dp-fee-row">
+                    <div>
+                      <p className="dp-fee-label">Consultation Fee</p>
+                      <p className="dp-fee-amount">₹{d.appointment_fee!.toLocaleString('en-IN')}</p>
+                    </div>
+                    <span className="dp-fee-validity">Valid 30 days</span>
+                  </div>
+                )
               )}
 
               {/* Next available pill */}

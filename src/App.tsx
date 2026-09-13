@@ -109,6 +109,17 @@ function AppInner() {
   return (
     <>
       <ScrollToTop />
+      {showNavbar && (
+        <div className="offer-ticker">
+          <div className="offer-ticker-track">
+            {[0, 1].map(i => (
+              <span key={i} className="offer-ticker-text" aria-hidden={i === 1}>
+                🎉 Nutrition Month Special &nbsp;•&nbsp; Expert Nutrition Consultation at just&nbsp;<strong>₹99</strong>&nbsp;<s style={{ opacity: 0.7 }}>₹999</s> &nbsp;•&nbsp; 1-on-1 with Verified Dietitian &nbsp;•&nbsp; 100% Confidential &nbsp;•&nbsp; Book Now on MeriDiet &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
       {showNavbar && <Navbar onOpenForm={openForm} />}
       {showNavbar && <div className="navbar-push" />}
       <Suspense fallback={<PageLoader />}>

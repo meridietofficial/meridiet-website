@@ -90,7 +90,7 @@ export default function ConsultModal({ dietitian, fee, onClose }: ConsultModalPr
       .catch(() => { setFullData(dietitian); setLoadingData(false) })
   }, [dietitian.id])
 
-  const consultFee = fullData.appointment_fee ?? fullData.fee ?? fee
+  const consultFee = fullData.is_under_offer ? fee : (fullData.appointment_fee ?? fullData.fee ?? fee)
   const dates = fullData.available_dates ?? []
 
 
@@ -261,8 +261,15 @@ export default function ConsultModal({ dietitian, fee, onClose }: ConsultModalPr
 
               <div className="cm-side-plan">
                 <p className="cm-plan-name">1-on-1 Consultation</p>
+                {fullData.is_under_offer && (
+                  <p className="cm-offer-badge">🏷 Nutrition Month Offer</p>
+                )}
                 <p className="cm-side-price">
-                  ₹{consultFee.toLocaleString('en-IN')} <span>/ 30 days</span>
+                  ₹{consultFee.toLocaleString('en-IN')}
+                  {fullData.is_under_offer && fullData.appointment_fee && (
+                    <span className="cm-side-price-orig">₹{fullData.appointment_fee.toLocaleString('en-IN')}</span>
+                  )}
+                  <span>/ 30 days</span>
                 </p>
                 <p className="cm-plan-feats">{PLAN_FEATURES.join(' · ')}</p>
               </div>

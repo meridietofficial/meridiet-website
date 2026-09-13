@@ -110,6 +110,17 @@ export default function ConsultDietitian() {
   const [debouncedFeeMin, setDebouncedFeeMin] = useState(FEE_RANGE_MIN)
   const [debouncedFeeMax, setDebouncedFeeMax] = useState(FEE_RANGE_MAX)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [heroSlide, setHeroSlide] = useState(0)
+  const heroHovered = useRef(false)
+  const HERO_SLIDES = 1
+
+  // Hero carousel auto-advance
+  useEffect(() => {
+    const t = setInterval(() => {
+      if (!heroHovered.current) setHeroSlide(s => (s + 1) % HERO_SLIDES)
+    }, 4500)
+    return () => clearInterval(t)
+  }, [])
 
   // Cities for the selected state (local map, keyed by state code)
   const cities = stateCode ? getCitiesOfState(stateCode).map(c => c.name) : []
@@ -257,58 +268,109 @@ export default function ConsultDietitian() {
         ]}
       />
 
-      {/* ── Hero + Specializations (one unified section) ── */}
-      <section className="cd-hero">
-        <div className="container cd-hero-inner">
-          <div className="cd-hero-left">
-            <h1 className="cd-hero-title">
-              Consult Top <span className="cd-green">Dietitians</span> Online
-            </h1>
-            <p className="cd-hero-sub">Get a personalised diet plan, expert guidance, and ongoing support — all in one place.</p>
-            <div className="cd-hero-badges">
-              <span className="cd-badge"><span className="cd-badge-icon"><UserRound size={14} strokeWidth={2.4} /></span> 1-on-1 Consultation</span>
-              <span className="cd-badge"><span className="cd-badge-icon"><MessagesSquare size={14} strokeWidth={2.4} /></span> 1 Follow Up</span>
-              <span className="cd-badge"><span className="cd-badge-icon"><ShieldCheck size={14} strokeWidth={2.4} /></span> 100% Confidential</span>
-            </div>
-            <div className="cd-hero-stats">
-              <div className="cd-hero-stat">
-                <span className="cd-hero-stat-val">100+</span>
-                <span className="cd-hero-stat-label">Verified Dietitians</span>
+      {/* ── Hero Carousel ── */}
+      <section
+        className="cd-hero"
+        onMouseEnter={() => { heroHovered.current = true }}
+        onMouseLeave={() => { heroHovered.current = false }}
+      >
+        <div className="cd-carousel">
+          <div
+            className="cd-carousel-track"
+            style={{ transform: `translateX(-${heroSlide * 100}%)` }}
+          >
+            {/* Slide 1 — existing hero content (temporarily hidden) */}
+            {/* <div className="cd-carousel-slide">
+              <div className="container cd-hero-inner">
+                <div className="cd-hero-left">
+                  <h1 className="cd-hero-title">
+                    Consult Top <span className="cd-green">Dietitians</span> Online
+                  </h1>
+                  <p className="cd-hero-sub">Get a personalised diet plan, expert guidance, and ongoing support — all in one place.</p>
+                  <div className="cd-hero-badges">
+                    <span className="cd-badge"><span className="cd-badge-icon"><UserRound size={14} strokeWidth={2.4} /></span> 1-on-1 Consultation</span>
+                    <span className="cd-badge"><span className="cd-badge-icon"><MessagesSquare size={14} strokeWidth={2.4} /></span> 1 Follow Up</span>
+                    <span className="cd-badge"><span className="cd-badge-icon"><ShieldCheck size={14} strokeWidth={2.4} /></span> 100% Confidential</span>
+                  </div>
+                  <div className="cd-hero-stats">
+                    <div className="cd-hero-stat">
+                      <span className="cd-hero-stat-val">100+</span>
+                      <span className="cd-hero-stat-label">Verified Dietitians</span>
+                    </div>
+                    <div className="cd-hero-stat-divider" />
+                    <div className="cd-hero-stat">
+                      <span className="cd-hero-stat-val">500+</span>
+                      <span className="cd-hero-stat-label">Happy Clients</span>
+                    </div>
+                    <div className="cd-hero-stat-divider" />
+                    <div className="cd-hero-stat">
+                      <span className="cd-hero-stat-val">4.8 ★</span>
+                      <span className="cd-hero-stat-label">Average Rating</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="cd-hero-card">
+                  <div className="cd-hero-card-info">
+                    <span className="cd-hero-card-badge">✦ 1-on-1 Expert Session</span>
+                    <p className="cd-hero-card-title">Start Your Health Journey</p>
+                    <p className="cd-hero-card-sub">Personalised consultation with a verified dietitian</p>
+                    <div className="cd-hero-card-price-wrap">
+                      <span className="cd-hero-card-price-label">Starting from</span>
+                      <span className="cd-hero-card-price">₹999</span>
+                    </div>
+                    <p className="cd-hero-card-validity">Price set by each dietitian</p>
+                    <button
+                      className="cd-book-btn"
+                      onClick={() => document.getElementById('cd-listing')?.scrollIntoView({ behavior: 'smooth' })}
+                    >
+                      Book Consultation →
+                    </button>
+                  </div>
+                  <img className="cd-hero-card-img" src="/consult-hero-dietitian.png" alt="Dietitian consultation" />
+                </div>
               </div>
-              <div className="cd-hero-stat-divider" />
-              <div className="cd-hero-stat">
-                <span className="cd-hero-stat-val">500+</span>
-                <span className="cd-hero-stat-label">Happy Clients</span>
-              </div>
-              <div className="cd-hero-stat-divider" />
-              <div className="cd-hero-stat">
-                <span className="cd-hero-stat-val">4.8 ★</span>
-                <span className="cd-hero-stat-label">Average Rating</span>
-              </div>
+            </div> */}
+
+            {/* Slide 2 — promo banner image */}
+            <div className="cd-carousel-slide cd-carousel-slide--banner">
+              <img
+                src="/nutrition-month-banner.png"
+                alt="Nutrition Month – Expert Nutrition Consultation at ₹99"
+                className="cd-carousel-banner-img"
+                onClick={() => document.getElementById('cd-listing')?.scrollIntoView({ behavior: 'smooth' })}
+              />
             </div>
           </div>
 
-          <div className="cd-hero-card">
-            <div className="cd-hero-card-info">
-              <span className="cd-hero-card-badge">✦ 1-on-1 Expert Session</span>
-              <p className="cd-hero-card-title">Start Your Health Journey</p>
-              <p className="cd-hero-card-sub">Personalised consultation with a verified dietitian</p>
-              <div className="cd-hero-card-price-wrap">
-                <span className="cd-hero-card-price-label">Starting from</span>
-                <span className="cd-hero-card-price">₹999</span>
-              </div>
-              <p className="cd-hero-card-validity">Price set by each dietitian</p>
+          {/* Prev / Next arrows */}
+          <button
+            className="cd-carousel-btn cd-carousel-btn--prev"
+            onClick={() => setHeroSlide(s => (s - 1 + HERO_SLIDES) % HERO_SLIDES)}
+            aria-label="Previous slide"
+          >
+            ‹
+          </button>
+          <button
+            className="cd-carousel-btn cd-carousel-btn--next"
+            onClick={() => setHeroSlide(s => (s + 1) % HERO_SLIDES)}
+            aria-label="Next slide"
+          >
+            ›
+          </button>
+
+          {/* Dot indicators */}
+          <div className="cd-carousel-dots">
+            {Array.from({ length: HERO_SLIDES }).map((_, i) => (
               <button
-                className="cd-book-btn"
-                onClick={() => document.getElementById('cd-listing')?.scrollIntoView({ behavior: 'smooth' })}
-              >
-                Book Consultation →
-              </button>
-            </div>
-            <img className="cd-hero-card-img" src="/consult-hero-dietitian.png" alt="Dietitian consultation" />
+                key={i}
+                className={`cd-carousel-dot${heroSlide === i ? ' cd-carousel-dot--active' : ''}`}
+                onClick={() => setHeroSlide(i)}
+                aria-label={`Go to slide ${i + 1}`}
+              />
+            ))}
           </div>
         </div>
-
       </section>
 
       {/* ── Specialisation infinite scroll strip ── */}
@@ -530,7 +592,7 @@ export default function ConsultDietitian() {
               results.map(d => {
                 const avail = availabilityLabel(d.availability)
                 return (
-                <div key={d.id} className="cd-card cd-card--clickable" onClick={() => navigate(`/dietitian/${d.id}/${d.full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`)}>
+                <div key={d.id} className={`cd-card cd-card--clickable${d.is_under_offer ? ' cd-card--offer' : ''}`} onClick={() => navigate(`/dietitian/${d.id}/${d.full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`)}>
 
                   {/* ── Header ── */}
                   <div className="cd-card-top">
@@ -564,10 +626,21 @@ export default function ConsultDietitian() {
 
                   {/* ── Fee row ── */}
                   {(d.appointment_fee ?? 0) > 0 && (
-                    <div className="cd-card-fee-row">
-                      <span className="cd-card-fee-amt">₹{d.appointment_fee!.toLocaleString('en-IN')}</span>
-                      <span className="cd-card-fee-label">per session <span className="cd-card-fee-followup">+ Follow Up</span></span>
-                    </div>
+                    d.is_under_offer ? (
+                      <div className="cd-card-fee-row cd-card-fee-row--offer">
+                        <div className="cd-offer-badge">🏷 Nutrition Month Offer</div>
+                        <div className="cd-offer-price-row">
+                          <span className="cd-card-fee-amt">₹99</span>
+                          <span className="cd-card-fee-orig">₹{d.appointment_fee!.toLocaleString('en-IN')}</span>
+                          <span className="cd-card-fee-label">per session</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="cd-card-fee-row">
+                        <span className="cd-card-fee-amt">₹{d.appointment_fee!.toLocaleString('en-IN')}</span>
+                        <span className="cd-card-fee-label">per session <span className="cd-card-fee-followup">+ Follow Up</span></span>
+                      </div>
+                    )
                   )}
 
                   {/* ── Meta ── */}
@@ -647,7 +720,7 @@ export default function ConsultDietitian() {
       </div>
 
       {consulting && (
-        <ConsultModal dietitian={consulting} fee={consulting.appointment_fee ?? 0} onClose={() => setConsulting(null)} />
+        <ConsultModal dietitian={consulting} fee={consulting.is_under_offer ? 99 : (consulting.appointment_fee ?? 0)} onClose={() => setConsulting(null)} />
       )}
     </main>
   )

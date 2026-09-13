@@ -27,7 +27,7 @@ const Hero = ({ onOpenForm }: { onOpenForm: () => void }) => {
               className="hero-btn-outline"
               onClick={() => navigate('/consult-dietitian')}
             >
-              <i className="fa-solid fa-user-doctor" /> Consult Dietitians
+              <i className="fa-solid fa-user-doctor" /> Consult Dietitians <span className="navbar-offer-badge">₹99</span>
             </button>
           </div>
 
