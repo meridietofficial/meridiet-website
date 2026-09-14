@@ -6,7 +6,7 @@ const PRICING_FEATURES = [
   { icon: 'fa-solid fa-wallet',         text: 'Earnings Dashboard & Payout Management' },
   { icon: 'fa-solid fa-shield-halved',  text: 'Verified Dietitian Badge on your profile' },
   { icon: 'fa-solid fa-headset',        text: 'Dedicated Support at every step' },
-  { icon: 'fa-solid fa-coins',          text: '₹100 wallet credit on your trial account' },
+  { icon: 'fa-solid fa-infinity',       text: 'Lifetime access — no monthly fees ever' },
 ]
 
 const BENEFITS = [
@@ -130,7 +130,7 @@ const TESTIMONIALS = [
 ]
 
 const FAQS = [
-  { q: 'Is there any registration fee?', a: 'No, registration on MeriDiet is absolutely free for all qualified dietitians and nutritionists.' },
+  { q: 'What is the joining fee?', a: 'MeriDiet charges a one-time fee of ₹999 (launch offer, regular price ₹2,499) for lifetime access. No monthly fees or hidden charges.' },
   { q: 'When will I receive my payouts?', a: 'Payouts are processed every week directly to your linked bank account or wallet.' },
   { q: 'Can I choose my consultation fee?', a: 'Yes, you have full control over setting your own consultation fees.' },
   { q: 'Can I work part-time?', a: 'Absolutely! You can set your own availability and work as little or as much as you want.' },
@@ -211,16 +211,16 @@ const ForDietitians = () => {
           </ul>
 
           <div className="fd-trial-chip">
-            <span className="fd-trial-chip-badge">FREE</span>
-            <span className="fd-trial-chip-text">7-Day Free Trial &nbsp;·&nbsp; ₹100 wallet credit included</span>
+            <span className="fd-trial-chip-badge" style={{ background: '#16a34a' }}>OFFER</span>
+            <span className="fd-trial-chip-text">One-Time Fee &nbsp;·&nbsp; <s style={{ opacity: 0.6 }}>₹2,499</s> &nbsp;<strong style={{ color: '#16a34a' }}>₹999</strong> lifetime access</span>
           </div>
 
           <div className="fd-cta-row">
-            <button className="btn-primary fd-cta-btn" onClick={() => navigate('/for-dietitians/basic-info')}>Start Free Trial →</button>
+            <button className="btn-primary fd-cta-btn" onClick={() => navigate('/for-dietitians/basic-info')}>Join Now →</button>
             <button className="btn-outline fd-cta-btn" onClick={() => setLoginOpen(true)}>Login</button>
           </div>
           <p className="fd-free-note">
-            <img src="/free-icon.png" alt="" className="fd-free-check" /> No payment required to register
+            <img src="/free-icon.png" alt="" className="fd-free-check" /> One-time payment · No monthly fees
           </p>
         </div>
 
@@ -297,7 +297,7 @@ const ForDietitians = () => {
         <div className="fd-dashboard-preview-left">
           <h2 className="fd-dashboard-preview-title">Powerful Dashboard Made For You</h2>
           <p className="fd-dashboard-preview-desc">Everything you need to manage your practice efficiently.</p>
-          <button className="btn-primary fd-dashboard-preview-btn" onClick={() => navigate('/for-dietitians/basic-info')}>Explore Dashboard →</button>
+          <button className="btn-primary fd-dashboard-preview-btn" onClick={() => navigate('/for-dietitians/basic-info')}>Join Now →</button>
         </div>
         <div className="fd-dashboard-preview-right">
           <img src="/dietitian-dashboard.png" alt="Dashboard Preview" className="fd-dashboard-preview-img" />
@@ -415,12 +415,11 @@ const ForDietitians = () => {
       <div className="container fd-pricing-inner">
         <div className="fd-pricing-left">
           <p className="fd-pricing-eyebrow">Simple & Transparent</p>
-          <h2 className="fd-pricing-title">Start Free — Pay Only After You're Sure</h2>
+          <h2 className="fd-pricing-title">One-Time Fee. Lifetime Access.</h2>
           <p className="fd-pricing-sub">
-            Register for <strong className="fd-pricing-amount-inline">FREE</strong> and get a 7-day trial to explore
-            all features. Activate your account for{' '}
+            Join MeriDiet for just{' '}
             <strong className="fd-pricing-amount-inline"><span className="fd-price-old">₹2,499</span> ₹999</strong>{' '}
-            only after you're confident — no surprises, no monthly fees.
+            — a one-time payment that gives you lifetime access to all features. No monthly fees, no hidden charges.
           </p>
 
           <ul className="fd-pricing-features">
@@ -437,45 +436,40 @@ const ForDietitians = () => {
 
         <div className="fd-pricing-right">
           <div className="fd-plan-card">
-            <div className="fd-plan-badge">7-Day Free Trial</div>
+            <div className="fd-plan-badge" style={{ background: 'linear-gradient(90deg,#16a34a,#15803d)' }}>Launch Offer</div>
 
-            {/* Free trial price */}
-            <div className="fd-plan-price-row">
-              <span className="fd-plan-currency" style={{ fontSize: 20, alignSelf: 'center' }}>₹</span>
-              <span className="fd-plan-amount">0</span>
+            {/* Pricing */}
+            <div className="fd-plan-price-row" style={{ alignItems: 'baseline', gap: 10 }}>
+              <span className="fd-price-old" style={{ fontSize: 22, fontWeight: 700 }}>₹2,499</span>
+              <span className="fd-plan-currency" style={{ fontSize: 22, alignSelf: 'center' }}>₹</span>
+              <span className="fd-plan-amount">999</span>
             </div>
-            <p className="fd-plan-free-label">to get started today</p>
-
-            {/* Wallet credit highlight */}
-            <p className="fd-plan-credit-note">
-              <i className="fa-solid fa-coins" style={{ color: '#f59e0b', marginRight: 6 }} />
-              Includes <strong>₹100 wallet credit</strong> on your trial account
-            </p>
+            <p className="fd-plan-free-label">one-time · lifetime access</p>
 
             <div className="fd-plan-divider" />
 
-            {/* How it works steps */}
+            {/* Steps */}
             <ol className="fd-plan-steps">
               <li>
                 <span className="fd-plan-step-num">1</span>
-                <span><strong>Register</strong> — free, no card needed</span>
+                <span><strong>Register</strong> — fill your profile & credentials</span>
               </li>
               <li>
                 <span className="fd-plan-step-num">2</span>
-                <span><strong>7-day trial</strong> starts after approval + ₹100 credit</span>
+                <span><strong>Get Verified</strong> — we review & approve your account</span>
               </li>
               <li>
                 <span className="fd-plan-step-num">3</span>
-                <span><strong>Activate</strong> for <span className="fd-price-old" style={{ fontSize: 12 }}>₹2,499</span> <strong style={{ color: '#16a34a' }}>₹999</strong> — one-time, lifetime access</span>
+                <span><strong>Pay once</strong> — <span className="fd-price-old" style={{ fontSize: 12 }}>₹2,499</span> <strong style={{ color: '#16a34a' }}>₹999</strong> &amp; go live instantly</span>
               </li>
             </ol>
 
             <button className="btn-primary fd-plan-cta" onClick={() => navigate('/for-dietitians/basic-info')}>
-              Start Free Trial →
+              Join Now →
             </button>
             <p className="fd-plan-secure">
               <i className="fa-solid fa-shield-halved" style={{ fontSize: 11, marginRight: 5 }} />
-              No payment required to register
+              One-time payment · No monthly fees ever
             </p>
           </div>
         </div>

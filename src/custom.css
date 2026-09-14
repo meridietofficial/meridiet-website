@@ -5012,21 +5012,51 @@
 .fd-cta-row {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   flex-wrap: wrap;
   margin-bottom: 4px;
 }
 
 .fd-cta-btn {
-  font-size: 15px;
-  height: 42px;
-  padding: 6px 32px;
-  border-radius: 12px;
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   justify-content: center;
+  height: 48px;
+  padding: 0 32px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
   white-space: nowrap;
-  box-shadow: 0px 4px 6px -4px #006B2833, 0px 10px 15px -3px #006B2833;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fd-cta-btn.btn-primary {
+  background: var(--green);
+  color: #fff;
+  border: 2px solid transparent;
+  box-shadow: 0 4px 14px rgba(30, 142, 62, 0.35);
+}
+
+.fd-cta-btn.btn-primary:hover {
+  background: #166c31;
+  box-shadow: 0 6px 20px rgba(30, 142, 62, 0.45);
+  transform: translateY(-1px);
+}
+
+.fd-cta-btn.btn-outline {
+  background: transparent;
+  color: var(--green);
+  border: 2px solid var(--green);
+  box-shadow: none;
+  padding: 0 28px;
+}
+
+.fd-cta-btn.btn-outline:hover {
+  background: var(--green);
+  color: #fff;
+  transform: translateY(-1px);
 }
 
 .fd-free-note {
@@ -6620,6 +6650,146 @@
   transition: background 0.15s;
 }
 .jd2-next-btn:hover { background: #005520; }
+
+/* ── Step 4: Payment card ── */
+.jd2-payment-card {
+  background: linear-gradient(145deg, #fffbeb 0%, #f0fdf4 100%);
+  border: 1.5px solid #86efac;
+  border-radius: 16px;
+  padding: 28px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  text-align: center;
+}
+
+.jd2-payment-badge {
+  display: inline-block;
+  background: linear-gradient(90deg, #16a34a, #15803d);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 16px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  margin-bottom: 16px;
+}
+
+.jd2-payment-price-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.jd2-payment-old {
+  font-size: 22px;
+  font-weight: 700;
+  color: #9ca3af;
+  text-decoration: line-through;
+}
+
+.jd2-payment-amount {
+  font-size: 52px;
+  font-weight: 900;
+  color: #15803d;
+  line-height: 1;
+}
+
+.jd2-payment-label {
+  font-size: 13px;
+  color: #6b7280;
+  margin-bottom: 20px;
+}
+
+.jd2-payment-divider {
+  width: 100%;
+  height: 1px;
+  background: #d1fae5;
+  margin: 16px 0;
+}
+
+.jd2-payment-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  text-align: left;
+}
+
+.jd2-payment-feature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  color: #374151;
+}
+
+.jd2-payment-feature-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #dcfce7;
+  color: #16a34a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 12px;
+}
+
+.jd2-payment-btn {
+  width: 100%;
+  height: 52px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 18px rgba(22, 163, 74, 0.38);
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 4px;
+}
+
+.jd2-payment-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(22, 163, 74, 0.45);
+}
+
+.jd2-payment-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.jd2-payment-secure {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 10px;
+}
+
+.jd2-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: jd2-spin 0.7s linear infinite;
+}
+
+@keyframes jd2-spin {
+  to { transform: rotate(360deg); }
+}
 
 /* ── Login note ── */
 .jd2-login-note {

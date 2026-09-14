@@ -125,11 +125,13 @@ export default function DietitianShowcase() {
                   </h3>
                   <p className="ds-title-text">{d.title}</p>
 
-                  <div className="ds-rating">
-                    <span className="ds-star">★</span>
-                    <span className="ds-rating-num">{d.rating > 0 ? d.rating.toFixed(1) : '—'}</span>
-                    {d.reviews > 0 && <span className="ds-rating-count">({d.reviews})</span>}
-                  </div>
+                  {d.rating > 0 && d.reviews > 0 && (
+                    <div className="ds-rating">
+                      <span className="ds-star">★</span>
+                      <span className="ds-rating-num">{d.rating.toFixed(1)}</span>
+                      <span className="ds-rating-count">({d.reviews})</span>
+                    </div>
+                  )}
 
                   <div className="ds-meta">
                     <span>⏱ {d.experience}</span>

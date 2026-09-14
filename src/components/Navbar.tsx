@@ -46,6 +46,7 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
   }, [search, user, pathname, navigate])
 
   const isHeroTop = pathname === '/' && !scrolled
+  const isOnboarding = ['/for-dietitians/basic-info', '/for-dietitians/qualification', '/for-dietitians/document-upload', '/for-dietitians/payment', '/dietitian/verification-submitted'].some(p => pathname === p || pathname.startsWith(p + '/'))
 
   const initials = user
     ? user.full_name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
@@ -67,7 +68,7 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
             </span>
           </div>
 
-          {user && (
+          {user && !isOnboarding && (
             <>
               <div className="navbar-user" ref={dropdownRef}>
                 <button className="navbar-avatar" onClick={() => setDropdownOpen(p => !p)}>
@@ -134,15 +135,15 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
               <button className="btn-primary navbar-cta" onClick={() => { setMenuOpen(false); onOpenForm() }}>
                 Get My Diet Plan
               </button>
-              {user ? (
+              {user && !isOnboarding ? (
                 <button className="navbar-login" onClick={() => { setMenuOpen(false); navigate(user.role === 'dietitian' ? '/dietitian-dashboard' : '/profile') }}>
                   {initials} · My Profile
                 </button>
-              ) : (
+              ) : !isOnboarding ? (
                 <button className="navbar-login" onClick={() => { setMenuOpen(false); setAuthOpen(true) }}>
                   Login / Sign Up
                 </button>
-              )}
+              ) : null}
             </li>
           </ul>
 
@@ -151,7 +152,7 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
               Get My Diet Plan
             </button>
 
-            {user ? (
+            {user && !isOnboarding ? (
               <div className="navbar-user" ref={dropdownRef}>
                 <button className="navbar-user-chip" onClick={() => setDropdownOpen(p => !p)}>
                   <span className="navbar-chip-avatar">
@@ -192,12 +193,12 @@ const Navbar = ({ onOpenForm }: NavbarProps) => {
                   </div>
                 )}
               </div>
-            ) : (
+            ) : !isOnboarding ? (
               <button className="navbar-login" onClick={() => setAuthOpen(true)}>
                 Login / Sign Up
               </button>
-            )}
-            {user?.wallet_balance !== undefined && (
+            ) : null}
+            {user?.wallet_balance !== undefined && !isOnboarding && (
               <div className="navbar-wallet-chip">
                 <svg className="navbar-wallet-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" fill="currentColor" stroke="none"/><path d="M22 7V5a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2"/></svg>
                 <span>₹ {Number(user.wallet_balance).toLocaleString('en-IN')}</span>

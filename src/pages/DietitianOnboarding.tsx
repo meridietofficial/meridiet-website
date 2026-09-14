@@ -1,16 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import dietitianApi, { uploadDocuments } from '../api/dietitian'
-import { dietitianRegOtpApi } from '../api/payment'
+import { dietitianRegOtpApi, dietitianRegistrationFeeApi } from '../api/payment'
 import { normalizeImageFile, normalizeDocumentFile } from '../utils/imageUtils'
 import { ApiError } from '../api/client'
 import { useToast } from '../context/ToastContext'
+import { useAuth } from '../context/AuthContext'
 import AuthModal from '../components/AuthModal'
 import { IN_STATES } from '../data/indiaCities'
 import SearchableSelect from '../components/SearchableSelect'
 import type { SelectOption } from '../components/SearchableSelect'
 import SpecializationInput from '../components/SpecializationInput'
 import { trackEvent } from '../utils/analytics'
+import { loadRazorpay } from '../utils/loadRazorpay'
 import SEO from '../components/SEO'
 
 /* ── Session storage key for form data (text fields only) ── */
@@ -21,18 +23,21 @@ const STEP_MAP: Record<string, number> = {
   '/for-dietitians/basic-info':      1,
   '/for-dietitians/qualification':   2,
   '/for-dietitians/document-upload': 3,
+  '/for-dietitians/payment':         4,
 }
 const STEP_PATHS = [
   '',
   '/for-dietitians/basic-info',
   '/for-dietitians/qualification',
   '/for-dietitians/document-upload',
+  '/for-dietitians/payment',
 ]
 
 const STEPS = [
   { num: 1, label: 'Basic Info' },
   { num: 2, label: 'Qualifications' },
   { num: 3, label: 'Documents' },
+  { num: 4, label: 'Payment' },
 ]
 
 const REG_FEATURES = [
@@ -43,7 +48,7 @@ const REG_FEATURES = [
   { icon: 'fa-solid fa-wallet',         text: 'Earnings Dashboard & Payout Management' },
   { icon: 'fa-solid fa-shield-halved',  text: 'Verified Dietitian Badge on your profile' },
   { icon: 'fa-solid fa-headset',        text: 'Dedicated Support at every step' },
-  { icon: 'fa-solid fa-coins',          text: '₹500 wallet credit — use for diet plans & more' },
+  { icon: 'fa-solid fa-infinity',       text: 'Lifetime access — no monthly fees ever' },
 ]
 
 /* ── Degrees ── */
@@ -161,6 +166,7 @@ export default function DietitianOnboarding() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const { showToast } = useToast()
+  const { user, saveAuth } = useAuth()
 
   const step = STEP_MAP[pathname] ?? 1
 
@@ -170,6 +176,7 @@ export default function DietitianOnboarding() {
   const [errors, setErrors]               = useState<Partial<Record<keyof Form, string>>>({})
   const [uploading, setUploading]         = useState(false)
   const [docError, setDocError]           = useState('')
+  const [paymentLoading, setPaymentLoading] = useState(false)
 
   /* OTP state */
   const [phoneVerified, setPhoneVerified]       = useState(false)
@@ -205,12 +212,13 @@ export default function DietitianOnboarding() {
 
   /* Guard: if user lands on a later step without having filled earlier steps, redirect */
   useEffect(() => {
-    if (step > 1 && !data.fullName.trim()) {
+    if (user?.role === 'dietitian') return  // already registered — skip guards
+    if (step > 1 && step < 4 && !data.fullName.trim()) {
       navigate('/for-dietitians/basic-info', { replace: true })
-    } else if (step > 2 && !data.qualification.trim()) {
+    } else if (step > 2 && step < 4 && !data.qualification.trim()) {
       navigate('/for-dietitians/qualification', { replace: true })
     }
-  }, [step, data.fullName, data.qualification, navigate])
+  }, [step, data.fullName, data.qualification, navigate, user])
 
   /* Fire funnel tracking event on each step load */
   useEffect(() => {
@@ -305,6 +313,12 @@ export default function DietitianOnboarding() {
   }
 
   const goNext = async () => {
+    // Already registered dietitian coming back from step 4 to retry payment
+    if (step === 3 && user?.role === 'dietitian') {
+      void openPayment()
+      return
+    }
+
     const e = validate(step)
     if (Object.keys(e).length > 0) { setErrors(e); return }
 
@@ -331,7 +345,7 @@ export default function DietitianOnboarding() {
           docs as Record<'profilePhoto' | 'degreeCert' | 'regCert' | 'idProof', File | null>
         )
 
-        await dietitianApi.register({
+        const regRes = await dietitianApi.register({
           fullName:           data.fullName,
           email:              data.email,
           phone:              data.phone,
@@ -350,9 +364,13 @@ export default function DietitianOnboarding() {
           },
         })
 
+        if (regRes.data.token) {
+          saveAuth(regRes.data.user as Parameters<typeof saveAuth>[0], regRes.data.token)
+        }
+
         clearSaved()
         trackEvent('dietitian_onboarding_complete')
-        navigate('/dietitian/verification-submitted')
+        void openPayment()
       } catch (err) {
         const msg = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.'
         if (msg.toLowerCase().includes('verif') && msg.toLowerCase().includes('phone')) {
@@ -380,6 +398,50 @@ export default function DietitianOnboarding() {
     } else {
       window.scrollTo({ top: 0, behavior: 'smooth' })
       navigate(STEP_PATHS[step - 1])
+    }
+  }
+
+  const openPayment = async () => {
+    setPaymentLoading(true)
+    try {
+      await loadRazorpay()
+      const order = await dietitianRegistrationFeeApi.createOrder()
+      const rzp = new window.Razorpay({
+        key:        order.data.key_id,
+        amount:     order.data.amount,
+        currency:   order.data.currency ?? 'INR',
+        order_id:   order.data.order_id,
+        name:       'MeriDiet',
+        description: 'Dietitian Registration Fee',
+        image:      '/logo.png',
+        theme:      { color: '#006B28' },
+        handler: async (rzpRes: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
+          try {
+            await dietitianRegistrationFeeApi.verify({
+              razorpay_order_id:   rzpRes.razorpay_order_id,
+              razorpay_payment_id: rzpRes.razorpay_payment_id,
+              razorpay_signature:  rzpRes.razorpay_signature,
+            })
+            trackEvent('dietitian_registration_fee_paid')
+            navigate('/dietitian/verification-submitted')
+          } catch {
+            showToast('Payment received but verification failed. Please contact support.', 'error')
+          } finally {
+            setPaymentLoading(false)
+          }
+        },
+        modal: {
+          ondismiss: async () => {
+            try { await dietitianRegistrationFeeApi.failed(order.data.order_id) } catch {}
+            setPaymentLoading(false)
+            navigate(STEP_PATHS[4])
+          },
+        },
+      })
+      rzp.open()
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Could not initiate payment. Please try again.', 'error')
+      setPaymentLoading(false)
     }
   }
 
@@ -417,18 +479,22 @@ export default function DietitianOnboarding() {
                 ? <img src="/jd-step1-icon.png" alt="" style={{ width: 28, height: 28, objectFit: 'contain' }} />
                 : step === 2
                 ? <i className="fa-solid fa-briefcase" />
-                : <i className="fa-solid fa-file-arrow-up" />}
+                : step === 3
+                ? <i className="fa-solid fa-file-arrow-up" />
+                : <i className="fa-solid fa-indian-rupee-sign" />}
             </div>
             <div>
               <h2 className="jd2-card-title">
                 {step === 1 ? 'Basic Information'
                   : step === 2 ? 'Professional Details'
-                  : 'Document Upload'}
+                  : step === 3 ? 'Document Upload'
+                  : 'Activate Your Account'}
               </h2>
               <p className="jd2-card-sub">
                 {step === 1 ? "Let's start with some basic details"
                   : step === 2 ? 'Tell us about your professional background'
-                  : 'Upload your documents to complete registration'}
+                  : step === 3 ? 'Upload your documents to complete registration'
+                  : 'One-time payment to go live on MeriDiet'}
               </p>
             </div>
           </div>
@@ -678,18 +744,66 @@ export default function DietitianOnboarding() {
             </div>
           )}
 
+          {/* ── Step 4: Payment ── */}
+          {step === 4 && (
+            <div className="jd2-fields">
+              <div className="jd2-payment-card">
+                <div className="jd2-payment-badge">🎉 Launch Offer</div>
+
+                <div className="jd2-payment-price-row">
+                  <span className="jd2-payment-old">₹2,499</span>
+                  <span className="jd2-payment-amount">₹999</span>
+                </div>
+                <p className="jd2-payment-label">One-time · Lifetime Access · No monthly fees</p>
+
+                <div className="jd2-payment-divider" />
+
+                <ul className="jd2-payment-features">
+                  {REG_FEATURES.map(f => (
+                    <li key={f.text} className="jd2-payment-feature">
+                      <span className="jd2-payment-feature-icon"><i className={f.icon} /></span>
+                      {f.text}
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="jd2-payment-divider" />
+
+                <button
+                  className="jd2-payment-btn"
+                  onClick={openPayment}
+                  disabled={paymentLoading}
+                >
+                  {paymentLoading
+                    ? <><span className="jd2-spinner" /> Processing…</>
+                    : <><i className="fa-solid fa-lock" style={{ marginRight: 8 }} /> Pay ₹999 & Go Live</>
+                  }
+                </button>
+
+                <p className="jd2-payment-secure">
+                  <i className="fa-solid fa-shield-halved" style={{ fontSize: 11, marginRight: 5, color: '#16a34a' }} />
+                  Secured by Razorpay · 100% safe
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* ── Nav buttons ── */}
           <div className="jd2-nav">
             <button className="jd2-back-btn" onClick={goBack}>
               ← {step === 1 ? 'Home' : 'Back'}
             </button>
-            <button className="jd2-next-btn" disabled={uploading} onClick={goNext}>
-              {uploading
-                ? 'Submitting…'
-                : step === 3
-                ? 'Submit Registration →'
-                : 'Next →'}
-            </button>
+            {step < 4 && (
+              <button className="jd2-next-btn" disabled={uploading || (step === 3 && paymentLoading)} onClick={goNext}>
+                {uploading
+                  ? 'Submitting…'
+                  : step === 3 && paymentLoading
+                  ? 'Opening Payment…'
+                  : step === 3
+                  ? 'Pay →'
+                  : 'Next →'}
+              </button>
+            )}
           </div>
         </div>
 

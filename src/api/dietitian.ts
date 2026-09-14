@@ -354,6 +354,7 @@ type DietitianRegisterResponse = {
   success: true
   message: string
   data: {
+    token?: string
     user: { id: number; full_name: string; email: string; role: string }
     dietitian: { id: number; is_verified: boolean; subscription_status: SubscriptionStatus }
   }

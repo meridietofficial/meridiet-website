@@ -112,7 +112,7 @@ export default function ConsultDietitian() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [heroSlide, setHeroSlide] = useState(0)
   const heroHovered = useRef(false)
-  const HERO_SLIDES = 1
+  const HERO_SLIDES = 4
 
   // Hero carousel auto-advance
   useEffect(() => {
@@ -337,6 +337,36 @@ export default function ConsultDietitian() {
               <img
                 src="/nutrition-month-banner.png"
                 alt="Nutrition Month – Expert Nutrition Consultation at ₹99"
+                className="cd-carousel-banner-img"
+                onClick={() => document.getElementById('cd-listing')?.scrollIntoView({ behavior: 'smooth' })}
+              />
+            </div>
+
+            {/* Slide 3 — banner image 2 */}
+            <div className="cd-carousel-slide cd-carousel-slide--banner">
+              <img
+                src="/banner-slide-2.png"
+                alt="Banner"
+                className="cd-carousel-banner-img"
+                onClick={() => document.getElementById('cd-listing')?.scrollIntoView({ behavior: 'smooth' })}
+              />
+            </div>
+
+            {/* Slide 4 — banner image 3 */}
+            <div className="cd-carousel-slide cd-carousel-slide--banner">
+              <img
+                src="/banner-slide-3.png"
+                alt="Banner"
+                className="cd-carousel-banner-img"
+                onClick={() => document.getElementById('cd-listing')?.scrollIntoView({ behavior: 'smooth' })}
+              />
+            </div>
+
+            {/* Slide 5 — Consult Top Dietitians Online */}
+            <div className="cd-carousel-slide cd-carousel-slide--banner">
+              <img
+                src="/banner-slide-4.png"
+                alt="Consult Top Dietitians Online"
                 className="cd-carousel-banner-img"
                 onClick={() => document.getElementById('cd-listing')?.scrollIntoView({ behavior: 'smooth' })}
               />
