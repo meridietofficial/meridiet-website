@@ -6,6 +6,7 @@ import appointmentApi from '../api/appointment'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from '../components/AuthModal'
 import SEO from '../components/SEO'
+import { loadRazorpay } from '../utils/loadRazorpay'
 
 function getInitials(name: string) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -150,9 +151,10 @@ export default function DietitianProfile() {
         phone: user.phone_number || undefined,
         fee: consultFee,
       })
+      await loadRazorpay()
       const rzp = new window.Razorpay({
         key: order.key_id,
-        amount: order.amount * 100,
+        amount: (order.final_amount ?? order.amount) * 100,
         currency: order.currency ?? 'INR',
         order_id: order.order_id,
         name: 'MeriDiet',

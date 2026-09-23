@@ -22,6 +22,8 @@ export type CreateOrderResult = {
   appointment_id: number
   order_id: string
   amount: number
+  final_amount: number
+  discount_applied: number
   currency: string
   key_id: string
 }

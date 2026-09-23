@@ -142,7 +142,7 @@ export default function ConsultModal({ dietitian, fee, onClose }: ConsultModalPr
       await loadRazorpay()
       const rzp = new window.Razorpay({
         key: order.key_id,
-        amount: order.amount * 100,
+        amount: (order.final_amount ?? order.amount) * 100,
         currency: order.currency ?? 'INR',
         order_id: order.order_id,
         name: 'MeriDiet',

@@ -373,7 +373,7 @@ const ACTIVITY = [
   { v: 'Lightly Active (1–3 days/week)',    icon: '🚶', short: 'Lightly Active', sub: '1–3 days/week' },
   { v: 'Moderately Active',                icon: '🏃', short: 'Moderate',       sub: '3–5 days/week' },
   { v: 'Very Active (6–7 days/week)',       icon: '💪', short: 'Very Active',    sub: '6–7 days/week' },
-  { v: 'Super Active (athlete)',            icon: '🏆', short: 'Super Active',   sub: 'Athlete level' },
+  // { v: 'Super Active (athlete)',            icon: '🏆', short: 'Super Active',   sub: 'Athlete level' },
 ]
 const SLEEP   = ['< 5 hrs', '5–6 hrs', '6–7 hrs', '7–8 hrs', '> 8 hrs']
 const SLEEP_V = ['Less than 5 hours', '5 – 6 hours', '6 – 7 hours', '7 – 8 hours', 'More than 8 hours']
@@ -409,6 +409,13 @@ const Step2 = ({ d, set, err }: { d: FormData; set: SetFn; err: Errors }) => (
     <div className="df-card-field">
       <label className="df-label">Activity Level <span className="df-req">*</span></label>
       <p className="df-field-sub">How active are you on a daily basis?</p>
+      <div className="df-activity-note">
+        <span className="df-activity-note-icon">⚠️</span>
+        <div>
+          <p>Please select your activity level based on your actual <strong>DAILY routine</strong>, not your desired activity level. If you are unsure, select the <strong>lower</strong> activity level.</p>
+          <p className="df-activity-note-example">Example: If you have a desk job and go to the gym 3 days/week, select <strong>Lightly Active</strong>, not Moderately/Very Active.</p>
+        </div>
+      </div>
       <div className="ls-activity-grid">
         {ACTIVITY.map((a) => (
           <button
@@ -610,8 +617,13 @@ const Step3 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
         <div className="df-input-wrap">
           <span className="df-icon">🚫</span>
           <input className="df-input" type="text" placeholder="e.g., mushrooms, tofu…"
-            value={d.foodsDislike} onChange={(e) => set('foodsDislike', e.target.value)} />
+            maxLength={80}
+            value={d.foodsDislike}
+            onChange={(e) => set('foodsDislike', e.target.value)} />
         </div>
+        <span className={`df-word-count${d.foodsDislike.length >= 80 ? ' df-word-count--max' : ''}`}>
+          {d.foodsDislike.length}/80
+        </span>
       </div>
       <div className="df-card-field">
         <label className="df-label">Favourite Foods <span className="df-opt">(Optional)</span></label>
@@ -619,8 +631,13 @@ const Step3 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
         <div className="df-input-wrap">
           <span className="df-icon">❤️</span>
           <input className="df-input" type="text" placeholder="e.g., dal, paneer, rajma, oats…"
-            value={d.favoriteFoods} onChange={(e) => set('favoriteFoods', e.target.value)} />
+            maxLength={80}
+            value={d.favoriteFoods}
+            onChange={(e) => set('favoriteFoods', e.target.value)} />
         </div>
+        <span className={`df-word-count${d.favoriteFoods.length >= 80 ? ' df-word-count--max' : ''}`}>
+          {d.favoriteFoods.length}/80
+        </span>
       </div>
     </div>
 
@@ -727,15 +744,21 @@ const Step4 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
         ))}
       </div>
       {d.medicalConditions.includes('Other') && (
-        <div className="df-input-wrap" style={{ marginTop: 10 }}>
-          <input
-            className="df-input"
-            type="text"
-            placeholder="Please specify your condition"
-            value={d.otherCondition}
-            onChange={(e) => set('otherCondition', e.target.value)}
-            style={{ paddingLeft: 12 }}
-          />
+        <div style={{ marginTop: 10 }}>
+          <div className="df-input-wrap">
+            <input
+              className="df-input"
+              type="text"
+              placeholder="Please specify your condition"
+              maxLength={100}
+              value={d.otherCondition}
+              onChange={(e) => set('otherCondition', e.target.value)}
+              style={{ paddingLeft: 12 }}
+            />
+          </div>
+          <span className={`df-word-count${d.otherCondition.length >= 100 ? ' df-word-count--max' : ''}`}>
+            {d.otherCondition.length}/100
+          </span>
         </div>
       )}
       <FieldErr msg={err.medicalConditions} />
@@ -761,9 +784,15 @@ const Step4 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
       {(d.onMedication === 'Yes, regularly' || d.onMedication === 'Yes, occasionally') && (
         <div style={{ marginTop: 12 }}>
           <label className="df-label">List your medications <span className="df-opt">(optional)</span></label>
-          <textarea className="df-textarea" rows={2}
-            placeholder="e.g., Metformin, Thyroxine, Vitamin D"
-            value={d.medications} onChange={(e) => set('medications', e.target.value)} />
+          <div className="df-ta-wrap">
+            <textarea className="df-textarea" rows={2}
+              maxLength={150}
+              placeholder="e.g., Metformin, Thyroxine, Vitamin D"
+              value={d.medications} onChange={(e) => set('medications', e.target.value)} />
+            <span className={`df-char${d.medications.length >= 150 ? ' df-word-count--max' : ''}`}>
+              {d.medications.length}/150
+            </span>
+          </div>
         </div>
       )}
       <FieldErr msg={err.onMedication} />
@@ -814,10 +843,10 @@ const Step4 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
       <label className="df-label">Anything else we should know? <span className="df-opt">(Optional)</span></label>
       <p className="df-field-sub">Recent surgery, pregnancy, breastfeeding, etc.</p>
       <div className="df-ta-wrap">
-        <textarea className="df-textarea" rows={3} maxLength={250}
+        <textarea className="df-textarea" rows={3} maxLength={200}
           placeholder="Share any other health information…"
           value={d.healthNotes} onChange={(e) => set('healthNotes', e.target.value)} />
-        <span className="df-char">{d.healthNotes.length}/250</span>
+        <span className="df-char">{d.healthNotes.length}/200</span>
       </div>
     </div>
   </div>
@@ -932,6 +961,7 @@ const Step5 = ({ d, set, err, coupon }: { d: FormData; set: SetFn; err: Errors; 
                 className="df-input"
                 type="text"
                 placeholder="Enter coupon code"
+                maxLength={20}
                 value={coupon.couponCode}
                 onChange={(e) => coupon.onCouponCodeChange(e.target.value.toUpperCase())}
                 onKeyDown={(e) => { if (e.key === 'Enter') coupon.onApplyCoupon() }}
@@ -1074,10 +1104,10 @@ const Step5 = ({ d, set, err, coupon }: { d: FormData; set: SetFn; err: Errors; 
         <label className="df-label">Anything else we should know? <span className="df-opt">(Optional)</span></label>
         <p className="df-field-sub">Irregular eating habits, fasting days, no onion-garlic, etc.</p>
         <div className="df-ta-wrap">
-          <textarea className="df-textarea" rows={5} maxLength={250}
+          <textarea className="df-textarea" rows={5} maxLength={150}
             placeholder="Share anything important for your plan…"
             value={d.finalNotes} onChange={(e) => set('finalNotes', e.target.value)} />
-          <span className="df-char">{d.finalNotes.length}/250</span>
+          <span className="df-char">{d.finalNotes.length}/150</span>
         </div>
       </div>
     </div>

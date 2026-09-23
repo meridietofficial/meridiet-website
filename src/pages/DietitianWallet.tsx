@@ -30,6 +30,8 @@ export default function DietitianWallet() {
   const [addAmt, setAddAmt]             = useState('')
   const [addingMoney, setAddingMoney]   = useState(false)
   const [addMoneyErr, setAddMoneyErr]   = useState<string | null>(null)
+  const [withdrawing, setWithdrawing]   = useState(false)
+  const [withdrawErr, setWithdrawErr]   = useState<string | null>(null)
 
   const [overview, setOverview]             = useState<WalletOverview | null>(null)
   const [overviewLoading, setOverviewLoading] = useState(true)
@@ -144,6 +146,30 @@ export default function DietitianWallet() {
     }
   }
 
+  async function handleWithdraw() {
+    const amt = Number(withdrawAmt)
+    if (!withdrawAmt || isNaN(amt) || amt <= 0) { setWithdrawErr('Please enter a valid amount'); return }
+    if (amt <= 1) { setWithdrawErr('Minimum withdrawal is ₹2'); return }
+    const available = overview?.available_balance ?? 0
+    if (amt > available) { setWithdrawErr(`Amount exceeds available balance of ${formatINR(available)}`); return }
+    if (accounts.length === 0) { setWithdrawErr('No payment account linked. Please add a bank account or UPI ID first.'); return }
+    setWithdrawing(true)
+    setWithdrawErr(null)
+    try {
+      const primaryAccount = accounts.find(a => a.is_primary) ?? accounts[0]
+      await earningsApi.requestWithdrawal(amt, primaryAccount?.id)
+      setShowWithdraw(false)
+      setWithdrawAmt('')
+      earningsApi.getWalletOverview().then(data => setOverview(data)).catch(() => {})
+      setPage(1)
+      setTxRefreshTick(t => t + 1)
+    } catch (e: any) {
+      setWithdrawErr(e?.response?.data?.message ?? e?.message ?? 'Withdrawal failed. Please try again.')
+    } finally {
+      setWithdrawing(false)
+    }
+  }
+
   const filtered = transactions.filter(t => {
     if (tab === 'credits' && t.type !== 'credit') return false
     if (tab === 'debits'  && t.type !== 'debit')  return false
@@ -251,8 +277,13 @@ export default function DietitianWallet() {
           <div className="wa-action-banner-inner">
             <div className="wa-action-icon"><i className="fa-solid fa-arrow-up-from-bracket" /></div>
             <div className="wa-action-body">
-              <p className="wa-action-title">Withdraw to Bank</p>
-              <p className="wa-action-sub">Funds will reach HDFC ••••4521 in 1–2 business days</p>
+              <p className="wa-action-title">Withdraw to Account</p>
+              {(() => {
+                const primary = accounts.find(a => a.is_primary) ?? accounts[0]
+                if (!primary) return <p className="wa-action-sub" style={{ color: '#f97316' }}>No payment account linked. Please add one in Profile → Bank Information.</p>
+                if (primary.type === 'upi') return <p className="wa-action-sub">Funds will be sent to UPI: <strong>{primary.upi_id}</strong></p>
+                return <p className="wa-action-sub">Funds will reach {primary.bank_name} ••••{primary.account_number?.slice(-4)} in 1–2 business days</p>
+              })()}
               <div className="wa-action-row">
                 <div className="wa-action-input-wrap">
                   <span className="wa-action-prefix">₹</span>
@@ -261,15 +292,27 @@ export default function DietitianWallet() {
                     type="number"
                     placeholder="Enter amount"
                     value={withdrawAmt}
-                    onChange={e => setWithdrawAmt(e.target.value)}
+                    onChange={e => { setWithdrawAmt(e.target.value); setWithdrawErr(null) }}
                     min={1}
                     max={overview?.available_balance ?? 0}
+                    disabled={withdrawing}
                   />
                 </div>
-                <button className="wa-action-confirm">Confirm Withdrawal</button>
-                <button className="wa-action-cancel" onClick={() => setShowWithdraw(false)}>Cancel</button>
+                <button
+                  className="wa-action-confirm"
+                  onClick={handleWithdraw}
+                  disabled={withdrawing || !withdrawAmt || accounts.length === 0}
+                >
+                  {withdrawing ? 'Processing…' : 'Confirm Withdrawal'}
+                </button>
+                <button className="wa-action-cancel" onClick={() => { setShowWithdraw(false); setWithdrawErr(null) }} disabled={withdrawing}>Cancel</button>
               </div>
-              <p className="wa-action-hint">Available: {formatINR(overview?.available_balance ?? 0)} · Min ₹100 · No fee</p>
+              {withdrawErr && (
+                <p style={{ color: '#ef4444', fontSize: 12, marginTop: 6 }}>
+                  <i className="fa-solid fa-circle-exclamation" style={{ marginRight: 4 }} />{withdrawErr}
+                </p>
+              )}
+              <p className="wa-action-hint">Available: {formatINR(overview?.available_balance ?? 0)} · Min ₹2 · No fee</p>
             </div>
           </div>
         </div>

@@ -126,6 +126,10 @@ const ENDPOINTS = {
     verify:      '/dietitian/wallet/recharge/verify-payment',
     failed:      '/dietitian/wallet/recharge/failed',
   },
+  withdrawal: {
+    request: '/dietitian/withdraw',
+    list:    '/dietitian/withdrawals',
+  },
   partnership: {
     submit: '/partnership-inquiry',
   },

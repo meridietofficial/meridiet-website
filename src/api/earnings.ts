@@ -227,6 +227,12 @@ const earningsApi = {
       razorpay_order_id: orderId,
     }),
 
+  requestWithdrawal: (amount: number, account_id?: number) =>
+    apiClient.apiPost<{ success: boolean; message: string; data: { withdrawal_id: number; amount: number; status: string } }>(
+      ENDPOINTS.withdrawal.request,
+      account_id ? { amount, account_id } : { amount },
+    ),
+
   async getSummary(period: EarningsPeriod): Promise<EarningsSummary> {
     const res = await apiClient.apiGet<{ success: boolean; data: EarningsSummary }>(
       `${ENDPOINTS.earnings.summary}?period=${period}`

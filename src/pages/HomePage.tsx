@@ -13,6 +13,7 @@ import WhyChoose from '../components/WhyChoose'
 import HomeFAQ from '../components/HomeFAQ'
 import Testimonials from '../components/Testimonials'
 import MediaPress from '../components/MediaPress'
+import TeamSection from '../components/TeamSection'
 import CTA from '../components/CTA'
 import SEO from '../components/SEO'
 
@@ -121,6 +122,7 @@ const HomePage = ({ onOpenForm }: { onOpenForm: () => void }) => (
     <HomeFAQ />
     <Testimonials />
     <MediaPress />
+    <TeamSection />
     <CTA onOpenForm={onOpenForm} />
   </main>
 )
