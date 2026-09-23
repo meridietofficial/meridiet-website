@@ -35164,9 +35164,9 @@
 
 .ts-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 44px;
-  max-width: 900px;
+  max-width: 1100px;
   margin: 0 auto;
 }
 
@@ -35246,12 +35246,13 @@
 }
 
 .ts-designation {
-  font-size: 12.5px;
+  font-size: 11px;
   color: #1e8e3e;
   margin: 0;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 .ts-linkedin {
@@ -35271,17 +35272,17 @@
   background: #cde0f7;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1000px) {
   .ts-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 16px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
   }
 }
 
 @media (max-width: 780px) {
   .ts-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
+    gap: 16px;
   }
 }
 

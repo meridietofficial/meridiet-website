@@ -49,6 +49,18 @@ const TEAM = [
     photo: '/team-anjani-chaturvedi.jpg',
     linkedin: '',
   },
+  {
+    name: 'Sagar Pal',
+    designation: 'Social Media Manager',
+    photo: '/team-sagar-pal.jpg',
+    linkedin: '',
+  },
+  {
+    name: 'Shivam Singh',
+    designation: 'Ecommerce Manager',
+    photo: '/team-shivam-singh.jpg',
+    linkedin: '',
+  },
 ]
 
 const AVATAR_COLORS = [
