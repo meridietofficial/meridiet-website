@@ -14420,18 +14420,25 @@
   gap: 4px;
 }
 
+.cd-stars {
+  display: flex;
+  gap: 1px;
+}
+
 .cd-star {
-  color: #f5a623;
   font-size: 15px;
+  line-height: 1;
 }
 
-.cd-rating-num {
-  font-size: 13px;
-  font-weight: 700;
-  color: #333;
+.cd-star--filled {
+  color: #f5a623;
 }
 
-.cd-rating-reviews {
+.cd-star--empty {
+  color: #d1d5db;
+}
+
+.cd-rating-new {
   font-size: 12px;
   color: #888;
 }
@@ -15654,6 +15661,20 @@
 }
 
 /* Reviews */
+.dp-reviews-avg-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.dp-reviews-big-num {
+  font-size: 42px;
+  font-weight: 800;
+  color: #1e8e3e;
+  line-height: 1;
+}
+
 .dp-reviews {
   display: flex;
   flex-direction: column;

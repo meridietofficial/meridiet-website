@@ -119,11 +119,17 @@ export default function DietitianProfile() {
   const [bookingDone, setBookingDone] = useState(false)
   const [confirmedLabel, setConfirmedLabel] = useState('')
 
+  type Review = { rating: number; review: string | null; reviewed_at: string; reviewer_name: string }
+  const [reviews, setReviews] = useState<Review[]>([])
+
   useEffect(() => {
     if (!id) { setNotFound(true); setLoading(false); return }
     dietitianApi.getDietitianById(Number(id))
       .then(data => { setD(data); setLoading(false) })
       .catch(() => { setNotFound(true); setLoading(false) })
+    dietitianApi.getDietitianReviews(Number(id))
+      .then(data => setReviews(data))
+      .catch(() => {})
   }, [id])
 
   // Only fetch the platform fallback fee when this dietitian has no fee of their own
@@ -487,6 +493,40 @@ export default function DietitianProfile() {
                         {a.organization && <p className="dp-edu-institute">{a.organization}</p>}
                         {a.year && <p className="dp-edu-year">{a.year}</p>}
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Ratings & Reviews */}
+            {reviews.length > 0 && (
+              <div className="dp-section">
+                <h2 className="dp-section-title">Ratings &amp; Reviews</h2>
+                <div className="dp-reviews-avg-row">
+                  <span className="dp-reviews-big-num">{(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)}</span>
+                  <div>
+                    <div className="dp-stars">
+                      {'★'.repeat(Math.round(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length))}
+                      {'☆'.repeat(5 - Math.round(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length))}
+                    </div>
+                    <span className="dp-rating-count">{reviews.length} {reviews.length === 1 ? 'review' : 'reviews'}</span>
+                  </div>
+                </div>
+                <div className="dp-reviews">
+                  {reviews.map((r, i) => (
+                    <div key={i} className="dp-review-card">
+                      <div className="dp-review-top">
+                        <div className="dp-reviewer-avatar">{r.reviewer_name.slice(0, 1).toUpperCase()}</div>
+                        <div>
+                          <p className="dp-reviewer-name">{r.reviewer_name}</p>
+                          <div className="dp-review-stars">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</div>
+                        </div>
+                        <span className="dp-review-date">
+                          {new Date(r.reviewed_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
+                      </div>
+                      {r.review && <p className="dp-review-comment">{r.review}</p>}
                     </div>
                   ))}
                 </div>

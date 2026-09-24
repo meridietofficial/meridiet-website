@@ -639,14 +639,14 @@ export default function ConsultDietitian() {
                       <p className="cd-card-title">{d.title}</p>
                       <div className="cd-card-rating-row">
                         <div className="cd-card-rating">
-                          {d.reviews > 0 ? (
-                            <>
-                              <span className="cd-star">★</span>
-                              <span className="cd-rating-num">{d.rating}</span>
-                              <span className="cd-rating-reviews">({d.reviews})</span>
-                            </>
+                          {d.rating > 0 ? (
+                            <span className="cd-stars">
+                              {Array.from({ length: 5 }, (_, i) => (
+                                <span key={i} className={i < Math.round(d.rating) ? 'cd-star cd-star--filled' : 'cd-star cd-star--empty'}>★</span>
+                              ))}
+                            </span>
                           ) : (
-                            <span className="cd-rating-reviews">New</span>
+                            <span className="cd-rating-new">New</span>
                           )}
                         </div>
                         <span className={`cd-avail-badge ${avail.cls}`}>{avail.text}</span>

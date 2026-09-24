@@ -385,6 +385,13 @@ const dietitianApi = {
     return res.data
   },
 
+  async getDietitianReviews(id: number): Promise<Array<{ rating: number; review: string | null; reviewed_at: string; reviewer_name: string }>> {
+    const res = await apiClient.apiGet<{ success: boolean; message: string; data: Array<{ rating: number; review: string | null; reviewed_at: string; reviewer_name: string }> }>(
+      `${ENDPOINTS.dietitian.list}/${id}/reviews`
+    )
+    return res.data
+  },
+
   async listDietitians(params: DietitianListParams = {}): Promise<{ data: DietitianCard[]; meta: PaginationMeta }> {
     const qs = new URLSearchParams()
     Object.entries(params).forEach(([key, val]) => {

@@ -230,16 +230,18 @@ export default function DietitianOnboarding() {
     if (EVENT_NAMES[step]) trackEvent(EVENT_NAMES[step])
   }, [step])
 
+  /* countriesnow uses the pre-merger name for this UT */
+  const COUNTRIESNOW_STATE_MAP: Record<string, string> = {
+    'Dadra and Nagar Haveli and Daman and Diu': 'Dadra and Nagar Haveli',
+  }
+
   /* Fetch cities whenever state changes */
   useEffect(() => {
     if (!data.state) { setCities([]); return }
+    const apiState = COUNTRIESNOW_STATE_MAP[data.state] ?? data.state
     setCitiesLoading(true)
     setCities([])
-    fetch('https://countriesnow.space/api/v0.1/countries/state/cities', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ country: 'India', state: data.state }),
-    })
+    fetch(`https://countriesnow.space/api/v0.1/countries/state/cities/q?country=India&state=${encodeURIComponent(apiState)}`)
       .then(r => r.json())
       .then(res => { if (!res.error) setCities(res.data ?? []) })
       .catch(() => {})
