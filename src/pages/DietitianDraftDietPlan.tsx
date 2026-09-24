@@ -1533,7 +1533,7 @@ export default function DietitianDraftDietPlan() {
       const weeksWithTotals = recomputeDayTotals(editWeeks)
       const body = {
         weeks:            weeksWithTotals,
-        featured_recipes: editRecipes.length ? editRecipes : undefined,
+        featured_recipes: editRecipes,
         general_tips:     editTips,
         ...editedFields,
       } as PlanContent
@@ -1557,7 +1557,7 @@ export default function DietitianDraftDietPlan() {
       try {
         await dietitianDietPlanApi.updateContent(id, {
           weeks:            recomputeDayTotals(editWeeks),
-          featured_recipes: editRecipes.length ? editRecipes : undefined,
+          featured_recipes: editRecipes,
           general_tips:     editTips,
           ...editedFields,
         } as PlanContent)
