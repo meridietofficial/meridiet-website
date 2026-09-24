@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import SEO from '../components/SEO'
 import courseApi from '../api/course'
+import { loadRazorpay } from '../utils/loadRazorpay'
 
 const COURSE_SCHEMA = {
   '@context': 'https://schema.org',
@@ -36,20 +37,128 @@ const BREADCRUMB_SCHEMA = {
   ],
 }
 
-const CURRICULUM = [
-  'Fundamentals of Nutrition',
-  'Weight Loss & Weight Management',
-  'Weight Gain Nutrition',
-  'PCOS Nutrition',
-  'Diabetes Nutrition',
-  'Sports Nutrition',
-  'Meal Planning',
-  'Client Assessment',
-  'Personalized Diet Planning',
-  'Communication & Consultation Skills',
-  'Professional Ethics',
-  'AI-Based Diet Plan Creation',
-  'Building Your Nutrition Career',
+const SECTIONS = [
+  {
+    title: 'Fundamentals of Nutrition', icon: '🔬',
+    classes: [
+      { title: 'Introduction to Nutrition, Health & Digestive System', topics: ['Definition, importance & scope of nutrition', 'Components of health — physical, mental & social', 'Macronutrients, micronutrients & essential nutrients', 'Digestive system — structure, digestion, absorption & assimilation'] },
+      { title: 'Human Circulatory & Endocrine Systems', topics: ['Heart structure, blood vessels & circulation', 'Nutrient transport & oxygen delivery', 'Major endocrine glands & hormones', 'Insulin, thyroid, cortisol & hunger/satiety hormones'] },
+      { title: 'Human Excretory System & Nutrition', topics: ['Kidneys, nephrons & urine formation', 'Fluid balance & electrolyte regulation', 'Protein metabolism & nitrogenous waste', 'Hydration & urinary function'] },
+    ],
+  },
+  {
+    title: 'Macronutrients', icon: '🥩',
+    classes: [
+      { title: 'Protein', topics: ['Definition, structure & functions of protein', 'Essential & non-essential amino acids', 'Protein quality, sources & requirements', 'Protein needs across life stages & Indian sources'] },
+      { title: 'Carbohydrates & Fiber', topics: ['Types of carbohydrates — simple & complex', 'Glycemic index & glycemic load', 'Soluble & insoluble fiber sources', 'Role of fiber in digestion & gut health'] },
+      { title: 'Dietary Fats', topics: ['Saturated, unsaturated, mono, poly & trans fats', 'Omega-3 & omega-6 fatty acids', 'Dietary fat sources & recommended intake'] },
+    ],
+  },
+  {
+    title: 'Micronutrients', icon: '💊',
+    classes: [
+      { title: 'Vitamins', topics: ['Fat-soluble vitamins: A, D, E, K', 'Water-soluble vitamins: B Complex & C', 'Dietary sources, recommended intake & deficiency disorders', 'Toxicity risks & excess intake'] },
+      { title: 'Minerals & Mineral Toxicity', topics: ['Macrominerals: Calcium, Magnesium, Sodium, Potassium', 'Trace minerals: Iron, Zinc, Iodine, Selenium & more', 'Deficiency disorders & tolerable upper intake levels', 'Safe supplementation practices'] },
+    ],
+  },
+  {
+    title: 'Nutrition Calculations', icon: '🧮',
+    classes: [
+      { title: 'BMI, BMR, TDEE, Protein & Hydration Calculations', topics: ['BMI formula, categories & practical examples', 'Basal Metabolic Rate using Mifflin–St Jeor equation', 'Total Daily Energy Expenditure with activity factors', 'Protein requirements by goal; daily water & fluid calculations'] },
+    ],
+  },
+  {
+    title: 'Food Science', icon: '🔍',
+    classes: [
+      { title: 'Food Labels', topics: ['Reading serving size, energy & macronutrient info', 'Ingredient list & label interpretation in practice'] },
+      { title: 'Food Additives & Artificial Sweeteners', topics: ['Preservatives, colours, emulsifiers & INS numbers', 'Types of artificial sweeteners, safety & acceptable daily intake'] },
+      { title: 'Food Processing', topics: ['Traditional vs modern processing methods', 'Effect of processing & cooking on nutrient content', 'Food fortification & preservation'] },
+      { title: 'Food Safety & Hygiene', topics: ['Safe storage, temperature control & cross-contamination', 'Personal hygiene & prevention of foodborne illness'] },
+    ],
+  },
+  {
+    title: 'Life-Stage & Special Population Nutrition', icon: '👨‍👩‍👧‍👦',
+    classes: [
+      { title: 'Pregnancy, Lactation & Infant Nutrition', topics: ['Energy, macronutrient & key micronutrient needs during pregnancy', 'Maternal diet, hydration & breastfeeding nutrition', 'Infant complementary feeding & introduction of solids'] },
+      { title: 'Child & Adolescent Nutrition', topics: ['Nutritional requirements for growth & development', 'Balanced diet, healthy habits & common deficiencies in children', 'Iron, calcium & puberty-related nutrition in adolescents'] },
+      { title: 'Geriatric Nutrition, Allergies & Drug–Nutrient Interactions', topics: ['Age-related nutritional changes & common concerns', 'Food allergies vs intolerances — gluten, lactose & nuts', 'Drug–nutrient interactions, food timing & referral considerations'] },
+    ],
+  },
+  {
+    title: 'Nutrition Assessment', icon: '📋',
+    classes: [
+      { title: 'Client Assessment & Intake', topics: ['Medical history, lifestyle & dietary assessment', 'Food preferences, allergies, intolerances & client goals', 'Anthropometric measurements — BMI, waist, hip, waist–hip ratio & body fat', 'Client assessment forms, food recall forms & record keeping'] },
+    ],
+  },
+  {
+    title: 'Diet Planning', icon: '📝',
+    classes: [
+      { title: 'Diet Planning Principles & Meal Structure', topics: ['Calorie requirements & macronutrient distribution', 'Meal timing, frequency, portion control & food variety', 'Customization for allergies, intolerances & lifestyle'] },
+      { title: 'Diet Templates & Indian Cuisine Customization', topics: ['Vegetarian, vegan & non-vegetarian templates (1200–2500 kcal)', 'Plant-based protein sources & nutrient considerations', 'North, South, East & West Indian meal customization'] },
+    ],
+  },
+  {
+    title: 'Weight Management', icon: '⚖️',
+    classes: [
+      { title: 'Weight Loss & Fat Loss', topics: ['Energy balance, calorie deficit & fat loss science', 'Factors affecting weight loss, rate of loss & plateaus', 'Diet planning — protein requirements, fiber & portion control'] },
+      { title: 'Weight Gain, Muscle Gain & Behaviour Change', topics: ['Calorie surplus, nutrient-dense foods & meal frequency', 'Protein & carbohydrate needs for muscle gain & recovery', 'Habit formation, motivation, goal setting & managing setbacks'] },
+    ],
+  },
+  {
+    title: 'Lifestyle Disorders', icon: '🏥',
+    classes: [
+      { title: 'Obesity & PCOS', topics: ['Pathophysiology, clinical features & complications', 'Nutrition considerations & sample meal plan'] },
+      { title: 'Diabetes & Hypertension', topics: ['Blood sugar & blood pressure management through diet', 'Nutrition considerations & sample meal plan'] },
+      { title: 'Thyroid Disorders & Fatty Liver', topics: ['Hypo & hyperthyroidism — nutrition strategies', 'Fatty liver — dietary & lifestyle modifications', 'Sample meal plans for both conditions'] },
+      { title: 'Gut Health', topics: ['Gut microbiome, pathophysiology & clinical features', 'Diet for IBS, bloating & constipation', 'Nutrition considerations & sample meal plan'] },
+    ],
+  },
+  {
+    title: 'Sports Nutrition', icon: '🏋️',
+    classes: [
+      { title: 'Sports Nutrition Fundamentals', topics: ['Energy requirements & pre/during/post-workout nutrition', 'Protein & carbohydrate requirements for athletes', 'Hydration, electrolyte replacement & competition nutrition'] },
+    ],
+  },
+  {
+    title: 'Supplements', icon: '💊',
+    classes: [
+      { title: 'Common Dietary Supplements', topics: ['Role of supplements & when they may be considered', 'Protein, creatine, omega-3, multivitamins, vitamin D, B12 & electrolytes', 'Dosage, timing, food vs supplement sources & safety', 'Client counselling on supplement use'] },
+    ],
+  },
+  {
+    title: 'Evidence-Based Awareness', icon: '🔎',
+    classes: [
+      { title: 'Fad Diets & Nutrition Myth-Busting', topics: ['Identifying unsupported nutrition claims', 'Keto diet & intermittent fasting — science check', 'Detox teas & cleanses — evidence, limitations & risks'] },
+      { title: 'Eating Disorders & Scope of Practice', topics: ['Warning signs of eating disorders & disordered eating', 'Nutritionist\'s role, referral guidelines & professional boundaries', 'Multidisciplinary care & when to refer to a specialist'] },
+    ],
+  },
+  {
+    title: 'Professional Practice', icon: '💼',
+    classes: [
+      { title: 'Consultation & Communication Skills', topics: ['First consultation to follow-up process & client retention', 'Active listening, client-centred communication & motivational interviewing', 'Explaining nutrition simply & handling client concerns'] },
+      { title: 'Professional Ethics & Documentation', topics: ['Scope of practice, confidentiality & informed communication', 'Evidence-based practice & professional boundaries', 'Record keeping, consultation notes & data privacy'] },
+    ],
+  },
+  {
+    title: 'Case Studies', icon: '📊',
+    classes: [
+      { title: 'Weight Management Case Studies', topics: ['Case: Weight loss — female client (assessment, plan & follow-up)', 'Case: Muscle gain client (energy, protein & training nutrition)'] },
+      { title: 'Lifestyle Disorder Case Studies', topics: ['Case: PCOS client (nutrition analysis, meal plan & follow-up)', 'Case: Diabetes client (meal planning & lifestyle considerations)'] },
+      { title: 'Office Professional & Integrated Case Practice', topics: ['Case: Sedentary office professional (lifestyle, diet & practical meal planning)', 'Integrated practice — assessment, calculations, planning, counselling & follow-up'] },
+    ],
+  },
+  {
+    title: 'Practical Toolkit', icon: '🛠️',
+    classes: [
+      { title: 'Nutrition Practice Tools', topics: ['Client assessment form, medical history & food recall form', 'Diet planning sheet, meal planning format & portion guide', 'Follow-up sheet, progress tracking & goal setting worksheet', 'Consultation checklist & client communication checklist'] },
+    ],
+  },
+  {
+    title: 'Software Learning — MeriDiet Platform', icon: '💻',
+    classes: [
+      { title: 'MeriDiet Platform Training', topics: ['Adding & managing client information', 'Entering client data, generating & reviewing AI diet plans', 'Making adjustments to diet plans', 'Tracking progress, updating records & managing follow-ups'] },
+    ],
+  },
 ]
 
 const WHO_CAN_JOIN = [
@@ -115,6 +224,13 @@ type Step = 'form' | 'otp' | 'paying' | 'success' | 'pay_failed'
 export default function NutritionistCourse() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [tab, setTab]         = useState<'pay' | 'enquiry'>('pay')
+  const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]))
+
+  const toggleSection = (i: number) => setOpenSections(prev => {
+    const next = new Set(prev)
+    if (next.has(i)) next.delete(i); else next.add(i)
+    return next
+  })
 
   // ── Enquiry state ──
   const [enqForm, setEnqForm]   = useState<EnqForm>(ENQ_INIT)
@@ -184,6 +300,7 @@ export default function NutritionistCourse() {
       const { key_id, order_id, amount, name, email, phone } = orderRes.data
 
       // Step 3: Open Razorpay
+      await loadRazorpay()
       setPayStep('paying')
       const rzp = new window.Razorpay({
         key: key_id,
@@ -354,16 +471,79 @@ export default function NutritionistCourse() {
         <div className="container">
           <div className="cp-sec-head">
             <p className="cp-eyebrow" style={{ background: '#f0fdf4', color: '#16a34a' }}>What you'll learn</p>
-            <h2 className="cp-sec-title">13 Practical Topics</h2>
-            <p className="cp-sec-sub">Our curriculum is designed to build practical, job-ready nutrition knowledge</p>
+            <h2 className="cp-sec-title">Complete Nutritionist Curriculum</h2>
+            <p className="cp-sec-sub">17 sections · 36 classes — from human body science to running your own nutrition practice</p>
           </div>
-          <div className="cp-curriculum-grid">
-            {CURRICULUM.map((topic, i) => (
-              <div key={topic} className="cp-topic-card">
-                <span className="cp-topic-num">{String(i + 1).padStart(2, '0')}</span>
-                <span className="cp-topic-name">{topic}</span>
+
+          <div className="cp-curr-stats">
+            <div className="cp-curr-stat">
+              <span className="cp-curr-stat-val">17</span>
+              <span>Sections</span>
+            </div>
+            <div className="cp-curr-stat-sep" />
+            <div className="cp-curr-stat">
+              <span className="cp-curr-stat-val">36</span>
+              <span>Classes</span>
+            </div>
+            <div className="cp-curr-stat-sep" />
+            <div className="cp-curr-stat">
+              <span className="cp-curr-stat-val">350+</span>
+              <span>Topics</span>
+            </div>
+            <div className="cp-curr-stat-sep" />
+            <div className="cp-curr-stat">
+              <span className="cp-curr-stat-val">🎓</span>
+              <span>Certification Included</span>
+            </div>
+          </div>
+
+          <div className="cp-sections-list">
+            {SECTIONS.map((sec, si) => {
+              const isOpen = openSections.has(si)
+              return (
+                <div key={si} className={`cp-section-acc${isOpen ? ' open' : ''}`}>
+                  <button className="cp-section-acc-hdr" onClick={() => toggleSection(si)}>
+                    <span className="cp-section-acc-snum">{String(si + 1).padStart(2, '0')}</span>
+                    <span className="cp-section-acc-icon">{sec.icon}</span>
+                    <span className="cp-section-acc-meta">
+                      <span className="cp-section-acc-label">Section {si + 1}</span>
+                      <span className="cp-section-acc-title">{sec.title}</span>
+                    </span>
+                    <span className="cp-section-acc-right">
+                      <span className="cp-section-acc-count">{sec.classes.length} {sec.classes.length === 1 ? 'Class' : 'Classes'}</span>
+                      <span className="cp-section-acc-arrow">▼</span>
+                    </span>
+                  </button>
+                  {isOpen && (
+                    <div className="cp-section-acc-body">
+                      {sec.classes.map((cls, ci) => (
+                        <div key={ci} className="cp-class-row">
+                          <div className="cp-class-title">
+                            <span className="cp-class-badge">Class {ci + 1}</span>
+                            {cls.title}
+                          </div>
+                          <ul className="cp-class-topics-list">
+                            {cls.topics.map((t, ti) => <li key={ti}>{t}</li>)}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+
+            <div className="cp-cert-block">
+              <div className="cp-cert-block-icon">🎓</div>
+              <div>
+                <div className="cp-cert-block-title">Certification Exam</div>
+                <div className="cp-cert-block-chips">
+                  {['100 MCQs', '20 Case-Based Questions', 'Online Practical Assignment', 'MeriDiet Platform Assessment', 'Certificate on Successful Completion'].map(c => (
+                    <span key={c}>{c}</span>
+                  ))}
+                </div>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
