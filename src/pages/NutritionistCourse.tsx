@@ -215,11 +215,18 @@ const INCLUDES = [
   'Career support & guidance',
 ]
 
+const COURSE_FEE                 = 14999
+const EMI_FIRST_INSTALLMENT      = 4999
+const EMI_SUBSEQUENT_INSTALLMENT = 5000
+const EMI_INSTALLMENTS           = 3
+const EMI_TOTAL                  = EMI_FIRST_INSTALLMENT + EMI_SUBSEQUENT_INSTALLMENT * (EMI_INSTALLMENTS - 1)
+
 type EnqForm = { name: string; email: string; phone: string; qualification: string; message: string }
 type PayForm = { name: string; email: string; phone: string }
 const ENQ_INIT: EnqForm = { name: '', email: '', phone: '', qualification: '', message: '' }
 const PAY_INIT: PayForm = { name: '', email: '', phone: '' }
 type Step = 'form' | 'otp' | 'paying' | 'success' | 'pay_failed'
+type AppliedCoupon = { code: string; discount: number; finalAmount: number }
 
 export default function NutritionistCourse() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
@@ -249,7 +256,18 @@ export default function NutritionistCourse() {
   const [payError, setPayError] = useState('')
   const [payOtpLoading, setPayOtpLoading] = useState(false)
   const [payOtpSent, setPayOtpSent] = useState(false)
-  const [paidData, setPaidData] = useState<{ name: string; amount: number } | null>(null)
+  const [paidData, setPaidData] = useState<{
+    name: string; amount: number;
+    paymentPlan?: 'full' | 'emi';
+    emiInstallmentsPaid?: number;
+  } | null>(null)
+  const [payPlan, setPayPlan] = useState<'full' | 'emi'>('full')
+
+  // ── Coupon state ──
+  const [payCouponInput, setPayCouponInput]     = useState('')
+  const [payCouponApplied, setPayCouponApplied] = useState<AppliedCoupon | null>(null)
+  const [payCouponLoading, setPayCouponLoading] = useState(false)
+  const [payCouponError, setPayCouponError]     = useState('')
 
   const setE = (k: keyof EnqForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setEnqForm(p => ({ ...p, [k]: e.target.value }))
   const setP = (k: keyof PayForm) => (e: React.ChangeEvent<HTMLInputElement>) => setPayForm(p => ({ ...p, [k]: e.target.value }))
@@ -276,6 +294,24 @@ export default function NutritionistCourse() {
     finally { setEnqLoading(false) }
   }
 
+  // ── Coupon handler ──
+  const applyPayCoupon = async () => {
+    if (!payCouponInput.trim()) return
+    setPayCouponError('')
+    setPayCouponApplied(null)
+    setPayCouponLoading(true)
+    try {
+      const res = await courseApi.validateCoupon({ code: payCouponInput.trim(), amount: COURSE_FEE })
+      setPayCouponApplied({ code: res.data.code, discount: res.data.discount_applied, finalAmount: res.data.final_amount })
+    } catch (err: unknown) {
+      setPayCouponError(err instanceof Error ? err.message : 'Invalid coupon code')
+    } finally {
+      setPayCouponLoading(false)
+    }
+  }
+
+  const removePayCoupon = () => { setPayCouponApplied(null); setPayCouponInput(''); setPayCouponError('') }
+
   // ── Pay handlers ──
   const sendPayOtp = async () => {
     const phone = payForm.phone.trim()
@@ -292,11 +328,11 @@ export default function NutritionistCourse() {
     setPayLoading(true)
     try {
       // Step 1: Register enrollment
-      const enrollRes = await courseApi.registerEnrollment({ name: payForm.name, email: payForm.email, phone: payForm.phone, otp: payOtp })
+      const enrollRes = await courseApi.registerEnrollment({ name: payForm.name, email: payForm.email, phone: payForm.phone, otp: payOtp, payment_plan: payPlan })
       const enrollmentId = enrollRes.data.id
 
       // Step 2: Create Razorpay order
-      const orderRes = await courseApi.createOrder({ enrollment_id: enrollmentId })
+      const orderRes = await courseApi.createOrder({ enrollment_id: enrollmentId, coupon_code: payCouponApplied?.code })
       const { key_id, order_id, amount, name, email, phone } = orderRes.data
 
       // Step 3: Open Razorpay
@@ -314,9 +350,10 @@ export default function NutritionistCourse() {
         handler: async (rzpRes: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
           try {
             const verifyRes = await courseApi.verifyPayment({ razorpay_order_id: rzpRes.razorpay_order_id, razorpay_payment_id: rzpRes.razorpay_payment_id, razorpay_signature: rzpRes.razorpay_signature })
-            setPaidData({ name: verifyRes.data.name, amount: verifyRes.data.amount_paid })
+            setPaidData({ name: verifyRes.data.name, amount: verifyRes.data.amount_paid, paymentPlan: verifyRes.data.payment_plan, emiInstallmentsPaid: verifyRes.data.emi_installments_paid })
             setPayStep('success')
-            setPayForm(PAY_INIT); setPayOtp(''); setPayOtpSent(false)
+            setPayForm(PAY_INIT); setPayOtp(''); setPayOtpSent(false); setPayPlan('full')
+            setPayCouponInput(''); setPayCouponApplied(null); setPayCouponError('')
           } catch {
             setPayError('Payment verification failed. Please contact support.')
             setPayStep('otp')
@@ -619,9 +656,20 @@ export default function NutritionistCourse() {
               <div className="cp-panel-r">
                 {payStep === 'success' && (
                   <div className="cp-success">
-                    <div className="cp-success-icon">🎉</div>
-                    <h3>Payment Successful!</h3>
-                    <p>Welcome to the MeriDiet Certified Nutritionist Program{paidData ? `, ${paidData.name}` : ''}! Check your email for confirmation and next steps.</p>
+                    <div className="cp-success-icon">{paidData?.paymentPlan === 'emi' ? '📅' : '🎉'}</div>
+                    {paidData?.paymentPlan === 'emi' ? (<>
+                      <h3>Installment {paidData.emiInstallmentsPaid} of {EMI_INSTALLMENTS} Paid!</h3>
+                      <p>
+                        Great start{paidData.name ? `, ${paidData.name}` : ''}! ₹{paidData.amount.toLocaleString('en-IN')} received.
+                        {(paidData.emiInstallmentsPaid ?? 0) < EMI_INSTALLMENTS
+                          ? ` You have ${EMI_INSTALLMENTS - (paidData.emiInstallmentsPaid ?? 0)} installment(s) remaining.`
+                          : ' All installments complete — welcome to the program!'}
+                      </p>
+                      <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>Check your email for confirmation and payment details.</p>
+                    </>) : (<>
+                      <h3>Payment Successful!</h3>
+                      <p>Welcome to the MeriDiet Certified Nutritionist Program{paidData ? `, ${paidData.name}` : ''}! Check your email for confirmation and next steps.</p>
+                    </>)}
                     <button onClick={() => { setPayStep('form'); setPayOtpSent(false) }} className="cp-btn-green" style={{ marginTop: 20, border: 'none', cursor: 'pointer' }}>← Go Back</button>
                   </div>
                 )}
@@ -648,6 +696,37 @@ export default function NutritionistCourse() {
                     </div>
 
                     {payStep === 'form' && (<>
+                      {/* ── Payment Plan Selector ── */}
+                      <div style={{ marginBottom: 18 }}>
+                        <p style={{ fontSize: 12.5, fontWeight: 700, color: '#374151', marginBottom: 8 }}>Payment Plan</p>
+                        <div style={{ display: 'flex', gap: 10 }}>
+                          {([
+                            { value: 'full', icon: '💳', title: 'Full Payment', amount: `₹${COURSE_FEE.toLocaleString('en-IN')}`, note: 'Coupons applicable' },
+                            { value: 'emi',  icon: '📅', title: 'EMI Plan',     amount: `₹${EMI_FIRST_INSTALLMENT.toLocaleString('en-IN')} + ₹${EMI_SUBSEQUENT_INSTALLMENT.toLocaleString('en-IN')} + ₹${EMI_SUBSEQUENT_INSTALLMENT.toLocaleString('en-IN')}`, note: `₹${EMI_TOTAL.toLocaleString('en-IN')} total` },
+                          ] as const).map(opt => {
+                            const active = payPlan === opt.value
+                            return (
+                              <div key={opt.value}
+                                onClick={() => { setPayPlan(opt.value); if (opt.value === 'emi') removePayCoupon() }}
+                                style={{
+                                  flex: 1, padding: '12px 14px', borderRadius: 12, cursor: 'pointer', transition: 'all 0.18s',
+                                  border: `2px solid ${active ? '#16a34a' : '#e5e7eb'}`,
+                                  background: active ? '#f0fdf4' : '#fff',
+                                  boxShadow: active ? '0 3px 12px rgba(22,163,74,0.15)' : 'none',
+                                }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                                  <span style={{ fontSize: 16 }}>{opt.icon}</span>
+                                  <span style={{ fontSize: 13, fontWeight: 700, color: active ? '#15803d' : '#374151' }}>{opt.title}</span>
+                                  {active && <span style={{ marginLeft: 'auto', width: 8, height: 8, borderRadius: '50%', background: '#16a34a', flexShrink: 0 }} />}
+                                </div>
+                                <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: active ? '#15803d' : '#111827' }}>{opt.amount}</p>
+                                <p style={{ margin: 0, fontSize: 11, color: active ? '#16a34a' : '#9ca3af', marginTop: 2 }}>{opt.note}</p>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+
                       <div className="cp-field-group">
                         <div className="cp-field">
                           <label>Full Name <span>*</span></label>
@@ -670,6 +749,44 @@ export default function NutritionistCourse() {
                       {payOtpSent && (
                         <p className="cp-otp-hint">OTP sent to +91 {payForm.phone}. <button type="button" className="cp-resend-link" onClick={sendPayOtp} disabled={payOtpLoading}>Resend</button></p>
                       )}
+
+                      {/* ── Coupon Code (full plan only) ── */}
+                      {payPlan === 'full' && (
+                        <div className="cp-field" style={{ marginTop: 8 }}>
+                          <label>Coupon Code <span style={{ fontWeight: 400, color: '#9ca3af', fontSize: 11 }}>(optional)</span></label>
+                          <div className="cp-otp-row">
+                            <input
+                              type="text"
+                              placeholder="Enter coupon code"
+                              value={payCouponInput}
+                              onChange={(e) => {
+                                const v = e.target.value.toUpperCase()
+                                setPayCouponInput(v)
+                                if (payCouponApplied) setPayCouponApplied(null)
+                                setPayCouponError('')
+                              }}
+                              style={{ textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'monospace', fontWeight: 600 }}
+                            />
+                            <button
+                              type="button"
+                              className="cp-send-otp-btn"
+                              onClick={applyPayCoupon}
+                              disabled={payCouponLoading || !payCouponInput.trim() || !!payCouponApplied}
+                            >
+                              {payCouponLoading ? '…' : payCouponApplied ? 'Applied ✓' : 'Apply'}
+                            </button>
+                          </div>
+                          {payCouponApplied && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                              <span style={{ fontSize: 13, color: '#16a34a', fontWeight: 600 }}>
+                                ✓ <strong>{payCouponApplied.code}</strong> — you save ₹{payCouponApplied.discount.toLocaleString('en-IN')}
+                              </span>
+                              <button type="button" onClick={removePayCoupon} style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: 12, padding: 0, fontWeight: 600 }}>Remove</button>
+                            </div>
+                          )}
+                          {payCouponError && <p className="cp-field-error" style={{ marginTop: 4 }}>{payCouponError}</p>}
+                        </div>
+                      )}
                     </>)}
 
                     {payStep === 'otp' && (<>
@@ -684,6 +801,39 @@ export default function NutritionistCourse() {
                       <p className="cp-otp-hint">
                         Didn't receive it? <button type="button" className="cp-resend-link" onClick={sendPayOtp} disabled={payOtpLoading}>{payOtpLoading ? 'Sending…' : 'Resend OTP'}</button>
                       </p>
+
+                      {/* ── Price Summary ── */}
+                      <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, padding: '14px 16px', marginTop: 8, marginBottom: 4 }}>
+                        {payPlan === 'emi' ? (<>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#64748b', marginBottom: 8 }}>
+                            <span>Payment Plan</span>
+                            <span style={{ fontWeight: 700, color: '#374151' }}>₹{EMI_FIRST_INSTALLMENT.toLocaleString('en-IN')} + ₹{EMI_SUBSEQUENT_INSTALLMENT.toLocaleString('en-IN')} + ₹{EMI_SUBSEQUENT_INSTALLMENT.toLocaleString('en-IN')}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#64748b', marginBottom: 8 }}>
+                            <span>Total Course Fee</span>
+                            <span>₹{EMI_TOTAL.toLocaleString('en-IN')}</span>
+                          </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 800, color: '#0f172a', borderTop: '1px solid #e2e8f0', paddingTop: 10 }}>
+                            <span>Pay Now (Installment 1 of {EMI_INSTALLMENTS})</span>
+                            <span style={{ color: '#16a34a' }}>₹{EMI_FIRST_INSTALLMENT.toLocaleString('en-IN')}</span>
+                          </div>
+                        </>) : (<>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#64748b', marginBottom: payCouponApplied ? 8 : 0 }}>
+                            <span>Course Fee</span>
+                            <span>₹{COURSE_FEE.toLocaleString('en-IN')}</span>
+                          </div>
+                          {payCouponApplied && (<>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, color: '#16a34a', fontWeight: 600, marginBottom: 8 }}>
+                              <span>Coupon ({payCouponApplied.code})</span>
+                              <span>−₹{payCouponApplied.discount.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 15, fontWeight: 800, color: '#0f172a', borderTop: '1px solid #e2e8f0', paddingTop: 10 }}>
+                              <span>You Pay</span>
+                              <span style={{ color: '#16a34a' }}>₹{payCouponApplied.finalAmount.toLocaleString('en-IN')}</span>
+                            </div>
+                          </>)}
+                        </>)}
+                      </div>
                     </>)}
 
                     {payError && <p className="cp-field-error">{payError}</p>}
@@ -695,7 +845,9 @@ export default function NutritionistCourse() {
                     )}
                     {payStep === 'otp' && (
                       <button type="submit" className="cp-pay-btn" disabled={payLoading}>
-                        {payLoading ? 'Please wait…' : '🔒 Pay ₹14,999 Securely'}
+                        {payLoading ? 'Please wait…' : payPlan === 'emi'
+                          ? `🔒 Pay ₹${EMI_FIRST_INSTALLMENT.toLocaleString('en-IN')} (Installment 1 of ${EMI_INSTALLMENTS})`
+                          : `🔒 Pay ₹${(payCouponApplied?.finalAmount ?? COURSE_FEE).toLocaleString('en-IN')} Securely`}
                       </button>
                     )}
                     <p className="cp-field-note">Powered by Razorpay · 100% secure</p>
