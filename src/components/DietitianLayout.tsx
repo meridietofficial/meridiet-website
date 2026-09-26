@@ -86,6 +86,15 @@ export default function DietitianLayout() {
     setPaymentLoading(true)
     try {
       const orderRes = await dietitianRegistrationFeeApi.createOrder()
+      if ((orderRes.data as { already_active?: boolean }).already_active) {
+        const updated = await dietitianApi.getProfile()
+        setProfile(updated)
+        setSubscriptionStatus(updated.subscription_status)
+        setPaymentPopupOpen(false)
+        setPaymentLoading(false)
+        showToast('Your account is already active!', 'success')
+        return
+      }
       const { order_id, amount, currency, key_id } = orderRes.data
       setPaymentLoading(false)
 

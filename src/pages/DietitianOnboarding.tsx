@@ -315,10 +315,15 @@ export default function DietitianOnboarding() {
   }
 
   const goNext = async () => {
-    // Already registered dietitian coming back from step 4 to retry payment
+    // If logged in as a dietitian AND the form email matches their account → payment retry, skip to step 4
+    // If form email is different → new account registration, fall through to normal flow
     if (step === 3 && user?.role === 'dietitian') {
-      void openPayment()
-      return
+      const isNewAccount = data.email && data.email.toLowerCase() !== (user.email ?? '').toLowerCase()
+      if (!isNewAccount) {
+        navigate(STEP_PATHS[4])
+        return
+      }
+      // Different email → register new account normally below
     }
 
     const e = validate(step)
@@ -408,6 +413,11 @@ export default function DietitianOnboarding() {
     try {
       await loadRazorpay()
       const order = await dietitianRegistrationFeeApi.createOrder()
+      if ((order.data as { already_active?: boolean }).already_active) {
+        trackEvent('dietitian_registration_fee_paid')
+        navigate('/dietitian/verification-submitted')
+        return
+      }
       const rzp = new window.Razorpay({
         key:        order.data.key_id,
         amount:     order.data.amount,
