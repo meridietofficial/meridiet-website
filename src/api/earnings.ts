@@ -55,7 +55,8 @@ export type TransactionItem = {
   client_avatar: string | null
   plan_name: string | null
   date: string
-  payment_status: 'paid' | 'pending' | 'refunded'
+  session_type: 'video_call' | 'in_person'
+  payment_status: 'paid' | 'pending' | 'refunded' | 'missed'
   gross_amount: number
   platform_commission: number
   net_amount: number
@@ -173,12 +174,14 @@ const earningsApi = {
 
   async getTransactions(params: {
     status?: string
+    session_type?: 'video_call' | 'in_person'
     search?: string
     page?: number
     limit?: number
   }): Promise<TransactionsResponse> {
     const qs = new URLSearchParams()
     if (params.status && params.status !== 'all') qs.set('status', params.status)
+    if (params.session_type) qs.set('session_type', params.session_type)
     if (params.search) qs.set('search', params.search)
     qs.set('page', String(params.page ?? 1))
     qs.set('limit', String(params.limit ?? 10))
@@ -231,6 +234,11 @@ const earningsApi = {
     apiClient.apiPost<{ success: boolean; message: string; data: { withdrawal_id: number; amount: number; status: string } }>(
       ENDPOINTS.withdrawal.request,
       account_id ? { amount, account_id } : { amount },
+    ),
+
+  syncWithdrawals: () =>
+    apiClient.apiGet<{ success: boolean; data: { checked: number; updated: { id: number; status: string }[] } }>(
+      ENDPOINTS.withdrawal.sync,
     ),
 
   async getSummary(period: EarningsPeriod): Promise<EarningsSummary> {

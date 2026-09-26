@@ -12,7 +12,7 @@ function formatINR(amount: number) {
 
 function formatDate(iso: string) {
   try {
-    return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+    return new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })
   } catch { return iso }
 }
 
@@ -57,6 +57,20 @@ export default function DietitianWallet() {
       .then(data => setAccounts(data))
       .catch(() => {})
       .finally(() => setAccountsLoading(false))
+  }, [])
+
+  // On page load, sync processing withdrawals against Cashfree.
+  // If any status changed (success/failed/reversed), refresh balance + transactions.
+  useEffect(() => {
+    earningsApi.syncWithdrawals()
+      .then(res => {
+        if (res.data.updated.length > 0) {
+          earningsApi.getWalletOverview().then(data => setOverview(data)).catch(() => {})
+          setPage(1)
+          setTxRefreshTick(t => t + 1)
+        }
+      })
+      .catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -152,11 +166,12 @@ export default function DietitianWallet() {
     if (amt <= 1) { setWithdrawErr('Minimum withdrawal is ₹2'); return }
     const available = overview?.available_balance ?? 0
     if (amt > available) { setWithdrawErr(`Amount exceeds available balance of ${formatINR(available)}`); return }
-    if (accounts.length === 0) { setWithdrawErr('No payment account linked. Please add a bank account or UPI ID first.'); return }
+    const bankAccount = accounts.find(a => a.is_primary && a.type === 'bank') ?? accounts.find(a => a.type === 'bank')
+    if (!bankAccount) { setWithdrawErr('No bank account linked. Please add a bank account in Profile → Bank Information.'); return }
     setWithdrawing(true)
     setWithdrawErr(null)
     try {
-      const primaryAccount = accounts.find(a => a.is_primary) ?? accounts[0]
+      const primaryAccount = bankAccount
       await earningsApi.requestWithdrawal(amt, primaryAccount?.id)
       setShowWithdraw(false)
       setWithdrawAmt('')
@@ -279,10 +294,10 @@ export default function DietitianWallet() {
             <div className="wa-action-body">
               <p className="wa-action-title">Withdraw to Account</p>
               {(() => {
-                const primary = accounts.find(a => a.is_primary) ?? accounts[0]
-                if (!primary) return <p className="wa-action-sub" style={{ color: '#f97316' }}>No payment account linked. Please add one in Profile → Bank Information.</p>
-                if (primary.type === 'upi') return <p className="wa-action-sub">Funds will be sent to UPI: <strong>{primary.upi_id}</strong></p>
-                return <p className="wa-action-sub">Funds will reach {primary.bank_name} ••••{primary.account_number?.slice(-4)} in 1–2 business days</p>
+                const primary = accounts.find(a => a.is_primary && a.type === 'bank') ?? accounts.find(a => a.type === 'bank')
+                if (!primary && accounts.length === 0) return <p className="wa-action-sub" style={{ color: '#f97316' }}>No payment account linked. Please add a bank account in Profile → Bank Information.</p>
+                if (!primary) return <p className="wa-action-sub" style={{ color: '#f97316' }}>UPI is not supported for payouts. Please add a bank account in Profile → Bank Information.</p>
+                return <p className="wa-action-sub">Funds will reach <strong>{primary.bank_name}</strong> ••••{primary.account_number?.slice(-4)} in 1–2 business days</p>
               })()}
               <div className="wa-action-row">
                 <div className="wa-action-input-wrap">
@@ -567,17 +582,24 @@ export default function DietitianWallet() {
               )}
 
               {!accountsLoading && accounts.map(a => (
-                <div key={a.id} className="wa-account-row">
+                <div key={a.id} className="wa-account-row" style={a.type === 'upi' ? { opacity: 0.55 } : undefined}>
                   <div className="wa-account-icon">
                     <i className={a.type === 'upi' ? 'fa-solid fa-mobile-screen' : 'fa-solid fa-building-columns'} />
                   </div>
                   <div className="wa-account-info">
-                    <p className="wa-account-label">{a.type === 'upi' ? 'UPI' : a.bank_name}</p>
+                    <p className="wa-account-label">
+                      {a.type === 'upi' ? 'UPI' : a.bank_name}
+                      {a.type === 'upi' && (
+                        <span style={{ fontSize: 10, marginLeft: 6, background: '#fee2e2', color: '#dc2626', borderRadius: 4, padding: '1px 5px', fontWeight: 600 }}>
+                          Not supported for payouts
+                        </span>
+                      )}
+                    </p>
                     <p className="wa-account-detail">
                       {a.type === 'upi' ? a.upi_id : `••••${a.account_number?.slice(-4)}`}
                     </p>
                   </div>
-                  {a.is_primary && <span className="wa-account-primary">Primary</span>}
+                  {a.is_primary && a.type !== 'upi' && <span className="wa-account-primary">Primary</span>}
                 </div>
               ))}
             </div>
@@ -613,11 +635,14 @@ export default function DietitianWallet() {
                 </div>
               </div>
               <div className="wa-schedule-row">
-                <div className="wa-schedule-icon"><i className="fa-solid fa-mobile-screen" /></div>
+                <div className="wa-schedule-icon"><i className="fa-solid fa-building-columns" /></div>
                 <div className="wa-schedule-info">
-                  <p className="wa-schedule-label">Payout UPI</p>
+                  <p className="wa-schedule-label">Payout Account</p>
                   <p className="wa-schedule-val">
-                    {payoutLoading ? '—' : payout?.payout_upi ?? 'No UPI linked'}
+                    {accountsLoading ? '—' : (() => {
+                      const bank = accounts.find(a => a.is_primary && a.type === 'bank') ?? accounts.find(a => a.type === 'bank')
+                      return bank ? `${bank.bank_name} ••••${bank.account_number?.slice(-4)}` : 'No bank account linked'
+                    })()}
                   </p>
                 </div>
               </div>

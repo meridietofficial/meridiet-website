@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import earningsApi, {
   EarningsSummary, MonthlyRevenueData, MonthlyRevenueItem,
   EarningsByPlanItem, PayoutData, TransactionItem, TxSummaryCount,
@@ -10,10 +11,11 @@ type TxTab  = 'all' | 'paid' | 'pending' | 'refunded'
 
 const PLAN_COLORS = ['#a855f7', '#06b6d4', '#f97316', '#3b82f6', '#22c55e', '#ec4899', '#f59e0b', '#ef4444']
 
-const TX_STATUS_META: Record<'paid' | 'pending' | 'refunded', { label: string; color: string }> = {
+const TX_STATUS_META: Record<'paid' | 'pending' | 'refunded' | 'missed', { label: string; color: string }> = {
   paid:     { label: 'Paid',     color: 'green'  },
   pending:  { label: 'Pending',  color: 'orange' },
   refunded: { label: 'Refunded', color: 'red'    },
+  missed:   { label: 'Missed',   color: 'gray'   },
 }
 
 function getInitials(name: string) {
@@ -36,16 +38,17 @@ function changeBadge(pct: number | null, period: string) {
   const up = pct >= 0
   return (
     <p className={`ea-kpi-sub ${up ? 'ea-sub--up' : 'ea-sub--down'}`}>
-      <SEO noIndex={true} title="Earnings" description="Earnings — private dietitian area." />
       {up ? '↗' : '↘'} {Math.abs(pct)}% vs last {period}
     </p>
   )
 }
 
 export default function DietitianEarnings() {
-  const [period, setPeriod] = useState<Period>('month')
-  const [txTab, setTxTab]   = useState<TxTab>('all')
-  const [search, setSearch] = useState('')
+  const navigate = useNavigate()
+  const [period, setPeriod]       = useState<Period>('month')
+  const [txTab, setTxTab]         = useState<TxTab>('all')
+  const [sessionTab, setSessionTab] = useState<'video_call' | 'in_person'>('video_call')
+  const [search, setSearch]       = useState('')
 
   const [summary, setSummary]               = useState<EarningsSummary | null>(null)
   const [summaryLoading, setSummaryLoading] = useState(true)
@@ -78,7 +81,7 @@ export default function DietitianEarnings() {
 
   // Fetch transactions — resets to page 1 when tab/search changes (one call, not two)
   useEffect(() => {
-    const filterKey = JSON.stringify([txTab, debouncedSearch])
+    const filterKey = JSON.stringify([txTab, sessionTab, debouncedSearch])
     const filtersChanged = filterKey !== txFiltersRef.current
     txFiltersRef.current = filterKey
 
@@ -90,7 +93,7 @@ export default function DietitianEarnings() {
 
     if (txPage === 1) setTxLoading(true)
     else setTxLoadingMore(true)
-    earningsApi.getTransactions({ status: txTab, search: debouncedSearch || undefined, page: txPage, limit: 10 })
+    earningsApi.getTransactions({ status: txTab, session_type: sessionTab, search: debouncedSearch || undefined, page: txPage, limit: 10 })
       .then(res => {
         setTxSummary(res.data.summary)
         setTxTotalPages(res.meta.totalPages)
@@ -98,7 +101,7 @@ export default function DietitianEarnings() {
       })
       .catch(() => {})
       .finally(() => { setTxLoading(false); setTxLoadingMore(false) })
-  }, [txTab, debouncedSearch, txPage])
+  }, [txTab, sessionTab, debouncedSearch, txPage])
 
   useEffect(() => {
     setSummaryLoading(true)
@@ -142,6 +145,7 @@ export default function DietitianEarnings() {
 
   return (
     <div className="ea-root">
+      <SEO noIndex={true} title="Earnings" description="Earnings — private dietitian area." />
 
       {/* ── Header ── */}
       <div className="ea-header">
@@ -327,7 +331,7 @@ export default function DietitianEarnings() {
                     ? <>
                         Processing on {new Date(payoutData.next_payout_date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         {' · '}
-                        {payoutData.payout_upi ? `UPI: ${payoutData.payout_upi}` : 'No UPI linked'}
+                        Paid to linked bank account
                       </>
                     : 'Payout info unavailable'
                   }
@@ -359,14 +363,25 @@ export default function DietitianEarnings() {
             </span>
           </div>
         </div>
-        <button className="ea-payout-btn">Manage Payout <i className="fa-solid fa-arrow-right" /></button>
+        <button className="ea-payout-btn" onClick={() => navigate('/dietitian-wallet')}>Manage Payout <i className="fa-solid fa-arrow-right" /></button>
       </div>
 
       {/* ── Transactions ── */}
       <div className="ea-card">
         <div className="ea-card-header">
-          <div>
-            <h2 className="ea-card-title">Transactions</h2>
+          <div className="cp-toggle" style={{ margin: '0', maxWidth: 'none', flex: 'none' }}>
+            <button
+              className={`cp-toggle-btn${sessionTab === 'video_call' ? ' active' : ''}`}
+              onClick={() => { setSessionTab('video_call'); setTxTab('all'); setTxPage(1); setTransactions([]) }}
+            >
+              💻 Online Appointment
+            </button>
+            <button
+              className={`cp-toggle-btn${sessionTab === 'in_person' ? ' active' : ''}`}
+              onClick={() => { setSessionTab('in_person'); setTxTab('all'); setTxPage(1); setTransactions([]) }}
+            >
+              🏠 Offline Appointment
+            </button>
           </div>
           <div className="ea-tx-toolbar">
             <div className="ea-tx-tabs">
@@ -393,6 +408,11 @@ export default function DietitianEarnings() {
           </div>
         </div>
 
+        {sessionTab === 'in_person' && (
+          <div style={{ margin: '0 0 12px', padding: '9px 14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10, fontSize: 12.5, color: '#92400e', fontWeight: 500 }}>
+            🏠 In-person consultations are recorded here but <strong>not counted</strong> in your payout or earnings summary.
+          </div>
+        )}
         <div className="ea-tx-list">
           {txLoading && [1,2,3,4,5].map(i => (
             <div key={i} className="ea-tx-row">
@@ -418,7 +438,8 @@ export default function DietitianEarnings() {
           )}
 
           {!txLoading && transactions.map(tx => {
-            const sm = TX_STATUS_META[tx.payment_status]
+            const sm = TX_STATUS_META[tx.payment_status as keyof typeof TX_STATUS_META] ?? { label: tx.payment_status, color: 'gray' }
+            const isOffline = tx.session_type === 'in_person'
             return (
               <div key={tx.id} className="ea-tx-row">
                 {tx.client_avatar
@@ -427,7 +448,12 @@ export default function DietitianEarnings() {
                 }
                 <div className="ea-tx-info">
                   <p className="ea-tx-name">{tx.client_name}</p>
-                  <p className="ea-tx-plan">{tx.plan_name ?? 'Consultation'}</p>
+                  <p className="ea-tx-plan">
+                    {tx.plan_name ?? 'Consultation'}
+                    <span className={`ea-tx-session-badge ea-tx-session-badge--${isOffline ? 'offline' : 'online'}`}>
+                      {isOffline ? 'In-person' : 'Online'}
+                    </span>
+                  </p>
                 </div>
                 <div className="ea-tx-meta">
                   <span className="ea-tx-invoice">{tx.invoice_number}</span>

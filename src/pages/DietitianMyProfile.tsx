@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useLocation, useNavigate, useOutletContext } from 'react-router-dom'
+import { useLocation, useNavigate, useOutletContext, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import dietitianApi, { uploadSingleDocument, deleteDocument, type DietitianProfile } from '../api/dietitian'
@@ -1169,7 +1169,7 @@ function TabBankInformation() {
   const [accounts, setAccounts]       = useState<LinkedAccount[]>([])
   const [loading, setLoading]         = useState(true)
   const [showForm, setShowForm]       = useState(false)
-  const [formType, setFormType]       = useState<'upi' | 'bank'>('upi')
+  const [formType, setFormType]       = useState<'upi' | 'bank'>('bank')
   const [selectedBank, setSelectedBank] = useState<Bank | null>(null)
   const [form, setForm] = useState({
     upi_id: '', bank_name: '', account_holder: '', account_number: '', ifsc_code: '', set_primary: false,
@@ -1288,10 +1288,15 @@ function TabBankInformation() {
           <div className="dmp-bi-form">
             <div className="dmp-bi-type-row">
               <button
-                className={`dmp-bi-type-btn${formType === 'upi' ? ' dmp-bi-type-btn--active' : ''}`}
-                onClick={() => setFormType('upi')}
+                className="dmp-bi-type-btn dmp-bi-type-btn--disabled"
+                disabled
+                title="UPI payouts are not supported at this time"
+                style={{ opacity: 0.45, cursor: 'not-allowed', pointerEvents: 'none' }}
               >
                 <i className="fa-solid fa-mobile-screen" /> UPI
+                <span style={{ fontSize: 10, marginLeft: 6, background: '#e5e7eb', color: '#6b7280', borderRadius: 4, padding: '1px 5px', fontWeight: 600, letterSpacing: 0.2 }}>
+                  Not available
+                </span>
               </button>
               <button
                 className={`dmp-bi-type-btn${formType === 'bank' ? ' dmp-bi-type-btn--active' : ''}`}
@@ -1718,13 +1723,23 @@ export default function DietitianMyProfile() {
   const { showToast } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams, setSearchParams] = useSearchParams()
   const { profile: layoutProfile, profileLoading: layoutProfileLoading, setLayoutProfile } = useOutletContext<DietitianOutletContext>()
-  // Allow other pages to deep-link to a specific tab (e.g. the onboarding
-  // prompt sends the dietitian straight to "Preferences" for availability).
+
+  // Determine initial tab: location.state deep-link takes priority over URL param, then default
   const requestedTab = (location.state as { tab?: string } | null)?.tab
-  const [activeTab, setActiveTab] = useState(
-    requestedTab && TABS.includes(requestedTab) ? requestedTab : 'Personal Information'
-  )
+  const getInitialTab = (): string => {
+    if (requestedTab && TABS.includes(requestedTab)) return requestedTab
+    const urlTab = searchParams.get('tab')
+    if (urlTab && TABS.includes(urlTab)) return urlTab
+    return 'Personal Information'
+  }
+  const [activeTab, setActiveTab] = useState(getInitialTab)
+
+  // Keep URL ?tab= in sync whenever the active tab changes (enables refresh persistence)
+  useEffect(() => {
+    setSearchParams({ tab: activeTab }, { replace: true })
+  }, [activeTab])
   const [photoSrc, setPhotoSrc] = useState<string | null>(null)
   const [profile, setProfile] = useState<DietitianProfile | null>(null)
   const [loading, setLoading] = useState(true)

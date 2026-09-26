@@ -129,6 +129,7 @@ const ENDPOINTS = {
   withdrawal: {
     request: '/dietitian/withdraw',
     list:    '/dietitian/withdrawals',
+    sync:    '/dietitian/withdrawals/sync',
   },
   partnership: {
     submit: '/partnership-inquiry',
