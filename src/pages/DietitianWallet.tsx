@@ -163,7 +163,7 @@ export default function DietitianWallet() {
   async function handleWithdraw() {
     const amt = Number(withdrawAmt)
     if (!withdrawAmt || isNaN(amt) || amt <= 0) { setWithdrawErr('Please enter a valid amount'); return }
-    if (amt <= 1) { setWithdrawErr('Minimum withdrawal is ₹2'); return }
+    if (amt < 500) { setWithdrawErr('Minimum withdrawal is ₹500'); return }
     const available = overview?.available_balance ?? 0
     if (amt > available) { setWithdrawErr(`Amount exceeds available balance of ${formatINR(available)}`); return }
     const bankAccount = accounts.find(a => a.is_primary && a.type === 'bank') ?? accounts.find(a => a.type === 'bank')
@@ -308,7 +308,7 @@ export default function DietitianWallet() {
                     placeholder="Enter amount"
                     value={withdrawAmt}
                     onChange={e => { setWithdrawAmt(e.target.value); setWithdrawErr(null) }}
-                    min={1}
+                    min={500}
                     max={overview?.available_balance ?? 0}
                     disabled={withdrawing}
                   />
@@ -327,7 +327,7 @@ export default function DietitianWallet() {
                   <i className="fa-solid fa-circle-exclamation" style={{ marginRight: 4 }} />{withdrawErr}
                 </p>
               )}
-              <p className="wa-action-hint">Available: {formatINR(overview?.available_balance ?? 0)} · Min ₹2 · No fee</p>
+              <p className="wa-action-hint">Available: {formatINR(overview?.available_balance ?? 0)} · Min ₹500 · No fee</p>
             </div>
           </div>
         </div>
