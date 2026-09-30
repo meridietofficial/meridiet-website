@@ -3,6 +3,34 @@ import SEO from '../components/SEO'
 import courseApi from '../api/course'
 import { loadRazorpay } from '../utils/loadRazorpay'
 
+function CourseVideo({ videoId }: { videoId: string }) {
+  const [playing, setPlaying] = useState(false)
+  const thumb = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`
+  return (
+    <div className="cp-video-wrap" onClick={() => setPlaying(true)}>
+      {playing ? (
+        <iframe
+          className="cp-video-iframe"
+          src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`}
+          title="Course Introduction"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      ) : (
+        <>
+          <img src={thumb} alt="Course Introduction" className="cp-video-thumb" />
+          <div className="cp-video-overlay">
+            <div className="cp-video-play">
+              <i className="fa-solid fa-play" />
+            </div>
+            <p className="cp-video-play-label">Watch Course Introduction</p>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 const COURSE_SCHEMA = {
   '@context': 'https://schema.org',
   '@type': 'Course',
@@ -173,12 +201,12 @@ const WHO_CAN_JOIN = [
 ]
 
 const AFTER_COMPLETION = [
-  { icon: '🎓', text: 'Receive your MeriDiet Certified Nutritionist Certificate' },
-  { icon: '👤', text: 'Get listed on the MeriDiet Platform' },
-  { icon: '📋', text: 'Create your professional nutrition profile' },
-  { icon: '💰', text: 'Receive ₹5,000 AI Diet Plan Credit Wallet' },
-  { icon: '📞', text: 'Start offering nutrition consultations through the platform' },
-  { icon: '🏠', text: 'Build your nutrition consulting career from home' },
+  { icon: 'fa-solid fa-certificate',   title: 'Get Certified',        text: 'Receive your MeriDiet Certified Nutritionist Certificate' },
+  { icon: 'fa-solid fa-list-check',    title: 'Get Listed',           text: 'Get listed on the MeriDiet Platform for clients to find you' },
+  { icon: 'fa-solid fa-id-card',       title: 'Build Your Profile',   text: 'Create your professional nutrition profile on the platform' },
+  { icon: 'fa-solid fa-wallet',        title: '₹5,000 Wallet Credit', text: 'Receive ₹5,000 AI Diet Plan Credit to generate diet plans' },
+  { icon: 'fa-solid fa-comments',      title: 'Start Consulting',     text: 'Offer nutrition consultations directly through the platform' },
+  { icon: 'fa-solid fa-house-laptop',  title: 'Work From Home',       text: 'Build your nutrition consulting career from the comfort of home' },
 ]
 
 const WHY_STANDS_OUT = [
@@ -384,84 +412,121 @@ export default function NutritionistCourse() {
         jsonLd={[COURSE_SCHEMA, BREADCRUMB_SCHEMA]}
       />
 
-      {/* ── HERO ── */}
-      <section className="cp-hero">
-        <div className="cp-hero-bg" />
-        <div className="container cp-hero-wrap">
-          <div className="cp-hero-left">
-            <div className="cp-hero-pill">
-              <span className="cp-hero-dot" />First Batch — Enrolling Now
-            </div>
-            <h1 className="cp-hero-h1">
-              Become a <span className="cp-hero-hl">Certified<br />Nutritionist</span><br />
-              in Just 3 Months
-            </h1>
-            <p className="cp-hero-tagline">Learn. Get Certified. Get Listed. Start Your Nutrition Career.</p>
-            <p className="cp-hero-sub">
-              Build a rewarding career in nutrition with the MeriDiet Certified Nutritionist Program.
-              Learn through live and recorded classes, earn your certification, and get access to the
-              MeriDiet platform to offer nutrition consultations from home.
-            </p>
-            <ul className="cp-hero-checks">
-              <li><span>✔</span> 3-Month Program</li>
-              <li><span>✔</span> Live + Recorded Classes</li>
-              <li><span>✔</span> English Medium</li>
-              <li><span>✔</span> 12th Pass Eligible</li>
-            </ul>
-            <a href="#enroll" className="cp-btn-green">Apply Now →</a>
-          </div>
+      {/* ── NEW HERO BANNER ── */}
+      <section className="cp-new-hero">
+        <div className="cp-new-hero-body">
+        <div className="cp-new-hero-inner">
+            {/* Left */}
+            <div className="cp-new-hero-left">
+              <h1 className="cp-new-hero-h1">
+                Become a Certified<br />
+                Nutritionist in Just <span className="cp-new-hero-green">3 Months</span>
+              </h1>
+              <p className="cp-new-hero-sub">Learn from Experts &nbsp;|&nbsp; Get Certified &nbsp;|&nbsp; Start Your Career</p>
 
-          <div className="cp-hero-right">
-            <div className="cp-card">
-              <div className="cp-card-top">
-                <div className="cp-card-badge">MERI DIET CERTIFIED PROGRAM</div>
-                <div className="cp-card-price-row">
-                  <span className="cp-card-price">
-                    <span className="cp-old-price">₹24,999</span>
-                    ₹14,999
-                  </span>
-                  <span className="cp-card-emi">EMI ₹5,999/month</span>
+              <div className="cp-new-hero-features">
+                <div className="cp-new-hero-feat">
+                  <div className="cp-new-hero-feat-icon"><i className="fa-solid fa-video" /></div>
+                  <span className="cp-new-hero-feat-label">Live + Recorded Classes</span>
                 </div>
-                <div className="cp-card-meta">
-                  <span>🗓 3 Months</span><span>•</span><span>💻 Online</span><span>•</span><span>🎓 Certificate</span>
+                <div className="cp-new-hero-feat">
+                  <div className="cp-new-hero-feat-icon"><i className="fa-solid fa-book-open" /></div>
+                  <span className="cp-new-hero-feat-label">Practical Learning & Case Studies</span>
+                </div>
+                <div className="cp-new-hero-feat">
+                  <div className="cp-new-hero-feat-icon"><i className="fa-solid fa-award" /></div>
+                  <span className="cp-new-hero-feat-label">MeriDiet Certificate</span>
+                </div>
+                <div className="cp-new-hero-feat">
+                  <div className="cp-new-hero-feat-icon"><i className="fa-solid fa-wallet" /></div>
+                  <span className="cp-new-hero-feat-label">₹5,000 Platform Credit</span>
+                </div>
+                <div className="cp-new-hero-feat">
+                  <div className="cp-new-hero-feat-icon"><i className="fa-solid fa-user-tie" /></div>
+                  <span className="cp-new-hero-feat-label">Career Support & Profile Listing</span>
                 </div>
               </div>
-              <ul className="cp-card-list">
-                {INCLUDES.map(i => <li key={i}><span className="cp-card-tick">✓</span>{i}</li>)}
-              </ul>
-              <a href="#enroll" className="cp-card-cta">Apply for First Batch →</a>
-              <p className="cp-card-seats">⚡ Limited seats — first come, first served</p>
+
+              <div className="cp-new-hero-price-strip">
+                <span className="cp-new-hero-price-old">₹24,999</span>
+                <span className="cp-new-hero-price-now">₹14,999</span>
+                <span className="cp-new-hero-price-divider" />
+                <span className="cp-new-hero-price-emi">EMI ₹4,999/month</span>
+              </div>
+
+              <div className="cp-new-hero-btns">
+                <a href="#enroll" className="cp-new-hero-btn-green">Enroll Now →</a>
+              </div>
+              <p className="cp-new-hero-counsellor">Have questions? Talk to our course counsellor before enrolling.</p>
+            </div>
+
+        </div>
+          {/* Right — image, absolute so it fills body top-to-bottom */}
+          <div className="cp-new-hero-right">
+            <img
+              src="/Frame 170.svg"
+              alt="Certified Nutritionist"
+              className="cp-new-hero-img"
+            />
+          </div>
+        </div>
+
+        {/* Stats bar */}
+        <div className="cp-new-hero-stats">
+          <div className="cp-new-hero-stat">
+            <span className="cp-new-hero-stat-icon"><i className="fa-solid fa-clock" /></span>
+            <div className="cp-new-hero-stat-text">
+              <span className="cp-new-hero-stat-val">3 Months</span>
+              <span className="cp-new-hero-stat-label">Duration</span>
+            </div>
+          </div>
+          <div className="cp-new-hero-stat">
+            <span className="cp-new-hero-stat-icon"><i className="fa-solid fa-graduation-cap" /></span>
+            <div className="cp-new-hero-stat-text">
+              <span className="cp-new-hero-stat-val">12th Pass</span>
+              <span className="cp-new-hero-stat-label">Eligible</span>
+            </div>
+          </div>
+          <div className="cp-new-hero-stat">
+            <span className="cp-new-hero-stat-icon"><i className="fa-solid fa-layer-group" /></span>
+            <div className="cp-new-hero-stat-text">
+              <span className="cp-new-hero-stat-val">13 Comprehensive</span>
+              <span className="cp-new-hero-stat-label">Modules</span>
+            </div>
+          </div>
+          <div className="cp-new-hero-stat">
+            <span className="cp-new-hero-stat-icon"><i className="fa-solid fa-certificate" /></span>
+            <div className="cp-new-hero-stat-text">
+              <span className="cp-new-hero-stat-val">Certificate on</span>
+              <span className="cp-new-hero-stat-label">Completion</span>
+            </div>
+          </div>
+          <div className="cp-new-hero-stat">
+            <span className="cp-new-hero-stat-icon"><i className="fa-solid fa-wallet" /></span>
+            <div className="cp-new-hero-stat-text">
+              <span className="cp-new-hero-stat-val">₹5,000</span>
+              <span className="cp-new-hero-stat-label">Wallet Credit</span>
+            </div>
+          </div>
+          <div className="cp-new-hero-stat">
+            <span className="cp-new-hero-stat-icon"><i className="fa-solid fa-circle-user" /></span>
+            <div className="cp-new-hero-stat-text">
+              <span className="cp-new-hero-stat-val">MeriDiet Platform</span>
+              <span className="cp-new-hero-stat-label">Profile Listing</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── KEY BENEFITS STRIP ── */}
-      <section className="cp-key-strip">
-        <div className="container cp-key-strip-inner">
-          <div className="cp-key-item">
-            <span className="cp-key-icon">🎥</span>
-            <div className="cp-key-text">
-              <strong>Recorded + Live Guest Lectures</strong>
-              <p>Learn at your own pace with recorded sessions, plus attend exclusive live guest lectures by industry experts</p>
-            </div>
+      {/* ── COURSE INTRO VIDEO ── */}
+      <section className="cp-video">
+        <div className="container">
+          <div className="cp-sec-head">
+            <p className="cp-eyebrow">Course Introduction</p>
+            <h2 className="cp-sec-title">See What You'll Learn</h2>
+            <p className="cp-sec-sub">Watch this short introduction to understand the program, curriculum, and career opportunities.</p>
           </div>
-          <div className="cp-key-sep" />
-          <div className="cp-key-item">
-            <span className="cp-key-icon">🎓</span>
-            <div className="cp-key-text">
-              <strong>Certification</strong>
-              <p>MeriDiet Certified Nutritionist — official certificate after successful course completion</p>
-            </div>
-          </div>
-          <div className="cp-key-sep" />
-          <div className="cp-key-item">
-            <span className="cp-key-icon">💰</span>
-            <div className="cp-key-text">
-              <strong>₹5,000 Free Wallet Credit</strong>
-              <p>Receive ₹5,000 wallet credit after completion to generate AI-powered diet plans on the MeriDiet Platform</p>
-            </div>
-          </div>
+          <CourseVideo videoId="xbnmuBPHofU" />
         </div>
       </section>
 
@@ -469,15 +534,21 @@ export default function NutritionistCourse() {
       <section className="cp-why">
         <div className="container">
           <div className="cp-sec-head">
-            <p className="cp-eyebrow">Why MeriDiet?</p>
+            <p className="cp-eyebrow">After Completion</p>
             <h2 className="cp-sec-title">More Than a Certification —<br />A Career Opportunity</h2>
-            <p className="cp-sec-sub">Unlike traditional courses that end with a certificate, the MeriDiet Certified Nutritionist Program helps you take the next step.</p>
+            <p className="cp-sec-sub">Unlike traditional courses that end with a certificate, the MeriDiet program gives you everything to launch your career.</p>
           </div>
           <div className="cp-why-grid">
-            {AFTER_COMPLETION.map(a => (
-              <div key={a.text} className="cp-why-card">
-                <span className="cp-why-icon">{a.icon}</span>
-                <p>{a.text}</p>
+            {AFTER_COMPLETION.map((a, i) => (
+              <div key={a.title} className="cp-why-card">
+                <div className="cp-why-card-icon-wrap">
+                  <i className={a.icon} />
+                  <span className="cp-why-step">0{i + 1}</span>
+                </div>
+                <div>
+                  <p className="cp-why-card-title">{a.title}</p>
+                  <p className="cp-why-card-text">{a.text}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -524,7 +595,7 @@ export default function NutritionistCourse() {
             </div>
             <div className="cp-curr-stat-sep" />
             <div className="cp-curr-stat">
-              <span className="cp-curr-stat-val">350+</span>
+              <span className="cp-curr-stat-val">150+</span>
               <span>Topics</span>
             </div>
             <div className="cp-curr-stat-sep" />
@@ -645,7 +716,7 @@ export default function NutritionistCourse() {
                 <div className="cp-panel-price">
                   <span className="cp-panel-old-price">₹24,999</span>
                   <span className="cp-panel-amount">₹14,999</span>
-                  <span className="cp-panel-note">One-time · EMI ₹5,999/month</span>
+                  <span className="cp-panel-note">One-time · EMI ₹4,999/month</span>
                 </div>
                 <ul className="cp-panel-includes">
                   {INCLUDES.map(i => <li key={i}><span>✓</span>{i}</li>)}

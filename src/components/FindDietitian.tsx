@@ -28,7 +28,7 @@ const FindDietitian = () => (
           <Link to="/consult-dietitian" className="fd-cta-btn">Find Your Dietitian →</Link>
         </div>
         <div className="fd-visual">
-          <img src="/dietitian-stats.png" alt="Dietitian with stats" className="fd-img" />
+          <img src="/image-131.svg" alt="Dietitian with stats" className="fd-img" />
         </div>
       </div>
     </div>
