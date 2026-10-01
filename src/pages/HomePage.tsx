@@ -11,6 +11,7 @@ import SamplePlan from '../components/SamplePlan'
 import Pricing from '../components/Pricing'
 import WhyChoose from '../components/WhyChoose'
 import HomeFAQ from '../components/HomeFAQ'
+import TransformationGallery from '../components/TransformationGallery'
 import Testimonials from '../components/Testimonials'
 import MediaPress from '../components/MediaPress'
 import TeamSection from '../components/TeamSection'
@@ -72,21 +73,63 @@ const SERVICE_SCHEMA = {
   review: [
     {
       '@type': 'Review',
-      author: { '@type': 'Person', name: 'Priya Sharma' },
+      author: { '@type': 'Person', name: 'Tanshik' },
       reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
-      reviewBody: 'I lost 8 kg in 2 months following my MeriDiet plan! The meals are delicious and so easy to prepare. Best part — everything is Indian food I already love.',
+      reviewBody: 'Thanks to Meri Diet\'s personalized nutrition plan, I gained 8 kg in 3 months of muscle and improved my fitness results.',
     },
     {
       '@type': 'Review',
-      author: { '@type': 'Person', name: 'Ananya Singh' },
+      author: { '@type': 'Person', name: 'Siddhesh' },
       reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
-      reviewBody: 'Dealing with PCOS for years, and finally found something that works! The plan is so detailed, with breakfast to dinner covered. Highly recommend to all women with PCOS.',
+      reviewBody: 'Meri Diet helped me lose 7kg in 3 months without feeling restricted or hungry all the time.',
     },
     {
       '@type': 'Review',
-      author: { '@type': 'Person', name: 'Rajesh Kumar' },
+      author: { '@type': 'Person', name: 'Gourav' },
       reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
-      reviewBody: 'As a diabetic, finding the right diet was always a challenge. MeriDiet gave me a proper plan that my doctor also approved. My sugar levels are much more stable now.',
+      reviewBody: 'I lost 40kg in 3 months with Meri Diet without giving up the foods I love. The plan was simple & easy to follow.',
+    },
+    {
+      '@type': 'Review',
+      author: { '@type': 'Person', name: 'Anmol' },
+      reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+      reviewBody: 'Meri Diet helped me understand what to eat to support my workouts. With a personalized plan, I lost 5kg in 3 months.',
+    },
+    {
+      '@type': 'Review',
+      author: { '@type': 'Person', name: 'Neeraj' },
+      reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+      reviewBody: 'Meri Diet helped me gain 11kg in 5 months in a healthy & sustainable way. The personalized plan was easy to follow & delivered great results.',
+    },
+    {
+      '@type': 'Review',
+      author: { '@type': 'Person', name: 'Priya' },
+      reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+      reviewBody: 'Meri Diet helped me gain 5kg in 2 months. The plan felt practical and sustainable. Highly recommended.',
+    },
+    {
+      '@type': 'Review',
+      author: { '@type': 'Person', name: 'Shubham' },
+      reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+      reviewBody: 'Thanks to Meri Diet, I maintained 63kg and developed healthier habits. I would recommend it to all fitness enthusiasts.',
+    },
+    {
+      '@type': 'Review',
+      author: { '@type': 'Person', name: 'Yash' },
+      reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+      reviewBody: 'I gained 20 kg in 6-7 months with Meri Diet\'s personalized nutrition plan. The approach was sustainable, practical, and helped me achieve my goals.',
+    },
+    {
+      '@type': 'Review',
+      author: { '@type': 'Person', name: 'Nikhil' },
+      reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+      reviewBody: 'I successfully lost 5 kg in just 2 months while preserving lean muscle mass. Meri Diet\'s nutrition plan perfectly supported my fat-loss journey.',
+    },
+    {
+      '@type': 'Review',
+      author: { '@type': 'Person', name: 'Charanjeet Kaur' },
+      reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+      reviewBody: 'I lost 6 kgs in 2 months, thanks to MeriDiet. MeriDiet gave me a personalized meal plan that fit my lifestyle instead of forcing me to change everything.',
     },
   ],
 }
@@ -120,6 +163,7 @@ const HomePage = ({ onOpenForm }: { onOpenForm: () => void }) => (
     <Pricing onOpenForm={onOpenForm} />
     <WhyChoose onOpenForm={onOpenForm} />
     <HomeFAQ />
+    <TransformationGallery />
     <Testimonials />
     <MediaPress />
     <TeamSection />
