@@ -256,7 +256,27 @@ export default function DietitianLayout() {
             <button className="dd-refer-btn">Refer Now &rarr;</button>
           </div> */}
 
-          <button className="dd-help-link"><i className="fa-regular fa-circle-question" /> Need Help?</button>
+          <div className="dd-support-card">
+            <div className="dd-support-card-header">
+              <div className="dd-support-card-icon"><i className="fa-solid fa-headset" /></div>
+              <div>
+                <p className="dd-support-card-title">Need Help?</p>
+                <p className="dd-support-card-sub">We're here for you</p>
+              </div>
+            </div>
+            <p className="dd-support-phone">+91 960 960 6009</p>
+            <div className="dd-support-card-actions">
+              <a href="tel:+919609606009" className="dd-support-btn dd-support-btn--call">
+                <i className="fa-solid fa-phone" /> Call
+              </a>
+              <a href="https://wa.me/919609606009" target="_blank" rel="noopener noreferrer" className="dd-support-btn dd-support-btn--whatsapp">
+                <i className="fa-brands fa-whatsapp" /> WhatsApp
+              </a>
+            </div>
+            <a href="mailto:support@meridiet.com" className="dd-support-email">
+              <i className="fa-regular fa-envelope" /> support@meridiet.com
+            </a>
+          </div>
         </div>
       </aside>
 

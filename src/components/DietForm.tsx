@@ -186,7 +186,7 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
           Full Name <span className="df-req">*</span>
         </label>
         <div className={`df-input-wrap${err.fullName ? ' df-input-wrap--err' : ''}`}>
-          <span className="df-icon">👤</span>
+          <i className="df-icon fa-solid fa-user" />
           <input
             className="df-input"
             type="text"
@@ -221,19 +221,16 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
         <label className="df-label">
           Mobile Number <span className="df-req">*</span>
         </label>
-        <div className="df-phone-row">
-          <select className="df-phone-code"><option>+91</option></select>
-          <div className={`df-input-wrap${err.whatsapp ? ' df-input-wrap--err' : ''}`} style={{ flex: 1 }}>
-            <span className="df-icon">📱</span>
-            <input
-              className="df-input"
-              type="tel"
-              placeholder="10-digit number"
-              maxLength={10}
-              value={d.whatsapp}
-              onChange={(e) => set('whatsapp', e.target.value.replace(/\D/g, ''))}
-            />
-          </div>
+        <div className={`df-input-wrap${err.whatsapp ? ' df-input-wrap--err' : ''}`}>
+          <i className="df-icon fa-solid fa-phone" />
+          <input
+            className="df-input"
+            type="tel"
+            placeholder="10-digit number"
+            maxLength={10}
+            value={d.whatsapp}
+            onChange={(e) => set('whatsapp', e.target.value.replace(/\D/g, ''))}
+          />
         </div>
         <FieldErr msg={err.whatsapp} />
       </div>
@@ -243,7 +240,7 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
           Email Address <span className="df-req">*</span> <span className="df-opt">(diet plan sent here)</span>
         </label>
         <div className={`df-input-wrap${err.email ? ' df-input-wrap--err' : ''}`}>
-          <span className="df-icon">📧</span>
+          <i className="df-icon fa-regular fa-envelope" />
           <input
             className="df-input"
             type="email"
@@ -262,14 +259,16 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
           Age {d.dob && <span className="df-age-auto">Auto-filled</span>}
         </label>
         <div className={`df-input-wrap${err.age ? ' df-input-wrap--err' : ''}${d.dob ? ' df-input-wrap--auto' : ''}`}>
-          <span className="df-icon">🎂</span>
+          <i className="df-icon fa-solid fa-hashtag" />
           <input
             className="df-input"
             type="number"
+            min={1}
+            max={120}
             placeholder="Your age"
             value={d.age}
             readOnly={!!d.dob}
-            onChange={(e) => { if (!d.dob) set('age', e.target.value) }}
+            onChange={(e) => { if (!d.dob) { const v = e.target.value.replace(/[^0-9]/g, ''); set('age', v) } }}
           />
         </div>
         <FieldErr msg={err.age} />
@@ -278,13 +277,16 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
         <label className="df-label">
           Gender <span className="df-req">*</span>
         </label>
-        <select className={`df-select${err.gender ? ' df-select--err' : ''}`} value={d.gender} onChange={(e) => set('gender', e.target.value)}>
-          <option value="">Select gender</option>
-          <option>Male</option>
-          <option>Female</option>
-          <option>Other</option>
-          <option>Prefer not to say</option>
-        </select>
+        <div className={`df-input-wrap${err.gender ? ' df-input-wrap--err' : ''}`}>
+          <i className="df-icon fa-solid fa-person" />
+          <select className="df-select df-select--inline" value={d.gender} onChange={(e) => set('gender', e.target.value)}>
+            <option value="">Select gender</option>
+            <option>Male</option>
+            <option>Female</option>
+            <option>Other</option>
+            <option>Prefer not to say</option>
+          </select>
+        </div>
         <FieldErr msg={err.gender} />
       </div>
     </div>
@@ -303,16 +305,19 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
             ))}
           </div>
         </div>
-        <input
-          className={`df-input${err.height ? ' df-input--err' : ''}`}
-          type="number"
-          min={d.heightUnit === 'cm' ? 50 : 1}
-          max={d.heightUnit === 'cm' ? 300 : 9}
-          step="0.1"
-          placeholder={d.heightUnit === 'cm' ? '50 – 300 cm' : '1 – 9 ft'}
-          value={d.height}
-          onChange={(e) => set('height', e.target.value)}
-        />
+        <div className={`df-input-wrap${err.height ? ' df-input-wrap--err' : ''}`}>
+          <i className="df-icon fa-solid fa-ruler-vertical" />
+          <input
+            className="df-input"
+            type="number"
+            min={d.heightUnit === 'cm' ? 50 : 4}
+            max={d.heightUnit === 'cm' ? 300 : 7}
+            step="0.1"
+            placeholder={d.heightUnit === 'cm' ? '50 – 300 cm' : '4 – 7 ft'}
+            value={d.height}
+            onChange={(e) => set('height', e.target.value)}
+          />
+        </div>
         <FieldErr msg={err.height} />
       </div>
       <div className="df-field">
@@ -328,16 +333,19 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
             ))}
           </div>
         </div>
-        <input
-          className={`df-input${err.weight ? ' df-input--err' : ''}`}
-          type="number"
-          min={1}
-          max={d.weightUnit === 'kg' ? 300 : 660}
-          step="0.1"
-          placeholder={d.weightUnit === 'kg' ? '1 – 300 kg' : '1 – 660 lbs'}
-          value={d.weight}
-          onChange={(e) => set('weight', e.target.value)}
-        />
+        <div className={`df-input-wrap${err.weight ? ' df-input-wrap--err' : ''}`}>
+          <i className="df-icon fa-solid fa-weight-scale" />
+          <input
+            className="df-input"
+            type="number"
+            min={d.weightUnit === 'kg' ? 30 : 66}
+            max={d.weightUnit === 'kg' ? 250 : 550}
+            step="0.1"
+            placeholder={d.weightUnit === 'kg' ? '30 – 250 kg' : '66 – 550 lbs'}
+            value={d.weight}
+            onChange={(e) => set('weight', e.target.value)}
+          />
+        </div>
         <FieldErr msg={err.weight} />
       </div>
     </div>
@@ -362,6 +370,20 @@ const Step1 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
       </div>
       <FieldErr msg={err.goals} />
     </div>
+
+    <a
+      href="https://wa.me/919609606009"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="df-whatsapp-help"
+    >
+      <span className="df-whatsapp-help-icon">💬</span>
+      <div>
+        <p className="df-whatsapp-help-title">Need Help?</p>
+        <p className="df-whatsapp-help-sub">Chat with our team on WhatsApp</p>
+      </div>
+      <span className="df-whatsapp-help-arrow">→</span>
+    </a>
 
   </div>
   )
@@ -854,9 +876,9 @@ const Step4 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
 
 /* ─── Step 5 ─────────────────────────────────────────────── */
 const PLAN_OPTS = [
-  { v: '1 Week',   price: '₹199', icon: '⚡', desc: '7-day personalized plan', badge: null },
-  { v: '1 Month',  price: '₹499', icon: '👑', desc: '28-day plan + dietitian consult', badge: '🔥 Most Popular' },
-  { v: '3 Months', price: '₹999', icon: '📅', desc: '3 months + monthly check-ins', badge: '⭐ Best Value' },
+  { v: '1 Week',   price: '₹199', salePrice: '₹179', icon: '⚡', desc: '7-day personalized plan',        badge: null,              offer: { code: 'FESTIVE10', label: '10% OFF',        type: 'coupon' as const } },
+  { v: '1 Month',  price: '₹499', salePrice: '₹399', icon: '👑', desc: '28-day personalized plan', badge: null /* '🔥 Most Popular' */, offer: { code: 'FESTIVE20', label: '20% OFF',        type: 'coupon' as const } },
+  { v: '3 Months', price: '₹999', salePrice: null,    icon: '📅', desc: '3 months + monthly check-ins',   badge: null /* '⭐ Best Value' */,   offer: { code: null,         label: 'FREE CONSULT', type: 'bonus'  as const } },
 ]
 
 const DELIVERY_OPTS = [
@@ -872,6 +894,7 @@ type CouponProps = {
   couponData: CouponData | null
   onApplyCoupon: () => void
   onRemoveCoupon: () => void
+  onQuickApply: (code: string) => void
 }
 
 const Step5 = ({ d, set, err, coupon }: { d: FormData; set: SetFn; err: Errors; coupon: CouponProps }) => {
@@ -927,8 +950,21 @@ const Step5 = ({ d, set, err, coupon }: { d: FormData; set: SetFn; err: Errors; 
             {d.planType === p.v && <span className="ct-plan-check">✓</span>}
             <span className="ct-plan-icon">{p.icon}</span>
             <strong className="ct-plan-name">{p.v}</strong>
-            <span className="ct-plan-price">{p.price}</span>
+            <div className="ct-plan-price-wrap">
+              {p.salePrice ? (
+                <>
+                  <span className="ct-plan-price-orig">{p.price}</span>
+                  <span className="ct-plan-price">{p.salePrice}</span>
+                </>
+              ) : (
+                <span className="ct-plan-price">{p.price}</span>
+              )}
+            </div>
             <span className="ct-plan-desc">{p.desc}</span>
+            <div className={`ct-plan-offer ct-plan-offer--${p.offer.type}`}>
+              <span className="ct-plan-offer-label">🎁 {p.offer.label}</span>
+              {p.offer.code && <span className="ct-plan-offer-code">{p.offer.code}</span>}
+            </div>
           </button>
         ))}
       </div>
@@ -954,9 +990,28 @@ const Step5 = ({ d, set, err, coupon }: { d: FormData; set: SetFn; err: Errors; 
         </div>
       ) : (
         <>
+          {(() => {
+            const planOffer = PLAN_OPTS.find(p => p.v === d.planType)?.offer
+            if (!planOffer?.code || coupon.couponCode) return null
+            return (
+              <button
+                className="ct-coupon-suggestion"
+                onClick={() => coupon.onQuickApply(planOffer.code!)}
+                disabled={coupon.couponLoading}
+              >
+                <span className="ct-coupon-suggestion-left">
+                  <i className="fa-solid fa-tag ct-coupon-suggestion-icon" />
+                  <span>Use <strong>{planOffer.code}</strong> — {planOffer.label} on this plan</span>
+                </span>
+                <span className="ct-coupon-suggestion-cta">
+                  {coupon.couponLoading ? '…' : 'Apply →'}
+                </span>
+              </button>
+            )
+          })()}
           <div className="ct-coupon-row">
             <div className="df-input-wrap" style={{ flex: 1 }}>
-              <span className="df-icon">🏷️</span>
+              <i className="df-icon fa-solid fa-tag" />
               <input
                 className="df-input"
                 type="text"
@@ -996,7 +1051,7 @@ const Step5 = ({ d, set, err, coupon }: { d: FormData; set: SetFn; err: Errors; 
         <div className="df-field">
           <label className="df-label">Full Name <span className="df-req">*</span></label>
           <div className={`df-input-wrap${err.contactName ? ' df-input-wrap--err' : ''}`}>
-            <span className="df-icon">👤</span>
+            <i className="df-icon fa-solid fa-user" />
             <input className="df-input" type="text" placeholder="Enter your full name"
               value={d.contactName}
               onChange={(e) => set('contactName', e.target.value.replace(/[^a-zA-Z\s]/g, ''))} />
@@ -1008,14 +1063,11 @@ const Step5 = ({ d, set, err, coupon }: { d: FormData; set: SetFn; err: Errors; 
           <label className="df-label">
             Phone / WhatsApp Number <span className="df-req">*</span>
           </label>
-          <div className="df-phone-row">
-            <select className="df-phone-code"><option>+91</option></select>
-            <div className={`df-input-wrap${err.whatsapp ? ' df-input-wrap--err' : ''}`} style={{ flex: 1 }}>
-              <span className="df-icon">📱</span>
-              <input className="df-input" type="tel" placeholder="10-digit number"
-                value={d.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} />
-              {phoneFromUser && <span className="df-verified-badge">✓ Verified</span>}
-            </div>
+          <div className={`df-input-wrap${err.whatsapp ? ' df-input-wrap--err' : ''}`}>
+            <i className="df-icon fa-solid fa-phone" />
+            <input className="df-input" type="tel" placeholder="10-digit number"
+              value={d.whatsapp} onChange={(e) => set('whatsapp', e.target.value)} />
+            {phoneFromUser && <span className="df-verified-badge">✓ Verified</span>}
           </div>
           <FieldErr msg={err.whatsapp} />
         </div>
@@ -1027,7 +1079,7 @@ const Step5 = ({ d, set, err, coupon }: { d: FormData; set: SetFn; err: Errors; 
             {!hasMethod('email') && <span className="df-opt"> (Optional)</span>}
           </label>
           <div className={`df-input-wrap${err.email ? ' df-input-wrap--err' : ''}`}>
-            <span className="df-icon">📧</span>
+            <i className="df-icon fa-regular fa-envelope" />
             <input className="df-input" type="email" placeholder="Enter your email address"
               value={d.email} onChange={(e) => set('email', e.target.value)} />
           </div>
@@ -1216,18 +1268,26 @@ const SidebarMain = ({ step, planType, onSelectPlan }: { step: number; planType:
           return (
             <button
               key={p.v}
-              className={`df-sb-plan-card${p.badge?.includes('Popular') ? ' df-sb-plan-card--popular' : ''}${selected ? ' df-sb-plan-card--selected' : ''}`}
+              className={`df-sb-plan-card${selected ? ' sel' : ''}`}
               onClick={() => onSelectPlan(p.v)}
             >
-              {selected && <span className="df-sb-plan-check">✓</span>}
-              {p.badge && <span className="df-sb-plan-badge">{p.badge}</span>}
-              <div className="df-sb-plan-top">
+              <div className="df-sb-plan-main">
                 <span className="df-sb-plan-icon">{p.icon}</span>
-                <div>
-                  <p className="df-sb-plan-name">{p.v}</p>
+                <div className="df-sb-plan-info">
+                  <div className="df-sb-plan-name-row">
+                    <p className="df-sb-plan-name">{p.v}</p>
+                    {selected && <span className="df-sb-plan-sel-dot">✓</span>}
+                  </div>
                   <p className="df-sb-plan-desc">{p.desc}</p>
                 </div>
-                <span className="df-sb-plan-price">{p.price}</span>
+                <div className="df-sb-plan-price-wrap">
+                  {p.salePrice && <span className="df-sb-plan-price-orig">{p.price}</span>}
+                  <span className="df-sb-plan-price">{p.salePrice ?? p.price}</span>
+                </div>
+              </div>
+              <div className={`df-sb-plan-offer df-sb-plan-offer--${p.offer.type}`}>
+                <span className="df-sb-plan-offer-label">🎁 {p.offer.label}</span>
+                {p.offer.code && <span className="df-sb-plan-offer-code">{p.offer.code}</span>}
               </div>
             </button>
           )
@@ -1263,14 +1323,14 @@ function validateStep(s: number, d: FormData): Errors {
     } else {
       const h = +d.height
       if (d.heightUnit === 'cm'   && (h < 50  || h > 300)) e.height = 'Height must be between 50 and 300 cm'
-      if (d.heightUnit === 'ft/in' && (h < 1   || h > 9))  e.height = 'Height must be between 1 and 9 ft'
+      if (d.heightUnit === 'ft/in' && (h < 4   || h > 7))  e.height = 'Height must be between 4 and 7 ft'
     }
     if (!d.weight.trim()) {
       e.weight = 'Weight is required'
     } else {
       const w = +d.weight
-      if (d.weightUnit === 'kg'  && (w < 1 || w > 300)) e.weight = 'Weight must be between 1 and 300 kg'
-      if (d.weightUnit === 'lbs' && (w < 1 || w > 660)) e.weight = 'Weight must be between 1 and 660 lbs'
+      if (d.weightUnit === 'kg'  && (w < 30  || w > 250)) e.weight = 'Weight must be between 30 and 250 kg'
+      if (d.weightUnit === 'lbs' && (w < 66  || w > 550)) e.weight = 'Weight must be between 66 and 550 lbs'
     }
     if (d.goals.length === 0)   e.goals = 'Please select at least one goal'
     if (!d.email.trim())        e.email = 'Email address is required'
@@ -1391,6 +1451,18 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
     setErrors(p => { const n = { ...p }; delete n[k]; return n })
   }
 
+  const friendlyCouponError = (err: unknown): string => {
+    if (!(err instanceof ApiError)) return 'Invalid or expired coupon code.'
+    const msg = err.message.toLowerCase()
+    if (msg.includes('not valid for') || msg.includes('not applicable') || msg.includes('plan'))
+      return 'This coupon is not applicable for the selected plan.'
+    if (msg.includes('expired'))
+      return 'This coupon has expired.'
+    if (msg.includes('already') || msg.includes('used'))
+      return 'This coupon has already been used.'
+    return 'Invalid or expired coupon code.'
+  }
+
   const applyCoupon = async () => {
     if (!couponCode.trim()) return
     setCouponLoading(true)
@@ -1400,7 +1472,22 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
       const res = await paymentApi.validateCoupon(couponCode.trim(), data.planType)
       setCouponData(res.data)
     } catch (err) {
-      setCouponError(err instanceof ApiError ? err.message : 'Invalid or expired coupon code.')
+      setCouponError(friendlyCouponError(err))
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const quickApplyCoupon = async (code: string) => {
+    setCouponCode(code)
+    setCouponLoading(true)
+    setCouponError(null)
+    setCouponData(null)
+    try {
+      const res = await paymentApi.validateCoupon(code, data.planType)
+      setCouponData(res.data)
+    } catch (err) {
+      setCouponError(friendlyCouponError(err))
     } finally {
       setCouponLoading(false)
     }
@@ -1610,6 +1697,7 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
                       couponData,
                       onApplyCoupon: applyCoupon,
                       onRemoveCoupon: () => { setCouponCode(''); setCouponData(null); setCouponError(null) },
+                      onQuickApply: quickApplyCoupon,
                     }}
                   />
                 )}

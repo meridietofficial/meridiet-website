@@ -241,9 +241,11 @@ export default function DietitianDashboard() {
                       <p className="dd-appt-day">{dateLabel(a.appointment_date)}</p>
                       <p className="dd-appt-hour">{fmtSlot(a.slot)}</p>
                     </div>
-                    <button className="dd-video-btn" onClick={() => startCall(a.id, a.name)}>
-                      &#128249; Video Call
-                    </button>
+                    {a.appointment_source !== 'dietitian' && (
+                      <button className="dd-video-btn" onClick={() => startCall(a.id, a.name)}>
+                        &#128249; Video Call
+                      </button>
+                    )}
                   </div>
                 ))
               )}

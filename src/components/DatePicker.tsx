@@ -109,7 +109,7 @@ export default function DatePicker({ value, onChange, min, max, placeholder, has
         className={['cdp-input dp-trigger', hasError?'dp-trigger--err':'', open?'dp-trigger--open':''].filter(Boolean).join(' ')}
         onClick={() => { setShowYears(false); setOpen(p => !p) }}
       >
-        <span className="dp-icon">📅</span>
+        <i className="dp-icon fa-regular fa-calendar" />
         <span className={displayVal ? 'dp-val' : 'dp-placeholder'}>
           {displayVal || placeholder || 'Select date of birth'}
         </span>

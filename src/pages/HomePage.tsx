@@ -1,4 +1,5 @@
 import Hero from '../components/Hero'
+import FestiveConfetti from '../components/FestiveConfetti'
 import StatsCounter from '../components/StatsCounter'
 import HowItWorks from '../components/HowItWorks'
 import GetStarted from '../components/GetStarted'
@@ -150,7 +151,22 @@ const HomePage = ({ onOpenForm }: { onOpenForm: () => void }) => (
       canonical="/"
       jsonLd={[ORG_SCHEMA, WEBSITE_SCHEMA, SERVICE_SCHEMA, BREADCRUMB_SCHEMA]}
     />
-    <Hero onOpenForm={onOpenForm} />
+    <FestiveConfetti />
+    {/* <Hero onOpenForm={onOpenForm} /> */}
+    <a href="/diet-plan" style={{ display: 'block', width: '100%' }}>
+      <img
+        src="/festive-banner-desktop.png"
+        alt="Biggest Festive Season Sale – Free Consultation + Up to 20% Off"
+        style={{ width: '100%', height: 'auto' }}
+        className="festive-banner-desktop"
+      />
+      <img
+        src="/festive-banner-mobile.png"
+        alt="Biggest Festive Season Sale – Free Consultation + Up to 20% Off"
+        style={{ width: '100%', height: 'auto' }}
+        className="festive-banner-mobile"
+      />
+    </a>
     <StatsCounter />
     <HowItWorks onOpenForm={onOpenForm} />
     <GetStarted onOpenForm={onOpenForm} />

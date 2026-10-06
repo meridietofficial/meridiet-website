@@ -114,7 +114,7 @@ function AppInner() {
           <div className="offer-ticker-track">
             {[0, 1].map(i => (
               <span key={i} className="offer-ticker-text" aria-hidden={i === 1}>
-                🎉 Nutrition Month Special &nbsp;•&nbsp; Expert Nutrition Consultation at just&nbsp;<strong>₹99</strong>&nbsp;<s style={{ opacity: 0.7 }}>₹999</s> &nbsp;•&nbsp; 1-on-1 with Verified Dietitian &nbsp;•&nbsp; 100% Confidential &nbsp;•&nbsp; Book Now on MeriDiet &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                🎊 Biggest Festive Season Sale &nbsp;•&nbsp; <strong>₹199</strong> – 10% OFF &nbsp;•&nbsp; <strong>₹499</strong> – 20% OFF &nbsp;•&nbsp; <strong>₹999</strong> – FREE Consultation &nbsp;•&nbsp; Limited Time Only &nbsp;•&nbsp; Book Now on MeriDiet &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
               </span>
             ))}
           </div>

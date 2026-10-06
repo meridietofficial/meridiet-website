@@ -183,7 +183,6 @@ export default function DietitianAppointments() {
     appointmentApi.getDietitianSessions({
       tab,
       search: debouncedSearch || undefined,
-      source: 'platform',
     }).then(res => {
       if (aborted) return
       setSummary(res.data.summary)
@@ -408,6 +407,9 @@ export default function DietitianAppointments() {
                               )}
                               {s.appointment_source === 'platform' && (
                                 <span className="ap-source-badge ap-source-badge--online">Online</span>
+                              )}
+                              {s.appointment_source === 'admin' && (
+                                <span className="ap-source-badge ap-source-badge--online">Free Consult</span>
                               )}
                             </div>
                             <div className="ap-meta-row">

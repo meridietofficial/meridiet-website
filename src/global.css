@@ -129,3 +129,11 @@ img {
     padding: 0 20px;
   }
 }
+
+.festive-banner-mobile { display: none; }
+.festive-banner-desktop { display: block; }
+
+@media (max-width: 767px) {
+  .festive-banner-desktop { display: none; }
+  .festive-banner-mobile { display: block; }
+}

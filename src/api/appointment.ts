@@ -135,7 +135,7 @@ export type DietitianAppointment = {
   dietitian_review: string | null
   dietitian_reviewed_at: string | null
   diet_plan: DietPlanRef | null
-  appointment_source?: 'platform' | 'dietitian'
+  appointment_source?: 'platform' | 'dietitian' | 'admin'
   payment_method?: 'razorpay' | 'cash' | 'upi' | 'card' | 'other' | null
   diet_plan_sent?: boolean
   diet_plan_file_url?: string | null
@@ -307,7 +307,7 @@ export type DietitianSession = {
   dietitian_review?: string | null
   user_review_done?: boolean
   user_rating?: number | null
-  appointment_source?: 'platform' | 'dietitian'
+  appointment_source?: 'platform' | 'dietitian' | 'admin'
   payment_method?: 'razorpay' | 'cash' | 'upi' | 'card' | 'other' | null
   diet_plan_sent?: boolean
   diet_plan_file_url?: string | null
