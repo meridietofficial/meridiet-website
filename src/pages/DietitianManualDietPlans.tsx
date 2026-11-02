@@ -202,7 +202,7 @@ export default function DietitianManualDietPlans() {
                       </button>
                     ) : (
                       <button className="dp-btn-view"
-                        onClick={() => navigate(`/dietitian-diet-plans/${p.id}?manual=1`, { state: { isManual: true, returnTo: '/dietitian-diet-plans/manual', startInEdit: true } })}>
+                        onClick={() => navigate(`/dietitian-diet-plans/${p.id}/edit?manual=1`, { state: { isManual: true, returnTo: '/dietitian-diet-plans/manual' } })}>
                         <i className="fa-solid fa-pen" /> Edit Plan
                       </button>
                     )}

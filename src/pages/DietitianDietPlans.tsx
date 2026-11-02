@@ -275,7 +275,10 @@ export default function DietitianDietPlans() {
                     {p.status === 'completed' && (
                       <>
                         <button className="dp-btn-view" onClick={() => navigate(`/dietitian-diet-plans/${p.id}`)}>
-                          <i className="fa-solid fa-eye" /> Preview
+                          <i className="fa-solid fa-eye" /> View
+                        </button>
+                        <button className="dp-btn-view" onClick={() => navigate(`/dietitian-diet-plans/${p.id}/edit`)}>
+                          <i className="fa-solid fa-pen" /> Edit
                         </button>
                         <button
                           className="dp-btn-send"
@@ -292,7 +295,10 @@ export default function DietitianDietPlans() {
                     {p.status === 'sent' && (
                       <>
                         <button className="dp-btn-view" onClick={() => navigate(`/dietitian-diet-plans/${p.id}`)}>
-                          <i className="fa-solid fa-eye" /> Preview
+                          <i className="fa-solid fa-eye" /> View
+                        </button>
+                        <button className="dp-btn-view" onClick={() => navigate(`/dietitian-diet-plans/${p.id}/edit`)}>
+                          <i className="fa-solid fa-pen" /> Edit
                         </button>
                         <button
                           className="dp-btn-view"
@@ -576,9 +582,15 @@ export default function DietitianDietPlans() {
                     <>
                       <button
                         className="dp-btn-primary dp-btn-primary--full"
+                        onClick={() => navigate(`/dietitian-diet-plans/${selected.id}/edit`)}
+                      >
+                        <i className="fa-solid fa-pen" /> Edit Plan
+                      </button>
+                      <button
+                        className="dp-btn-primary dp-btn-primary--full"
                         onClick={() => navigate(`/dietitian-diet-plans/${selected.id}`)}
                       >
-                        <i className="fa-solid fa-eye" /> Preview & Edit
+                        <i className="fa-solid fa-eye" /> Preview Plan
                       </button>
                       <button
                         className="dp-btn-send dp-btn-send--full"
@@ -597,9 +609,15 @@ export default function DietitianDietPlans() {
                     <>
                       <button
                         className="dp-btn-primary dp-btn-primary--full"
+                        onClick={() => navigate(`/dietitian-diet-plans/${selected.id}/edit`)}
+                      >
+                        <i className="fa-solid fa-pen" /> Edit Plan
+                      </button>
+                      <button
+                        className="dp-btn-primary dp-btn-primary--full"
                         onClick={() => navigate(`/dietitian-diet-plans/${selected.id}`)}
                       >
-                        <i className="fa-solid fa-eye" /> Preview Plan
+                        <i className="fa-solid fa-eye" /> View Plan
                       </button>
                       <button
                         className="dp-btn-view"

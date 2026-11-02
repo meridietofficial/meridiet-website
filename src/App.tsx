@@ -171,6 +171,7 @@ function AppInner() {
             <Route path="/dietitian-diet-plans/manual"                 element={<DietitianManualDietPlans />} />
             <Route path="/dietitian-diet-plans/manual/new"             element={<DietitianManualDietPlanForm />} />
             <Route path="/dietitian-diet-plans/manual/:planId/edit"    element={<DietitianManualDietPlanForm />} />
+            <Route path="/dietitian-diet-plans/:planId/edit"           element={<DietitianDraftDietPlan />} />
             <Route path="/dietitian-diet-plans/:planId"                element={<DietitianDraftDietPlan />} />
             <Route path="/dietitian-chat"                   element={<DietitianChat />} />
             <Route path="/dietitian-follow-ups"             element={<DietitianFollowUps />} />

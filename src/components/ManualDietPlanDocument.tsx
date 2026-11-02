@@ -83,7 +83,7 @@ const DietitianHeader = ({ dietitian, calorie }: { dietitian?: DietitianProfile 
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         {logoUrl && (
           <img src={logoUrl} alt="" crossOrigin="anonymous"
-            style={{ height: 46, width: "auto", objectFit: "contain", maxWidth: 160 }} />
+            style={{ height: 64, width: "auto", objectFit: "contain", maxWidth: 200 }} />
         )}
         <div>
           {name && <div style={{ fontWeight: 800, fontSize: 15, color: C.dark, lineHeight: 1.15 }}>{name}</div>}
@@ -370,14 +370,37 @@ const OverviewPage = ({ plan, dietitian, page }: { plan: any; dietitian?: Dietit
 // WEEK PAGES — card-per-day layout
 // ════════════════════════════════════════════════════════════════════════════
 const MEALS = [
-  { key: "breakfast", label: "Breakfast", Icon: FaSun     },
-  { key: "lunch",     label: "Lunch",     Icon: FaUtensils },
-  { key: "snack",     label: "Snack",     Icon: FaAppleAlt },
-  { key: "dinner",    label: "Dinner",    Icon: FaMoon     },
+  { key: "breakfast", label: "Breakfast", Icon: FaSun,      defaultMins:  8 * 60 },
+  { key: "lunch",     label: "Lunch",     Icon: FaUtensils, defaultMins: 13 * 60 },
+  { key: "snack",     label: "Snack",     Icon: FaAppleAlt, defaultMins: 17 * 60 },
+  { key: "dinner",    label: "Dinner",    Icon: FaMoon,     defaultMins: 20 * 60 },
 ];
+
+function parseMealTime(time: string | undefined): number {
+  if (!time) return Infinity;
+  const m = time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!m) return Infinity;
+  let h = parseInt(m[1]), mins = parseInt(m[2]);
+  const pm = m[3].toUpperCase() === "PM";
+  if (pm && h !== 12) h += 12;
+  if (!pm && h === 12) h = 0;
+  return h * 60 + mins;
+}
 
 const DayCard = ({ d }: { d: any }) => {
   const extraMeals: any[] = Array.isArray(d.extra_meals) ? d.extra_meals : [];
+
+  const allSlots = [
+    ...MEALS.map(m => {
+      const t = parseMealTime(d.meal_timing?.[m.key]);
+      return { type: "fixed" as const, m, sortMin: isFinite(t) ? t : m.defaultMins };
+    }),
+    ...extraMeals.map((em, ei) => ({
+      type: "extra" as const, em, ei,
+      sortMin: parseMealTime(em.time),
+    })),
+  ].sort((a, b) => a.sortMin - b.sortMin);
+
   return (
     <div style={{ background: C.white, borderRadius: 12, border: `1px solid ${C.line}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
       <div style={{ background: C.brand, color: "#fff", padding: "5px 10px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -389,54 +412,54 @@ const DayCard = ({ d }: { d: any }) => {
         )}
       </div>
       <div style={{ padding: "7px 9px", flex: 1 }}>
-        {/* Fixed meals */}
-        {MEALS.map((m) => {
-          const items = list(d[m.key]);
-          if (!items.length) return null;
-          const time = d.meal_timing?.[m.key];
-          return (
-            <div key={m.key} style={{ marginBottom: 7 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 8.5, fontWeight: 800, color: C.brand, letterSpacing: 0.3, marginBottom: 2 }}>
-                <m.Icon size={8} />
-                <span>{m.label.toUpperCase()}</span>
-                {time && <span style={{ marginLeft: "auto", color: C.faint, fontWeight: 700 }}>{time}</span>}
-              </div>
-              {items.map((it: any, k: number) => (
-                <div key={k} style={{ display: "flex", gap: 5, fontSize: 8.5, color: C.ink, lineHeight: 1.3, paddingLeft: 2 }}>
-                  <span style={{ color: C.brand, flexShrink: 0 }}>•</span>
-                  <span style={{ flex: 1 }}>
-                    {(it.food || "").replace(/\s*\([^)]*\)/g, "").trim()}
-                    {it.quantity ? <span style={{ color: C.sub }}> — {it.quantity}</span> : ""}
-                  </span>
+        {allSlots.map(slot => {
+          if (slot.type === "fixed") {
+            const { m } = slot;
+            const items = list(d[m.key]);
+            if (!items.length) return null;
+            const time = d.meal_timing?.[m.key];
+            return (
+              <div key={m.key} style={{ marginBottom: 7 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 8.5, fontWeight: 800, color: C.brand, letterSpacing: 0.3, marginBottom: 2 }}>
+                  <m.Icon size={8} />
+                  <span>{m.label.toUpperCase()}</span>
+                  {time && <span style={{ marginLeft: "auto", color: C.faint, fontWeight: 700 }}>{time}</span>}
                 </div>
-              ))}
-            </div>
-          );
-        })}
-
-        {/* Extra meals */}
-        {extraMeals.map((em: any, ei: number) => {
-          const items = list(em.items);
-          return (
-            <div key={`em-${ei}`} style={{ marginBottom: 7, borderLeft: `2px solid ${EXTRA_MEAL_COLOR}`, paddingLeft: 5 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 8.5, fontWeight: 800, color: EXTRA_MEAL_COLOR, letterSpacing: 0.3, marginBottom: 2 }}>
-                <FaUtensilSpoon size={8} color={EXTRA_MEAL_COLOR} />
-                <span>{(em.name || "Extra Meal").toUpperCase()}</span>
-                {em.time && <span style={{ marginLeft: "auto", color: C.faint, fontWeight: 700 }}>{em.time}</span>}
+                {items.map((it: any, k: number) => (
+                  <div key={k} style={{ display: "flex", gap: 5, fontSize: 8.5, color: C.ink, lineHeight: 1.3, paddingLeft: 2 }}>
+                    <span style={{ color: C.brand, flexShrink: 0 }}>•</span>
+                    <span style={{ flex: 1 }}>
+                      {(it.food || "").replace(/\s*\([^)]*\)/g, "").trim()}
+                      {it.quantity ? <span style={{ color: C.sub }}> — {it.quantity}</span> : ""}
+                    </span>
+                  </div>
+                ))}
               </div>
-              {items.length === 0 ? (
-                <div style={{ fontSize: 8, color: C.faint, paddingLeft: 2 }}>—</div>
-              ) : items.map((it: any, k: number) => (
-                <div key={k} style={{ display: "flex", gap: 5, fontSize: 8.5, color: C.ink, lineHeight: 1.3, paddingLeft: 2 }}>
-                  <span style={{ color: EXTRA_MEAL_COLOR, flexShrink: 0 }}>•</span>
-                  <span style={{ flex: 1 }}>
-                    {(it.food || "").replace(/\s*\([^)]*\)/g, "").trim()}
-                    {it.quantity ? <span style={{ color: C.sub }}> — {it.quantity}</span> : ""}
-                  </span>
+            );
+          } else {
+            const { em, ei } = slot;
+            const items = list(em.items);
+            return (
+              <div key={`em-${ei}`} style={{ marginBottom: 7, borderLeft: `2px solid ${EXTRA_MEAL_COLOR}`, paddingLeft: 5 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 8.5, fontWeight: 800, color: EXTRA_MEAL_COLOR, letterSpacing: 0.3, marginBottom: 2 }}>
+                  <FaUtensilSpoon size={8} color={EXTRA_MEAL_COLOR} />
+                  <span>{(em.name || "Extra Meal").toUpperCase()}</span>
+                  {em.time && <span style={{ marginLeft: "auto", color: C.faint, fontWeight: 700 }}>{em.time}</span>}
                 </div>
-              ))}
-            </div>
-          );
+                {items.length === 0 ? (
+                  <div style={{ fontSize: 8, color: C.faint, paddingLeft: 2 }}>—</div>
+                ) : items.map((it: any, k: number) => (
+                  <div key={k} style={{ display: "flex", gap: 5, fontSize: 8.5, color: C.ink, lineHeight: 1.3, paddingLeft: 2 }}>
+                    <span style={{ color: EXTRA_MEAL_COLOR, flexShrink: 0 }}>•</span>
+                    <span style={{ flex: 1 }}>
+                      {(it.food || "").replace(/\s*\([^)]*\)/g, "").trim()}
+                      {it.quantity ? <span style={{ color: C.sub }}> — {it.quantity}</span> : ""}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            );
+          }
         })}
       </div>
       <div style={{ borderTop: `1px solid ${C.line}`, padding: "5px 9px", display: "flex", justifyContent: "space-between", fontSize: 9, fontWeight: 700 }}>
@@ -455,6 +478,64 @@ const DayCard = ({ d }: { d: any }) => {
   );
 };
 
+// ── Week page: height estimation & day splitting ─────────────────────────────
+// Available height for the day-card grid on a full WeekPage (conservative).
+// Breakdown: Page content 1063px − header 46px − title 35px − subtitle 28px
+//            − macro bar 46px − footer reserve 108px ≈ 800px.
+// Use 730 as the threshold: standard plans (5 items/meal) estimate 721px for 2 rows
+// and stay on 1 page; plans with extra meals estimate ≥777px and correctly split.
+const GRID_AVAIL_H = 730;
+const GRID_COLS    = 4;
+const GRID_GAP     = 9;
+// Card overhead: header row 25px + body padding 14px + footer row 25px = 64px
+const CARD_FIXED_H = 64;
+// Per meal: label row 11px + margin-bottom 7px = 18px header; continuation pages skip macro bar
+const MEAL_HDR_H   = 18;
+// Per item: fontSize 8.5 × lineHeight 1.3 ≈ 11px
+const ITEM_H       = 11;
+
+function estimateDayCardH(d: any): number {
+  let h = CARD_FIXED_H;
+  for (const key of ["breakfast", "lunch", "snack", "dinner"]) {
+    const items = list(d[key]);
+    if (items.length) h += MEAL_HDR_H + items.length * ITEM_H;
+  }
+  for (const em of (d.extra_meals ?? [])) {
+    const items = list(em.items);
+    h += MEAL_HDR_H + Math.max(items.length, 1) * ITEM_H;
+  }
+  return h;
+}
+
+function estimateGridH(group: any[]): number {
+  let total = 0;
+  const rows = Math.ceil(group.length / GRID_COLS);
+  for (let r = 0; r < rows; r++) {
+    const row = group.slice(r * GRID_COLS, (r + 1) * GRID_COLS);
+    const rowH = Math.max(...row.map(estimateDayCardH));
+    if (r > 0) total += GRID_GAP;
+    total += rowH;
+  }
+  return total;
+}
+
+function splitDaysIntoGroups(days: any[]): any[][] {
+  const groups: any[][] = [];
+  let cur: any[] = [];
+  for (const d of days) {
+    const candidate = [...cur, d];
+    if (cur.length > 0 && estimateGridH(candidate) > GRID_AVAIL_H) {
+      groups.push(cur);
+      cur = [d];
+    } else {
+      cur = candidate;
+    }
+  }
+  if (cur.length > 0) groups.push(cur);
+  return groups.length ? groups : [[]];
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 const WeekPage = ({ week, weekIndex, plan, dietitian, page }: {
   week: any; weekIndex: number; plan: any; dietitian?: DietitianProfile | null; page: number;
 }) => {
@@ -462,42 +543,53 @@ const WeekPage = ({ week, weekIndex, plan, dietitian, page }: {
   const days     = week?.days    || [];
   const startDay = days[0]?.day  || weekIndex * 7 + 1;
   const endDay   = days[days.length - 1]?.day || startDay + days.length - 1;
+  const groups   = splitDaysIntoGroups(days);
+  const weekNum  = week?.week || weekIndex + 1;
+
   return (
-    <Page>
-      <DietitianHeader dietitian={dietitian} calorie={s.calorie_range} />
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-        <Title pre={`WEEK ${week?.week || weekIndex + 1} —`} accent="MEAL PLAN" size={22} />
-        <Chip><span style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}><FaBullseye size={10} /> Goal: {humanize(s.primary_goal) || "—"}</span></Chip>
-      </div>
-      <p style={{ fontSize: 11.5, color: C.sub, margin: "2px 0 10px" }}>
-        Days {startDay}–{endDay}{week?.title ? ` — ${week.title}` : ""}.
-      </p>
-
-      {/* Macro targets bar */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-        {[
-          { Icon: FaFireAlt,    label: "Calories", val: s.calorie_range ? s.calorie_range.replace("/day", "").trim() : null, color: C.gold },
-          { Icon: FaDumbbell,   label: "Protein",  val: s.protein_target_g ? `${s.protein_target_g} g` : null, color: C.brand },
-          { Icon: FaBreadSlice, label: "Carbs",    val: s.carbs_target_g   ? `${s.carbs_target_g} g`   : null, color: "#d97706" },
-          { Icon: FaCheese,     label: "Fat",      val: s.fat_target_g     ? `${s.fat_target_g} g`     : null, color: "#dc2626" },
-        ].filter((x) => x.val).map(({ Icon, label, val, color }) => (
-          <div key={label} style={{ flex: 1, background: C.card, borderRadius: 10, padding: "6px 10px", display: "flex", alignItems: "center", gap: 7 }}>
-            <span style={{ width: 22, height: 22, borderRadius: "50%", background: C.soft, display: "flex", alignItems: "center", justifyContent: "center", color, flexShrink: 0 }}><Icon size={10} /></span>
-            <div>
-              <div style={{ fontSize: 8, color: C.sub, fontWeight: 700, letterSpacing: 0.3 }}>{label.toUpperCase()}</div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: C.dark }}>{val}</div>
-            </div>
+    <>
+      {groups.map((group, gi) => (
+        <Page key={gi}>
+          <DietitianHeader dietitian={dietitian} calorie={s.calorie_range} />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
+            <Title pre={`WEEK ${weekNum} —`} accent="MEAL PLAN" size={22} />
+            <Chip><span style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 5 }}><FaBullseye size={10} /> Goal: {humanize(s.primary_goal) || "—"}</span></Chip>
           </div>
-        ))}
-      </div>
+          <p style={{ fontSize: 11.5, color: C.sub, margin: "2px 0 10px" }}>
+            {gi === 0
+              ? `Days ${startDay}–${endDay}${week?.title ? ` — ${week.title}` : ""}.`
+              : `Week ${weekNum} continued · Days ${startDay}–${endDay}.`}
+          </p>
 
-      {/* Day cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 9 }}>
-        {days.map((d: any) => <DayCard key={d.day} d={d} />)}
-      </div>
+          {gi === 0 && (
+            /* Macro targets bar — only on first sub-page */
+            <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+              {[
+                { Icon: FaFireAlt,    label: "Calories", val: s.calorie_range ? s.calorie_range.replace("/day", "").trim() : null, color: C.gold },
+                { Icon: FaDumbbell,   label: "Protein",  val: s.protein_target_g ? `${s.protein_target_g} g` : null, color: C.brand },
+                { Icon: FaBreadSlice, label: "Carbs",    val: s.carbs_target_g   ? `${s.carbs_target_g} g`   : null, color: "#d97706" },
+                { Icon: FaCheese,     label: "Fat",      val: s.fat_target_g     ? `${s.fat_target_g} g`     : null, color: "#dc2626" },
+              ].filter((x) => x.val).map(({ Icon, label, val, color }) => (
+                <div key={label} style={{ flex: 1, background: C.card, borderRadius: 10, padding: "6px 10px", display: "flex", alignItems: "center", gap: 7 }}>
+                  <span style={{ width: 22, height: 22, borderRadius: "50%", background: C.soft, display: "flex", alignItems: "center", justifyContent: "center", color, flexShrink: 0 }}><Icon size={10} /></span>
+                  <div>
+                    <div style={{ fontSize: 8, color: C.sub, fontWeight: 700, letterSpacing: 0.3 }}>{label.toUpperCase()}</div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: C.dark }}>{val}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
-      <DietitianFooter page={page} dietitian={dietitian} tagline={{ main: "You've got this!", sub: "Consistency today, transformation tomorrow." }} />
-    </Page>
+          {/* Day cards */}
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 9 }}>
+            {group.map((d: any) => <DayCard key={d.day} d={d} />)}
+          </div>
+
+          <DietitianFooter page={page + gi} dietitian={dietitian} tagline={{ main: "You've got this!", sub: "Consistency today, transformation tomorrow." }} />
+        </Page>
+      ))}
+    </>
   );
 };
 
@@ -680,7 +772,7 @@ const HydrationPage = ({ plan, dietitian, page }: { plan: any; dietitian?: Dieti
         </SectionCard>
         <SectionCard icon={<FaStethoscope size={13} color={C.brand} />} title="GENERAL TIPS">
           <ul style={{ margin: 0, paddingLeft: 14, fontSize: 10, color: C.sub, lineHeight: 1.5 }}>
-            {(tips.length ? tips : ["Prioritize protein at every meal.", "Include colorful vegetables and fruits.", "Stay consistent with meal timings.", "Listen to hunger and fullness cues."]).slice(0, 5).map((t: string, i: number) => <li key={i}>{t}</li>)}
+            {(tips.length ? tips : ["Prioritize protein at every meal.", "Include colorful vegetables and fruits.", "Stay consistent with meal timings.", "Listen to hunger and fullness cues."]).slice(0, 6).map((t: string, i: number) => <li key={i}>{t}</li>)}
           </ul>
         </SectionCard>
         <SectionCard icon={<FaCheckCircle size={13} color={C.brand} />} title="HYDRATION CHECKLIST">

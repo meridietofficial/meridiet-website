@@ -409,6 +409,25 @@ function recomputeDayTotals(weeks: DietWeek[]): DietWeek[] {
   }))
 }
 
+// Convert "8:00 AM" / "1:30 PM" → minutes since midnight for sorting
+function parseTimeToMinutes(time: string): number {
+  if (!time) return Infinity
+  const m = time.match(/(\d+):(\d+)\s*(AM|PM)/i)
+  if (!m) return Infinity
+  let h = parseInt(m[1]), mins = parseInt(m[2])
+  const pm = m[3].toUpperCase() === 'PM'
+  if (pm && h !== 12) h += 12
+  if (!pm && h === 12) h = 0
+  return h * 60 + mins
+}
+
+const FIXED_MEAL_DEFAULT_MINS: Record<MealKey, number> = {
+  breakfast:  8 * 60,
+  lunch:     13 * 60,
+  snack:     17 * 60,
+  dinner:    20 * 60,
+}
+
 // Extra meal helpers
 function addExtraMeal(weeks: DietWeek[], wi: number, di: number): DietWeek[] {
   return weeks.map((w, a) => a !== wi ? w : ({
@@ -1034,131 +1053,143 @@ function EditPlanContent({
                           </button>
                           {isOpen && (
                             <div className="epm-day-body">
-                              {(['breakfast','lunch','snack','dinner'] as MealKey[]).map(mealKey => {
-                                const items  = day[mealKey] ?? []
-                                const mKcal  = items.reduce((s: number, f: any) => s + (f.kcal ?? 0), 0)
-                                const col    = MEAL_COLORS[mealKey]
-                                return (
-                                  <div key={mealKey} className="epm-meal-section" style={{ borderLeftColor: col }}>
-                                    <div className="epm-meal-head">
-                                      <span style={{ color: col, fontWeight: 700 }}>
-                                        {MEAL_ICONS[mealKey]} {mealKey.charAt(0).toUpperCase() + mealKey.slice(1)}
-                                      </span>
-                                      <input
-                                        className="epm-field-input"
-                                        style={{ maxWidth: 100, padding: '2px 6px', fontSize: 12, color: '#6b7280' }}
-                                        placeholder="e.g. 8:00 AM"
-                                        value={(day.meal_timing as any)?.[mealKey] ?? ''}
-                                        onChange={e => updMealTiming(wi, di, mealKey, e.target.value)}
-                                      />
-                                      {mKcal > 0 && (
-                                        <span className="epm-meal-kcal" style={{ background: col + '22', color: col }}>
-                                          {mKcal} kcal
+                              {/* All meals sorted by time */}
+                              {[
+                                ...(['breakfast','lunch','snack','dinner'] as MealKey[]).map(key => {
+                                  const t = parseTimeToMinutes((day.meal_timing as any)?.[key] ?? '');
+                                  return { type: 'fixed' as const, key, sortMin: isFinite(t) ? t : FIXED_MEAL_DEFAULT_MINS[key] };
+                                }),
+                                ...(day.extra_meals ?? []).map((em, originalIdx) => ({
+                                  type: 'extra' as const, em, originalIdx,
+                                  sortMin: parseTimeToMinutes(em.time ?? ''),
+                                })),
+                              ].sort((a, b) => a.sortMin - b.sortMin).map(slot => {
+                                if (slot.type === 'fixed') {
+                                  const mealKey = slot.key
+                                  const items  = day[mealKey] ?? []
+                                  const mKcal  = items.reduce((s: number, f: any) => s + (f.kcal ?? 0), 0)
+                                  const col    = MEAL_COLORS[mealKey]
+                                  return (
+                                    <div key={mealKey} className="epm-meal-section" style={{ borderLeftColor: col }}>
+                                      <div className="epm-meal-head">
+                                        <span style={{ color: col, fontWeight: 700 }}>
+                                          {MEAL_ICONS[mealKey]} {mealKey.charAt(0).toUpperCase() + mealKey.slice(1)}
                                         </span>
-                                      )}
-                                    </div>
-                                    {items.length > 0 && (
-                                      <div className="epm-food-header-row">
-                                        <span className="epm-fc-food">Food</span>
-                                        <span className="epm-fc-qty">Qty</span>
-                                        <span className="epm-fc-kcal">kcal</span>
-                                        <span className="epm-fc-prot">protein (g)</span>
-                                        <span />
+                                        <input
+                                          className="epm-field-input"
+                                          style={{ maxWidth: 100, padding: '2px 6px', fontSize: 12, color: '#6b7280' }}
+                                          placeholder="e.g. 8:00 AM"
+                                          value={(day.meal_timing as any)?.[mealKey] ?? ''}
+                                          onChange={e => updMealTiming(wi, di, mealKey, e.target.value)}
+                                        />
+                                        {mKcal > 0 && (
+                                          <span className="epm-meal-kcal" style={{ background: col + '22', color: col }}>
+                                            {mKcal} kcal
+                                          </span>
+                                        )}
                                       </div>
-                                    )}
-                                    {items.map((item: any, fi: number) => (
-                                      <div key={fi} className="epm-food-row">
-                                        <input className="epm-food-inp epm-fc-food" placeholder="Food name"
-                                          value={item.food ?? ''}
-                                          onChange={e => updMealItem(wi, di, mealKey, fi, 'food', e.target.value)} />
-                                        <input className="epm-food-inp epm-fc-qty" placeholder="e.g. 1 cup"
-                                          value={item.quantity ?? ''}
-                                          onChange={e => updMealItem(wi, di, mealKey, fi, 'quantity', e.target.value)} />
-                                        <input className="epm-food-inp epm-fc-kcal" type="number" placeholder="0"
-                                          value={item.kcal ?? ''}
-                                          onChange={e => updMealItem(wi, di, mealKey, fi, 'kcal', e.target.value)} />
-                                        <input className="epm-food-inp epm-fc-prot" type="number" placeholder="0"
-                                          value={item.protein_g ?? ''}
-                                          onChange={e => updMealItem(wi, di, mealKey, fi, 'protein_g', e.target.value)} />
-                                        <button className="epm-btn-icon-red"
-                                          onClick={() => remMealItm(wi, di, mealKey, fi)}>
-                                          <i className="fa-solid fa-xmark" />
-                                        </button>
-                                      </div>
-                                    ))}
-                                    <button className="epm-add-food-btn"
-                                      onClick={() => addMealItm(wi, di, mealKey)}>
-                                      <i className="fa-solid fa-plus" /> Add item
-                                    </button>
-                                  </div>
-                                )
-                              })}
-                              {/* Extra meals */}
-                              {(day.extra_meals ?? []).map((em, ei) => {
-                                const emKcal = (em.items ?? []).reduce((s, f) => s + (f.kcal ?? 0), 0)
-                                return (
-                                  <div key={ei} className="epm-meal-section" style={{ borderLeftColor: '#ec4899' }}>
-                                    <div className="epm-meal-head">
-                                      <input
-                                        className="epm-field-input"
-                                        style={{ fontWeight: 700, color: '#ec4899', maxWidth: 200, padding: '2px 6px' }}
-                                        value={em.name}
-                                        onChange={e => renExMeal(wi, di, ei, e.target.value)}
-                                        placeholder="Meal name…"
-                                      />
-                                      <input
-                                        className="epm-field-input"
-                                        style={{ maxWidth: 100, padding: '2px 6px', fontSize: 12, color: '#6b7280' }}
-                                        placeholder="e.g. 5:00 PM"
-                                        value={em.time ?? ''}
-                                        onChange={e => updExMealTime(wi, di, ei, e.target.value)}
-                                      />
-                                      {emKcal > 0 && (
-                                        <span className="epm-meal-kcal" style={{ background: '#fdf2f8', color: '#ec4899' }}>
-                                          {emKcal} kcal
-                                        </span>
+                                      {items.length > 0 && (
+                                        <div className="epm-food-header-row">
+                                          <span className="epm-fc-food">Food</span>
+                                          <span className="epm-fc-qty">Qty</span>
+                                          <span className="epm-fc-kcal">kcal</span>
+                                          <span className="epm-fc-prot">protein (g)</span>
+                                          <span />
+                                        </div>
                                       )}
-                                      <button className="epm-btn-icon-red" style={{ marginLeft: 'auto' }}
-                                        title="Remove this meal"
-                                        onClick={() => remExMeal(wi, di, ei)}>
-                                        <i className="fa-solid fa-trash" />
+                                      {items.map((item: any, fi: number) => (
+                                        <div key={fi} className="epm-food-row">
+                                          <input className="epm-food-inp epm-fc-food" placeholder="Food name"
+                                            value={item.food ?? ''}
+                                            onChange={e => updMealItem(wi, di, mealKey, fi, 'food', e.target.value)} />
+                                          <input className="epm-food-inp epm-fc-qty" placeholder="e.g. 1 cup"
+                                            value={item.quantity ?? ''}
+                                            onChange={e => updMealItem(wi, di, mealKey, fi, 'quantity', e.target.value)} />
+                                          <input className="epm-food-inp epm-fc-kcal" type="number" placeholder="0"
+                                            value={item.kcal ?? ''}
+                                            onChange={e => updMealItem(wi, di, mealKey, fi, 'kcal', e.target.value)} />
+                                          <input className="epm-food-inp epm-fc-prot" type="number" placeholder="0"
+                                            value={item.protein_g ?? ''}
+                                            onChange={e => updMealItem(wi, di, mealKey, fi, 'protein_g', e.target.value)} />
+                                          <button className="epm-btn-icon-red"
+                                            onClick={() => remMealItm(wi, di, mealKey, fi)}>
+                                            <i className="fa-solid fa-xmark" />
+                                          </button>
+                                        </div>
+                                      ))}
+                                      <button className="epm-add-food-btn"
+                                        onClick={() => addMealItm(wi, di, mealKey)}>
+                                        <i className="fa-solid fa-plus" /> Add item
                                       </button>
                                     </div>
-                                    {(em.items ?? []).length > 0 && (
-                                      <div className="epm-food-header-row">
-                                        <span className="epm-fc-food">Food</span>
-                                        <span className="epm-fc-qty">Qty</span>
-                                        <span className="epm-fc-kcal">kcal</span>
-                                        <span className="epm-fc-prot">protein (g)</span>
-                                        <span />
-                                      </div>
-                                    )}
-                                    {(em.items ?? []).map((item, fi) => (
-                                      <div key={fi} className="epm-food-row">
-                                        <input className="epm-food-inp epm-fc-food" placeholder="Food name"
-                                          value={item.food ?? ''}
-                                          onChange={e => updExMealItm(wi, di, ei, fi, 'food', e.target.value)} />
-                                        <input className="epm-food-inp epm-fc-qty" placeholder="e.g. 1 cup"
-                                          value={item.quantity ?? ''}
-                                          onChange={e => updExMealItm(wi, di, ei, fi, 'quantity', e.target.value)} />
-                                        <input className="epm-food-inp epm-fc-kcal" type="number" placeholder="0"
-                                          value={item.kcal ?? ''}
-                                          onChange={e => updExMealItm(wi, di, ei, fi, 'kcal', e.target.value)} />
-                                        <input className="epm-food-inp epm-fc-prot" type="number" placeholder="0"
-                                          value={item.protein_g ?? ''}
-                                          onChange={e => updExMealItm(wi, di, ei, fi, 'protein_g', e.target.value)} />
-                                        <button className="epm-btn-icon-red"
-                                          onClick={() => remExMealItm(wi, di, ei, fi)}>
-                                          <i className="fa-solid fa-xmark" />
+                                  )
+                                } else {
+                                  const { em, originalIdx: ei } = slot
+                                  const emKcal = (em.items ?? []).reduce((s: number, f: any) => s + (f.kcal ?? 0), 0)
+                                  return (
+                                    <div key={`extra-${ei}`} className="epm-meal-section" style={{ borderLeftColor: '#ec4899' }}>
+                                      <div className="epm-meal-head">
+                                        <input
+                                          className="epm-field-input"
+                                          style={{ fontWeight: 700, color: '#ec4899', maxWidth: 200, padding: '2px 6px' }}
+                                          value={em.name}
+                                          onChange={e => renExMeal(wi, di, ei, e.target.value)}
+                                          placeholder="Meal name…"
+                                        />
+                                        <input
+                                          className="epm-field-input"
+                                          style={{ maxWidth: 100, padding: '2px 6px', fontSize: 12, color: '#6b7280' }}
+                                          placeholder="e.g. 5:00 PM"
+                                          value={em.time ?? ''}
+                                          onChange={e => updExMealTime(wi, di, ei, e.target.value)}
+                                        />
+                                        {emKcal > 0 && (
+                                          <span className="epm-meal-kcal" style={{ background: '#fdf2f8', color: '#ec4899' }}>
+                                            {emKcal} kcal
+                                          </span>
+                                        )}
+                                        <button className="epm-btn-icon-red" style={{ marginLeft: 'auto' }}
+                                          title="Remove this meal"
+                                          onClick={() => remExMeal(wi, di, ei)}>
+                                          <i className="fa-solid fa-trash" />
                                         </button>
                                       </div>
-                                    ))}
-                                    <button className="epm-add-food-btn"
-                                      onClick={() => addExMealItm(wi, di, ei)}>
-                                      <i className="fa-solid fa-plus" /> Add item
-                                    </button>
-                                  </div>
-                                )
+                                      {(em.items ?? []).length > 0 && (
+                                        <div className="epm-food-header-row">
+                                          <span className="epm-fc-food">Food</span>
+                                          <span className="epm-fc-qty">Qty</span>
+                                          <span className="epm-fc-kcal">kcal</span>
+                                          <span className="epm-fc-prot">protein (g)</span>
+                                          <span />
+                                        </div>
+                                      )}
+                                      {(em.items ?? []).map((item, fi) => (
+                                        <div key={fi} className="epm-food-row">
+                                          <input className="epm-food-inp epm-fc-food" placeholder="Food name"
+                                            value={item.food ?? ''}
+                                            onChange={e => updExMealItm(wi, di, ei, fi, 'food', e.target.value)} />
+                                          <input className="epm-food-inp epm-fc-qty" placeholder="e.g. 1 cup"
+                                            value={item.quantity ?? ''}
+                                            onChange={e => updExMealItm(wi, di, ei, fi, 'quantity', e.target.value)} />
+                                          <input className="epm-food-inp epm-fc-kcal" type="number" placeholder="0"
+                                            value={item.kcal ?? ''}
+                                            onChange={e => updExMealItm(wi, di, ei, fi, 'kcal', e.target.value)} />
+                                          <input className="epm-food-inp epm-fc-prot" type="number" placeholder="0"
+                                            value={item.protein_g ?? ''}
+                                            onChange={e => updExMealItm(wi, di, ei, fi, 'protein_g', e.target.value)} />
+                                          <button className="epm-btn-icon-red"
+                                            onClick={() => remExMealItm(wi, di, ei, fi)}>
+                                            <i className="fa-solid fa-xmark" />
+                                          </button>
+                                        </div>
+                                      ))}
+                                      <button className="epm-add-food-btn"
+                                        onClick={() => addExMealItm(wi, di, ei)}>
+                                        <i className="fa-solid fa-plus" /> Add item
+                                      </button>
+                                    </div>
+                                  )
+                                }
                               })}
 
                               {/* Add meal button */}
@@ -1261,12 +1292,12 @@ export default function DietitianDraftDietPlan() {
   const { planId } = useParams<{ planId: string }>()
   const { profile } = useOutletContext<DietitianOutletContext>()
   const id = Number(planId)
-  const locationState = location.state as { returnTo?: string; appointmentId?: number; isManual?: boolean; startInEdit?: boolean } | null
+  const locationState = location.state as { returnTo?: string; appointmentId?: number; isManual?: boolean } | null
   const searchParams  = new URLSearchParams(location.search)
   const returnTo      = locationState?.returnTo ?? '/dietitian-diet-plans'
   const stateApptId   = locationState?.appointmentId
   const stateIsManual = (locationState?.isManual ?? false) || searchParams.get('manual') === '1'
-  const startInEdit   = locationState?.startInEdit ?? false
+  const isEditPath    = location.pathname.endsWith('/edit')
 
   const [plan, setPlan]             = useState<DietPlanDetail | null>(null)
   const [loading, setLoading]       = useState(true)
@@ -1326,12 +1357,12 @@ export default function DietitianDraftDietPlan() {
       .finally(() => setCitiesLoading(false))
   }, [clientState])
 
-  // Auto-enter edit mode when navigated here with startInEdit flag (e.g. from "Edit Plan" button on list)
+  // Auto-enter edit mode when on the /edit URL path
   useEffect(() => {
-    if (startInEdit && plan && (plan.status === 'completed' || plan.status === 'sent')) {
+    if (isEditPath && plan && (plan.status === 'completed' || plan.status === 'sent') && !editingContent) {
       startEditContent()
     }
-  }, [startInEdit, plan?.id])
+  }, [isEditPath, plan?.id])
 
   // Poll every 15 s while generating
   useEffect(() => {
@@ -1524,6 +1555,10 @@ export default function DietitianDraftDietPlan() {
     setEditRecipes(JSON.parse(JSON.stringify(plan.featured_recipes ?? [])))
     setEditingContent(true)
     setActionErr(null)
+    if (!isEditPath) {
+      const manualQuery = stateIsManual ? '?manual=1' : ''
+      navigate(`/dietitian-diet-plans/${id}/edit${manualQuery}`, { replace: true, state: location.state })
+    }
   }
 
   async function handleSaveContent() {
@@ -1542,6 +1577,8 @@ export default function DietitianDraftDietPlan() {
       setEditingContent(false)
       loadPlan()
       setTimeout(() => setSavedOk(false), 3000)
+      const manualQuery = stateIsManual ? '?manual=1' : ''
+      navigate(`/dietitian-diet-plans/${id}${manualQuery}`, { replace: true, state: location.state })
     } catch (e: any) {
       setActionErr(e.message ?? 'Failed to save plan content')
     } finally {
@@ -1576,6 +1613,8 @@ export default function DietitianDraftDietPlan() {
       setSendOk(true)
       setPlan(prev => prev ? { ...prev, status: 'sent' } : prev)
       setEditingContent(false)
+      const manualQuery = stateIsManual ? '?manual=1' : ''
+      navigate(`/dietitian-diet-plans/${id}${manualQuery}`, { replace: true, state: location.state })
     } catch (e: any) {
       setActionErr(e.message ?? 'Failed to send plan to patient')
     } finally {
@@ -1657,7 +1696,12 @@ export default function DietitianDraftDietPlan() {
           editRecipes={editRecipes}
           onRecipesChange={setEditRecipes}
           isDirty={isDirty}
-          onBack={() => { setEditingContent(false); setActionErr(null) }}
+          onBack={() => {
+            setEditingContent(false)
+            setActionErr(null)
+            const manualQuery = stateIsManual ? '?manual=1' : ''
+            navigate(`/dietitian-diet-plans/${id}${manualQuery}`, { replace: true, state: location.state })
+          }}
           onSave={handleSaveContent}
           onSend={() => { setActionErr(null); setShowSendModal(true) }}
           saving={savingContent}
