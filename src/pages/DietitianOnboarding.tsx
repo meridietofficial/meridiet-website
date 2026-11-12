@@ -11,7 +11,7 @@ import { IN_STATES } from '../data/indiaCities'
 import SearchableSelect from '../components/SearchableSelect'
 import type { SelectOption } from '../components/SearchableSelect'
 import SpecializationInput from '../components/SpecializationInput'
-import { trackEvent } from '../utils/analytics'
+import { trackEvent, trackInitiateCheckout, trackPurchase, trackCompleteRegistration } from '../utils/analytics'
 import { loadRazorpay } from '../utils/loadRazorpay'
 import SEO from '../components/SEO'
 
@@ -220,15 +220,6 @@ export default function DietitianOnboarding() {
     }
   }, [step, data.fullName, data.qualification, navigate, user])
 
-  /* Fire funnel tracking event on each step load */
-  useEffect(() => {
-    const EVENT_NAMES: Record<number, string> = {
-      1: 'dietitian_onboarding_step1_basic_info',
-      2: 'dietitian_onboarding_step2_qualification',
-      3: 'dietitian_onboarding_step3_documents',
-    }
-    if (EVENT_NAMES[step]) trackEvent(EVENT_NAMES[step])
-  }, [step])
 
   /* countriesnow uses the pre-merger name for this UT */
   const COUNTRIESNOW_STATE_MAP: Record<string, string> = {
@@ -376,6 +367,7 @@ export default function DietitianOnboarding() {
         }
 
         clearSaved()
+        trackEvent('DocumentsUploaded')
         trackEvent('dietitian_onboarding_complete')
         void openPayment()
       } catch (err) {
@@ -395,6 +387,11 @@ export default function DietitianOnboarding() {
     }
 
     setErrors({})
+    const STEP_COMPLETION_EVENTS: Record<number, string> = {
+      1: 'BasicInfoCompleted',
+      2: 'QualificationCompleted',
+    }
+    if (STEP_COMPLETION_EVENTS[step]) trackEvent(STEP_COMPLETION_EVENTS[step])
     window.scrollTo({ top: 0, behavior: 'smooth' })
     navigate(STEP_PATHS[step + 1])
   }
@@ -414,14 +411,16 @@ export default function DietitianOnboarding() {
       await loadRazorpay()
       const order = await dietitianRegistrationFeeApi.createOrder()
       if ((order.data as { already_active?: boolean }).already_active) {
-        trackEvent('dietitian_registration_fee_paid')
         navigate('/dietitian/verification-submitted')
         return
       }
+      const regFeeAmount = order.data.amount / 100
+      const regFeeCurrency = order.data.currency ?? 'INR'
+      trackInitiateCheckout({ value: regFeeAmount, currency: regFeeCurrency, funnel_type: 'dietitian_onboarding' })
       const rzp = new window.Razorpay({
         key:        order.data.key_id,
         amount:     order.data.amount,
-        currency:   order.data.currency ?? 'INR',
+        currency:   regFeeCurrency,
         order_id:   order.data.order_id,
         name:       'MeriDiet',
         description: 'Dietitian Registration Fee',
@@ -434,7 +433,13 @@ export default function DietitianOnboarding() {
               razorpay_payment_id: rzpRes.razorpay_payment_id,
               razorpay_signature:  rzpRes.razorpay_signature,
             })
-            trackEvent('dietitian_registration_fee_paid')
+            trackPurchase({
+              value:          regFeeAmount,
+              currency:       regFeeCurrency,
+              funnel_type:    'dietitian_onboarding',
+              transaction_id: rzpRes.razorpay_order_id,
+            })
+            trackCompleteRegistration('dietitian_onboarding')
             navigate('/dietitian/verification-submitted')
           } catch {
             showToast('Payment received but verification failed. Please contact support.', 'error')

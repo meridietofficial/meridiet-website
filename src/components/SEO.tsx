@@ -2,13 +2,16 @@ import { Helmet } from 'react-helmet-async'
 
 const SITE_URL  = 'https://meridiet.com'
 const SITE_NAME = 'MeriDiet'
-const DEFAULT_IMAGE = `${SITE_URL}/logo.png`
+// Replace /og-cover.png with a dedicated 1200×630 image when ready
+const DEFAULT_IMAGE = `${SITE_URL}/banner-slide-2.png`
+const DEFAULT_IMAGE_ALT = 'MeriDiet – Personalized Indian Diet Plans & Online Dietitian Consultations'
 
 interface SEOProps {
   title: string
   description: string
   canonical?: string
   ogImage?: string
+  ogImageAlt?: string
   ogType?: 'website' | 'article'
   jsonLd?: object | object[]
   noIndex?: boolean
@@ -19,6 +22,7 @@ export default function SEO({
   description,
   canonical,
   ogImage = DEFAULT_IMAGE,
+  ogImageAlt = DEFAULT_IMAGE_ALT,
   ogType = 'website',
   jsonLd,
   noIndex = false,
@@ -38,12 +42,13 @@ export default function SEO({
       {canonicalUrl && <link rel="alternate" hrefLang="x-default" href={canonicalUrl} />}
 
       {/* Open Graph */}
-      <meta property="og:site_name"   content={SITE_NAME} />
-      <meta property="og:type"        content={ogType} />
-      <meta property="og:title"       content={fullTitle} />
-      <meta property="og:description" content={description} />
+      <meta property="og:site_name"    content={SITE_NAME} />
+      <meta property="og:type"         content={ogType} />
+      <meta property="og:title"        content={fullTitle} />
+      <meta property="og:description"  content={description} />
       <meta property="og:image"        content={ogImage} />
-      <meta property="og:locale"      content="en_IN" />
+      <meta property="og:image:alt"    content={ogImageAlt} />
+      <meta property="og:locale"       content="en_IN" />
       {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
 
       {/* Twitter Card */}
@@ -52,6 +57,7 @@ export default function SEO({
       <meta name="twitter:title"       content={fullTitle} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image"       content={ogImage} />
+      <meta name="twitter:image:alt"   content={ogImageAlt} />
 
       {/* JSON-LD Structured Data */}
       {schemas.map((schema, i) => (

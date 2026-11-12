@@ -5,7 +5,7 @@ import dietitianApi from '../api/dietitian'
 import appointmentApi from '../api/appointment'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from './AuthModal'
-import { trackPurchase, trackConsultationBooked } from '../utils/analytics'
+import { trackPurchase, trackInitiateCheckout, trackConsultationBooked } from '../utils/analytics'
 import { loadRazorpay } from '../utils/loadRazorpay'
 
 const SLOT_MINUTES = 30
@@ -140,6 +140,7 @@ export default function ConsultModal({ dietitian, fee, onClose }: ConsultModalPr
       })
 
       await loadRazorpay()
+      trackInitiateCheckout({ value: consultFee, currency: order.currency ?? 'INR', funnel_type: 'consultation' })
       const rzp = new window.Razorpay({
         key: order.key_id,
         amount: (order.final_amount ?? order.amount) * 100,
@@ -161,7 +162,12 @@ export default function ConsultModal({ dietitian, fee, onClose }: ConsultModalPr
               ? `${fmtTime(result.slot)} – ${fmtTime(slotObj.end)}`
               : fmtTime(result.slot)
             setConfirmedLabel(`${shortDate(result.appointment_date)} · ${slotDisplay}`)
-            trackPurchase(consultFee, 'INR')
+            trackPurchase({
+              value:          consultFee,
+              currency:       'INR',
+              funnel_type:    'consultation',
+              transaction_id: rzpRes.razorpay_order_id,
+            })
             trackConsultationBooked(consultFee, fullData.full_name)
             navigate('/consult-dietitian/success', { replace: true })
             setDone(true)

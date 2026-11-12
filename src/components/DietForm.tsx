@@ -10,7 +10,7 @@ import { mapStep1ToPayload, mapStep2ToPayload, mapStep3ToPayload, mapStep4ToPayl
 import { useToast } from '../context/ToastContext'
 import { useAuth } from '../context/AuthContext'
 import AuthModal from './AuthModal'
-import { trackEvent, trackFormOpened, trackStepComplete, trackInitiateCheckout, trackPurchase, trackPlanSelected, trackValidationError, trackAuthGateShown, trackAuthGateComplete, trackPaymentDismissed } from '../utils/analytics'
+import { trackEvent, trackFormOpened, trackStepComplete, trackInitiateCheckout, trackPurchase, trackViewContent, trackPlanSelected, trackValidationError, trackAuthGateShown, trackAuthGateComplete, trackPaymentDismissed } from '../utils/analytics'
 import { loadRazorpay } from '../utils/loadRazorpay'
 
 const STEPS = [
@@ -1392,6 +1392,7 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
     document.body.style.overflow = 'hidden'
     navigate('/diet-plan/step-1', { replace: true })
     trackFormOpened()
+    trackViewContent({ content_name: 'AI Diet Plan', content_category: 'diet_plan', value: 199, currency: 'INR' })
     return () => { document.body.style.overflow = '' }
   }, [])
 
@@ -1502,7 +1503,7 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
 
         // Track checkout intent before Razorpay opens
         navigate('/diet-plan/checkout', { replace: true })
-        trackInitiateCheckout(chargedAmount, currency ?? 'INR')
+        trackInitiateCheckout({ value: chargedAmount, currency: currency ?? 'INR', funnel_type: 'diet_plan' })
 
         const rzp = new window.Razorpay({
           key:         key_id,
@@ -1522,7 +1523,13 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
             try {
               await paymentApi.verify(rzpResponse)
               // Track confirmed purchase then show success
-              trackPurchase(chargedAmount, currency ?? 'INR', data.planType)
+              trackPurchase({
+                value:          chargedAmount,
+                currency:       currency ?? 'INR',
+                funnel_type:    'diet_plan',
+                transaction_id: rzpResponse.razorpay_order_id,
+                plan_name:      data.planType,
+              })
               // OpenAI Pixel — diet plan order confirmed
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const oaiq = (window as any).oaiq

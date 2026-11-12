@@ -11,6 +11,7 @@ import ConsultModal from '../components/ConsultModal'
 import SearchableSelect from '../components/SearchableSelect'
 import { IN_STATES, getCitiesOfState } from '../data/indiaCities'
 import SEO from '../components/SEO'
+import { trackViewContent } from '../utils/analytics'
 
 const SPECS = [
   { label: 'Weight Loss',            icon: 'fas fa-weight-scale',    link: '/weight-loss' },
@@ -81,6 +82,11 @@ function shortDate(iso: string) {
 
 export default function ConsultDietitian() {
   const navigate = useNavigate()
+
+  useEffect(() => {
+    trackViewContent({ content_name: 'Consult a Dietitian', content_category: 'consultation' })
+  }, [])
+
   const [specializations, setSpecializations] = useState<Specialization[]>([])
   const [results, setResults] = useState<DietitianCard[]>([])
   const [meta, setMeta] = useState<PaginationMeta | null>(null)

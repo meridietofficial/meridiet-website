@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import SEO from '../components/SEO'
 import courseApi from '../api/course'
 import { loadRazorpay } from '../utils/loadRazorpay'
+import { trackViewContent, trackInitiateCheckout, trackPurchase, trackCompleteRegistration, trackEvent } from '../utils/analytics'
 
 function CourseVideo({ videoId }: { videoId: string }) {
   const [playing, setPlaying] = useState(false)
@@ -257,6 +258,10 @@ type Step = 'form' | 'otp' | 'paying' | 'success' | 'pay_failed'
 type AppliedCoupon = { code: string; discount: number; finalAmount: number }
 
 export default function NutritionistCourse() {
+  useEffect(() => {
+    trackViewContent({ content_name: 'Certified Nutritionist Course', content_category: 'certification_course', value: COURSE_FEE, currency: 'INR' })
+  }, [])
+
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [tab, setTab]         = useState<'pay' | 'enquiry'>('pay')
   const [openSections, setOpenSections] = useState<Set<number>>(new Set([0]))
@@ -316,6 +321,7 @@ export default function NutritionistCourse() {
     setEnqLoading(true)
     try {
       await courseApi.submitEnquiry({ name: enqForm.name, email: enqForm.email, phone: enqForm.phone, otp: enqOtp, qualification: enqForm.qualification, message: enqForm.message })
+      if (window.fbq) window.fbq('track', 'Lead', { content_name: 'Course Enquiry', funnel_type: 'certification_course' })
       setEnqStep('success'); setEnqForm(ENQ_INIT); setEnqOtp(''); setEnqOtpSent(false)
     }
     catch (err: unknown) { setEnqError(err instanceof Error ? err.message : 'Something went wrong. Please call +91 960 960 6009.') }
@@ -365,6 +371,8 @@ export default function NutritionistCourse() {
 
       // Step 3: Open Razorpay
       await loadRazorpay()
+      const checkoutValue = payPlan === 'emi' ? EMI_FIRST_INSTALLMENT : (payCouponApplied?.finalAmount ?? COURSE_FEE)
+      trackInitiateCheckout({ value: checkoutValue, currency: 'INR', funnel_type: 'certification_course' })
       setPayStep('paying')
       const rzp = new window.Razorpay({
         key: key_id,
@@ -378,6 +386,24 @@ export default function NutritionistCourse() {
         handler: async (rzpRes: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) => {
           try {
             const verifyRes = await courseApi.verifyPayment({ razorpay_order_id: rzpRes.razorpay_order_id, razorpay_payment_id: rzpRes.razorpay_payment_id, razorpay_signature: rzpRes.razorpay_signature })
+            trackPurchase({
+              value:          verifyRes.data.amount_paid,
+              currency:       'INR',
+              funnel_type:    'certification_course',
+              transaction_id: rzpRes.razorpay_order_id,
+              plan_name:      verifyRes.data.payment_plan === 'emi' ? 'EMI' : 'Full',
+            })
+            if (verifyRes.data.payment_plan === 'emi') {
+              trackEvent('InstallmentPaid', {
+                installment_number: verifyRes.data.emi_installments_paid,
+                total_installments: EMI_INSTALLMENTS,
+                value:              verifyRes.data.amount_paid,
+                funnel_type:        'certification_course',
+              })
+            }
+            if (verifyRes.data.payment_plan !== 'emi' || verifyRes.data.emi_installments_paid === EMI_INSTALLMENTS) {
+              trackCompleteRegistration('certification_course')
+            }
             setPaidData({ name: verifyRes.data.name, amount: verifyRes.data.amount_paid, paymentPlan: verifyRes.data.payment_plan, emiInstallmentsPaid: verifyRes.data.emi_installments_paid })
             setPayStep('success')
             setPayForm(PAY_INIT); setPayOtp(''); setPayOtpSent(false); setPayPlan('full')
@@ -778,7 +804,7 @@ export default function NutritionistCourse() {
                             const active = payPlan === opt.value
                             return (
                               <div key={opt.value}
-                                onClick={() => { setPayPlan(opt.value); if (opt.value === 'emi') removePayCoupon() }}
+                                onClick={() => { setPayPlan(opt.value); if (opt.value === 'emi') removePayCoupon(); trackEvent('PaymentPlanSelected', { plan: opt.value, funnel_type: 'certification_course' }) }}
                                 style={{
                                   flex: 1, padding: '12px 14px', borderRadius: 12, cursor: 'pointer', transition: 'all 0.18s',
                                   border: `2px solid ${active ? '#16a34a' : '#e5e7eb'}`,

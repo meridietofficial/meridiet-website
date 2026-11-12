@@ -152,13 +152,19 @@ const VS_MERIDIET = [
   'Integrated secure payouts',
 ]
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AuthModal from '../components/AuthModal'
 import SEO from '../components/SEO'
+import { trackViewContent } from '../utils/analytics'
 
 const ForDietitians = () => {
   const navigate = useNavigate()
+
+  useEffect(() => {
+    trackViewContent({ content_name: 'Join as a Dietitian', content_category: 'dietitian_onboarding' })
+  }, [])
+
   const [loginOpen, setLoginOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(0)
   return (

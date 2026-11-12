@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Helmet } from 'react-helmet-async'
 
 const faqs = [
   {
@@ -35,11 +36,24 @@ const faqs = [
   },
 ]
 
+const FAQ_SCHEMA = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map(f => ({
+    '@type': 'Question',
+    name: f.q,
+    acceptedAnswer: { '@type': 'Answer', text: f.a },
+  })),
+}
+
 const HomeFAQ = () => {
   const [open, setOpen] = useState<number | null>(null)
 
   return (
     <section className="hfaq-section">
+      <Helmet>
+        <script type="application/ld+json">{JSON.stringify(FAQ_SCHEMA)}</script>
+      </Helmet>
       <div className="container">
         <div className="hfaq-header">
           <span className="section-tag">FAQs</span>

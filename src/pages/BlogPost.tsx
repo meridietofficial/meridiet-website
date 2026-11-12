@@ -111,6 +111,22 @@ export default function BlogPost() {
       }
     : null
 
+  const stepsBlock = post.content.find(b => b.type === 'steps') as Extract<typeof post.content[number], { type: 'steps' }> | undefined
+  const howToSchema = stepsBlock
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'HowTo',
+        name: post.title,
+        description: post.description,
+        step: stepsBlock.items.map((s, i) => ({
+          '@type': 'HowToStep',
+          position: i + 1,
+          name: s.title,
+          text: s.text,
+        })),
+      }
+    : null
+
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -121,7 +137,12 @@ export default function BlogPost() {
     ],
   }
 
-  const schemas = [articleSchema, breadcrumbSchema, ...(faqSchema ? [faqSchema] : [])]
+  const schemas = [
+    articleSchema,
+    breadcrumbSchema,
+    ...(faqSchema ? [faqSchema] : []),
+    ...(howToSchema ? [howToSchema] : []),
+  ]
 
   return (
     <main className="bp-page">

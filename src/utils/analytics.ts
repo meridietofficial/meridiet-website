@@ -66,12 +66,24 @@ export function trackEvent(eventName: string, params?: Record<string, unknown>) 
   }
 }
 
-export function trackInitiateCheckout(value: number, currency: string) {
+export type FunnelType = 'diet_plan' | 'consultation' | 'dietitian_onboarding' | 'certification_course'
+
+export function trackInitiateCheckout(params: {
+  value: number
+  currency: string
+  funnel_type: FunnelType
+  num_items?: number
+}) {
   if (typeof gtag !== 'undefined') {
-    gtag('event', 'begin_checkout', { value, currency })
+    gtag('event', 'begin_checkout', { value: params.value, currency: params.currency })
   }
   if (window.fbq) {
-    window.fbq('track', 'InitiateCheckout', { value, currency })
+    window.fbq('track', 'InitiateCheckout', {
+      value:       params.value,
+      currency:    params.currency,
+      funnel_type: params.funnel_type,
+      num_items:   params.num_items ?? 1,
+    })
   }
 }
 
@@ -81,12 +93,66 @@ export function trackConsultationBooked(value: number, dietitian_name: string) {
   }
 }
 
-export function trackPurchase(value: number, currency: string, plan_name?: string) {
+export function trackPurchase(params: {
+  value: number
+  currency: string
+  funnel_type: FunnelType
+  transaction_id: string
+  plan_name?: string
+}) {
   if (typeof gtag !== 'undefined') {
-    gtag('event', 'purchase', { value, currency })
+    gtag('event', 'purchase', {
+      value:          params.value,
+      currency:       params.currency,
+      transaction_id: params.transaction_id,
+    })
   }
   if (window.fbq) {
-    window.fbq('track', 'Purchase', { value, currency, ...(plan_name ? { plan_name } : {}) })
+    window.fbq('track', 'Purchase', {
+      value:          params.value,
+      currency:       params.currency,
+      content_type:   'product',
+      content_ids:    [params.funnel_type],
+      funnel_type:    params.funnel_type,
+      transaction_id: params.transaction_id,
+      ...(params.plan_name ? { plan_name: params.plan_name } : {}),
+    }, { eventID: params.transaction_id })
+  }
+}
+
+export function trackViewContent(params: {
+  content_name: string
+  content_category: FunnelType
+  value?: number
+  currency?: string
+}) {
+  if (window.fbq) {
+    window.fbq('track', 'ViewContent', {
+      content_name:     params.content_name,
+      content_category: params.content_category,
+      ...(params.value    ? { value: params.value }       : {}),
+      ...(params.currency ? { currency: params.currency } : {}),
+    })
+  }
+}
+
+export function trackCompleteRegistration(funnel_type: FunnelType) {
+  if (window.fbq) {
+    window.fbq('track', 'CompleteRegistration', { funnel_type })
+  }
+}
+
+export function trackAddPaymentInfo(params: {
+  value: number
+  currency: string
+  funnel_type: FunnelType
+}) {
+  if (window.fbq) {
+    window.fbq('track', 'AddPaymentInfo', {
+      value:       params.value,
+      currency:    params.currency,
+      funnel_type: params.funnel_type,
+    })
   }
 }
 
