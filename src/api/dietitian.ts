@@ -315,7 +315,6 @@ export type DietitianCard = {
   available_dates: AvailableDate[]
   availability: string
   is_verified: number | boolean
-  is_under_offer?: boolean
 }
 
 export type DietitianListParams = {

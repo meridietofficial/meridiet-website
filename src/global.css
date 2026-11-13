@@ -19,7 +19,7 @@
   --white: #ffffff;
   --bg-main: #F8F8F4;
   --bg-soft: #EEF4E8;
-  --navbar-h: 106px;
+  --navbar-h: 74px;
 }
 
 html {
@@ -128,12 +128,4 @@ img {
   .container {
     padding: 0 20px;
   }
-}
-
-.festive-banner-mobile { display: none; }
-.festive-banner-desktop { display: block; }
-
-@media (max-width: 767px) {
-  .festive-banner-desktop { display: none; }
-  .festive-banner-mobile { display: block; }
 }

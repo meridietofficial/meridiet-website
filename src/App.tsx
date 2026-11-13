@@ -109,17 +109,6 @@ function AppInner() {
   return (
     <>
       <ScrollToTop />
-      {showNavbar && (
-        <div className="offer-ticker">
-          <div className="offer-ticker-track">
-            {[0, 1].map(i => (
-              <span key={i} className="offer-ticker-text" aria-hidden={i === 1}>
-                🎊 Biggest Festive Season Sale &nbsp;•&nbsp; <strong>₹199</strong> – 10% OFF &nbsp;•&nbsp; <strong>₹499</strong> – 20% OFF &nbsp;•&nbsp; <strong>₹999</strong> – FREE Consultation &nbsp;•&nbsp; Limited Time Only &nbsp;•&nbsp; Book Now on MeriDiet &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
       {showNavbar && <Navbar onOpenForm={openForm} />}
       {showNavbar && <div className="navbar-push" />}
       <Suspense fallback={<PageLoader />}>

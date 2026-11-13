@@ -338,17 +338,7 @@ export default function ConsultDietitian() {
               </div>
             </div> */}
 
-            {/* Slide 2 — promo banner image */}
-            <div className="cd-carousel-slide cd-carousel-slide--banner">
-              <img
-                src="/nutrition-month-banner.png"
-                alt="Nutrition Month – Expert Nutrition Consultation at ₹99"
-                className="cd-carousel-banner-img"
-                onClick={() => document.getElementById('cd-listing')?.scrollIntoView({ behavior: 'smooth' })}
-              />
-            </div>
-
-            {/* Slide 3 — banner image 2 */}
+            {/* Slide 2 — banner image 2 */}
             <div className="cd-carousel-slide cd-carousel-slide--banner">
               <img
                 src="/banner-slide-2.png"
@@ -628,7 +618,7 @@ export default function ConsultDietitian() {
               results.map(d => {
                 const avail = availabilityLabel(d.availability)
                 return (
-                <div key={d.id} className={`cd-card cd-card--clickable${d.is_under_offer ? ' cd-card--offer' : ''}`} onClick={() => navigate(`/dietitian/${d.id}/${d.full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`)}>
+                <div key={d.id} className="cd-card cd-card--clickable" onClick={() => navigate(`/dietitian/${d.id}/${d.full_name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`)}>
 
                   {/* ── Header ── */}
                   <div className="cd-card-top">
@@ -662,21 +652,10 @@ export default function ConsultDietitian() {
 
                   {/* ── Fee row ── */}
                   {(d.appointment_fee ?? 0) > 0 && (
-                    d.is_under_offer ? (
-                      <div className="cd-card-fee-row cd-card-fee-row--offer">
-                        <div className="cd-offer-badge">🏷 Nutrition Month Offer</div>
-                        <div className="cd-offer-price-row">
-                          <span className="cd-card-fee-amt">₹99</span>
-                          <span className="cd-card-fee-orig">₹{d.appointment_fee!.toLocaleString('en-IN')}</span>
-                          <span className="cd-card-fee-label">per session</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="cd-card-fee-row">
-                        <span className="cd-card-fee-amt">₹{d.appointment_fee!.toLocaleString('en-IN')}</span>
-                        <span className="cd-card-fee-label">per session <span className="cd-card-fee-followup">+ Follow Up</span></span>
-                      </div>
-                    )
+                    <div className="cd-card-fee-row">
+                      <span className="cd-card-fee-amt">₹{d.appointment_fee!.toLocaleString('en-IN')}</span>
+                      <span className="cd-card-fee-label">per session <span className="cd-card-fee-followup">+ Follow Up</span></span>
+                    </div>
                   )}
 
                   {/* ── Meta ── */}
@@ -756,7 +735,7 @@ export default function ConsultDietitian() {
       </div>
 
       {consulting && (
-        <ConsultModal dietitian={consulting} fee={consulting.is_under_offer ? 99 : (consulting.appointment_fee ?? 0)} onClose={() => setConsulting(null)} />
+        <ConsultModal dietitian={consulting} fee={consulting.appointment_fee ?? 0} onClose={() => setConsulting(null)} />
       )}
     </main>
   )

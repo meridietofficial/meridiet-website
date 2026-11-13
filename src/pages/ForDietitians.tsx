@@ -130,7 +130,7 @@ const TESTIMONIALS = [
 ]
 
 const FAQS = [
-  { q: 'What is the joining fee?', a: 'MeriDiet charges a one-time fee of ₹999 (launch offer, regular price ₹2,499) for lifetime access. No monthly fees or hidden charges.' },
+  { q: 'What is the joining fee?', a: 'MeriDiet charges a one-time fee of ₹999 for lifetime access. No monthly fees or hidden charges.' },
   { q: 'When will I receive my payouts?', a: 'Payouts are processed every week directly to your linked bank account or wallet.' },
   { q: 'Can I choose my consultation fee?', a: 'Yes, you have full control over setting your own consultation fees.' },
   { q: 'Can I work part-time?', a: 'Absolutely! You can set your own availability and work as little or as much as you want.' },
@@ -217,8 +217,7 @@ const ForDietitians = () => {
           </ul>
 
           <div className="fd-trial-chip">
-            <span className="fd-trial-chip-badge" style={{ background: '#16a34a' }}>OFFER</span>
-            <span className="fd-trial-chip-text">One-Time Fee &nbsp;·&nbsp; <s style={{ opacity: 0.6 }}>₹2,499</s> &nbsp;<strong style={{ color: '#16a34a' }}>₹999</strong> lifetime access</span>
+            <span className="fd-trial-chip-text">One-Time Fee &nbsp;·&nbsp; <strong style={{ color: '#16a34a' }}>₹999</strong> lifetime access</span>
           </div>
 
           <div className="fd-cta-row">
@@ -424,7 +423,7 @@ const ForDietitians = () => {
           <h2 className="fd-pricing-title">One-Time Fee. Lifetime Access.</h2>
           <p className="fd-pricing-sub">
             Join MeriDiet for just{' '}
-            <strong className="fd-pricing-amount-inline"><span className="fd-price-old">₹2,499</span> ₹999</strong>{' '}
+            <strong className="fd-pricing-amount-inline">₹999</strong>{' '}
             — a one-time payment that gives you lifetime access to all features. No monthly fees, no hidden charges.
           </p>
 
@@ -442,11 +441,8 @@ const ForDietitians = () => {
 
         <div className="fd-pricing-right">
           <div className="fd-plan-card">
-            <div className="fd-plan-badge" style={{ background: 'linear-gradient(90deg,#16a34a,#15803d)' }}>Launch Offer</div>
-
             {/* Pricing */}
             <div className="fd-plan-price-row" style={{ alignItems: 'baseline', gap: 10 }}>
-              <span className="fd-price-old" style={{ fontSize: 22, fontWeight: 700 }}>₹2,499</span>
               <span className="fd-plan-currency" style={{ fontSize: 22, alignSelf: 'center' }}>₹</span>
               <span className="fd-plan-amount">999</span>
             </div>
@@ -466,7 +462,7 @@ const ForDietitians = () => {
               </li>
               <li>
                 <span className="fd-plan-step-num">3</span>
-                <span><strong>Pay once</strong> — <span className="fd-price-old" style={{ fontSize: 12 }}>₹2,499</span> <strong style={{ color: '#16a34a' }}>₹999</strong> &amp; go live instantly</span>
+                <span><strong>Pay once</strong> — <strong style={{ color: '#16a34a' }}>₹999</strong> &amp; go live instantly</span>
               </li>
             </ol>
 
