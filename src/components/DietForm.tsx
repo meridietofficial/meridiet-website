@@ -876,9 +876,9 @@ const Step4 = ({ d, set, tog, err }: { d: FormData; set: SetFn; tog: ToglFn; err
 
 /* ─── Step 5 ─────────────────────────────────────────────── */
 const PLAN_OPTS = [
-  { v: '1 Week',   price: '₹199', salePrice: '₹179', icon: '⚡', desc: '7-day personalized plan',        badge: null,              offer: { code: 'FESTIVE10', label: '10% OFF',        type: 'coupon' as const } },
-  { v: '1 Month',  price: '₹499', salePrice: '₹399', icon: '👑', desc: '28-day personalized plan', badge: null /* '🔥 Most Popular' */, offer: { code: 'FESTIVE20', label: '20% OFF',        type: 'coupon' as const } },
-  { v: '3 Months', price: '₹999', salePrice: null,    icon: '📅', desc: '3 months + monthly check-ins',   badge: null /* '⭐ Best Value' */,   offer: { code: null,         label: 'FREE CONSULT', type: 'bonus'  as const } },
+  { v: '1 Week',   price: '₹199', icon: '⚡', desc: '7-day personalized plan',      badge: null },
+  { v: '1 Month',  price: '₹499', icon: '👑', desc: '28-day personalized plan',     badge: null },
+  { v: '3 Months', price: '₹999', icon: '📅', desc: '3 months + monthly check-ins', badge: null },
 ]
 
 const DELIVERY_OPTS = [
@@ -894,7 +894,6 @@ type CouponProps = {
   couponData: CouponData | null
   onApplyCoupon: () => void
   onRemoveCoupon: () => void
-  onQuickApply: (code: string) => void
 }
 
 const Step5 = ({ d, set, err, coupon }: { d: FormData; set: SetFn; err: Errors; coupon: CouponProps }) => {
@@ -951,20 +950,9 @@ const Step5 = ({ d, set, err, coupon }: { d: FormData; set: SetFn; err: Errors; 
             <span className="ct-plan-icon">{p.icon}</span>
             <strong className="ct-plan-name">{p.v}</strong>
             <div className="ct-plan-price-wrap">
-              {p.salePrice ? (
-                <>
-                  <span className="ct-plan-price-orig">{p.price}</span>
-                  <span className="ct-plan-price">{p.salePrice}</span>
-                </>
-              ) : (
-                <span className="ct-plan-price">{p.price}</span>
-              )}
+              <span className="ct-plan-price">{p.price}</span>
             </div>
             <span className="ct-plan-desc">{p.desc}</span>
-            <div className={`ct-plan-offer ct-plan-offer--${p.offer.type}`}>
-              <span className="ct-plan-offer-label">🎁 {p.offer.label}</span>
-              {p.offer.code && <span className="ct-plan-offer-code">{p.offer.code}</span>}
-            </div>
           </button>
         ))}
       </div>
@@ -990,25 +978,6 @@ const Step5 = ({ d, set, err, coupon }: { d: FormData; set: SetFn; err: Errors; 
         </div>
       ) : (
         <>
-          {(() => {
-            const planOffer = PLAN_OPTS.find(p => p.v === d.planType)?.offer
-            if (!planOffer?.code || coupon.couponCode) return null
-            return (
-              <button
-                className="ct-coupon-suggestion"
-                onClick={() => coupon.onQuickApply(planOffer.code!)}
-                disabled={coupon.couponLoading}
-              >
-                <span className="ct-coupon-suggestion-left">
-                  <i className="fa-solid fa-tag ct-coupon-suggestion-icon" />
-                  <span>Use <strong>{planOffer.code}</strong> — {planOffer.label} on this plan</span>
-                </span>
-                <span className="ct-coupon-suggestion-cta">
-                  {coupon.couponLoading ? '…' : 'Apply →'}
-                </span>
-              </button>
-            )
-          })()}
           <div className="ct-coupon-row">
             <div className="df-input-wrap" style={{ flex: 1 }}>
               <i className="df-icon fa-solid fa-tag" />
@@ -1281,13 +1250,8 @@ const SidebarMain = ({ step, planType, onSelectPlan }: { step: number; planType:
                   <p className="df-sb-plan-desc">{p.desc}</p>
                 </div>
                 <div className="df-sb-plan-price-wrap">
-                  {p.salePrice && <span className="df-sb-plan-price-orig">{p.price}</span>}
-                  <span className="df-sb-plan-price">{p.salePrice ?? p.price}</span>
+                  <span className="df-sb-plan-price">{p.price}</span>
                 </div>
-              </div>
-              <div className={`df-sb-plan-offer df-sb-plan-offer--${p.offer.type}`}>
-                <span className="df-sb-plan-offer-label">🎁 {p.offer.label}</span>
-                {p.offer.code && <span className="df-sb-plan-offer-code">{p.offer.code}</span>}
               </div>
             </button>
           )
@@ -1471,21 +1435,6 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
     setCouponData(null)
     try {
       const res = await paymentApi.validateCoupon(couponCode.trim(), data.planType)
-      setCouponData(res.data)
-    } catch (err) {
-      setCouponError(friendlyCouponError(err))
-    } finally {
-      setCouponLoading(false)
-    }
-  }
-
-  const quickApplyCoupon = async (code: string) => {
-    setCouponCode(code)
-    setCouponLoading(true)
-    setCouponError(null)
-    setCouponData(null)
-    try {
-      const res = await paymentApi.validateCoupon(code, data.planType)
       setCouponData(res.data)
     } catch (err) {
       setCouponError(friendlyCouponError(err))
@@ -1704,7 +1653,6 @@ const DietForm = ({ onClose, resumeFormId, resumeData }: {
                       couponData,
                       onApplyCoupon: applyCoupon,
                       onRemoveCoupon: () => { setCouponCode(''); setCouponData(null); setCouponError(null) },
-                      onQuickApply: quickApplyCoupon,
                     }}
                   />
                 )}

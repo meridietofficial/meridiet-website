@@ -118,7 +118,7 @@ export default function ConsultDietitian() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [heroSlide, setHeroSlide] = useState(0)
   const heroHovered = useRef(false)
-  const HERO_SLIDES = 4
+  const HERO_SLIDES = 3
 
   // Hero carousel auto-advance
   useEffect(() => {

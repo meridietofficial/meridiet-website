@@ -356,11 +356,9 @@ export default function DietitianLayout() {
             {/* Price */}
             <div className="dd-pay-price-section">
               <div className="dd-pay-price-box">
-                <div className="dd-pay-old-price-large">₹2,499</div>
                 <div className="dd-pay-price-now">
                   <span className="dd-pay-currency">₹</span><span className="dd-pay-amount">999</span>
                 </div>
-                <div className="dd-pay-savings">Save 60% — limited time offer</div>
               </div>
             </div>
 

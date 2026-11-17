@@ -2967,14 +2967,6 @@
   flex-shrink: 0;
 }
 
-.df-sb-plan-price-orig {
-  font-size: 10px;
-  font-weight: 500;
-  color: #b0b8c1;
-  text-decoration: line-through;
-  line-height: 1.3;
-}
-
 .df-sb-plan-price {
   font-size: 15px;
   font-weight: 800;
@@ -2982,45 +2974,6 @@
   line-height: 1.1;
 }
 
-/* offer strip */
-.df-sb-plan-offer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  margin-top: 8px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.df-sb-plan-offer--coupon {
-  background: #fff7ed;
-  border: 1px dashed #f97316;
-  color: #c2410c;
-}
-
-.df-sb-plan-offer--bonus {
-  background: #f0fdf4;
-  border: 1px dashed var(--green);
-  color: #15803d;
-}
-
-.df-sb-plan-offer-label {
-  flex: 1;
-}
-
-.df-sb-plan-offer-code {
-  background: #fff;
-  border: 1px solid currentColor;
-  border-radius: 4px;
-  padding: 1px 6px;
-  font-size: 9px;
-  letter-spacing: 0.5px;
-  font-family: monospace;
-  white-space: nowrap;
-}
 
 .df-sb-help {
   display: flex;
@@ -4798,56 +4751,6 @@
   margin-top: 6px;
 }
 
-/* ── Coupon code ── */
-.ct-coupon-suggestion {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  width: 100%;
-  margin-bottom: 10px;
-  padding: 10px 14px;
-  background: #fff7ed;
-  border: 1.5px dashed #f97316;
-  border-radius: 10px;
-  cursor: pointer;
-  text-align: left;
-  font-family: inherit;
-  transition: background 0.15s, border-color 0.15s;
-}
-
-.ct-coupon-suggestion:hover:not(:disabled) {
-  background: #ffedd5;
-  border-color: #ea580c;
-}
-
-.ct-coupon-suggestion:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.ct-coupon-suggestion-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #92400e;
-}
-
-.ct-coupon-suggestion-icon {
-  font-size: 14px;
-  color: #f97316;
-  flex-shrink: 0;
-}
-
-.ct-coupon-suggestion-cta {
-  font-size: 12px;
-  font-weight: 700;
-  color: #ea580c;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
 .ct-coupon-row {
   display: flex;
   gap: 8px;
@@ -5042,14 +4945,6 @@
   gap: 1px;
 }
 
-.ct-plan-price-orig {
-  font-size: 12px;
-  font-weight: 600;
-  color: #9ca3af;
-  text-decoration: line-through;
-  line-height: 1;
-}
-
 .ct-plan-price {
   font-size: 18px;
   font-weight: 800;
@@ -5062,46 +4957,6 @@
   line-height: 1.4;
 }
 
-.ct-plan-offer {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  flex-wrap: wrap;
-  margin-top: 6px;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 10px;
-  font-weight: 600;
-  width: 100%;
-}
-
-.ct-plan-offer--coupon {
-  background: #fff7ed;
-  border: 1px dashed #f97316;
-  color: #c2410c;
-}
-
-.ct-plan-offer--bonus {
-  background: #f0fdf4;
-  border: 1px dashed var(--green);
-  color: #15803d;
-}
-
-.ct-plan-offer-label {
-  white-space: nowrap;
-}
-
-.ct-plan-offer-code {
-  background: #fff;
-  border: 1px solid currentColor;
-  border-radius: 4px;
-  padding: 1px 5px;
-  font-size: 9px;
-  letter-spacing: 0.5px;
-  font-family: monospace;
-  white-space: nowrap;
-}
 
 @media (max-width: 600px) {
   .ct-delivery-grid {
@@ -17774,12 +17629,6 @@
   align-items: center;
   gap: 8px;
 }
-.dd-pay-old-price-large {
-  font-size: 18px;
-  font-weight: 600;
-  color: #9ca3af;
-  text-decoration: line-through;
-}
 .dd-pay-price-now {
   display: flex;
   align-items: baseline;
@@ -17787,13 +17636,6 @@
 }
 .dd-pay-currency { font-size: 26px; font-weight: 700; color: #1a202c; }
 .dd-pay-amount { font-size: 48px; font-weight: 900; color: #16a34a; line-height: 1; }
-.dd-pay-savings {
-  font-size: 12px;
-  font-weight: 600;
-  color: #d97706;
-  margin-top: 4px;
-}
-
 /* ── Bonus Section ── */
 .dd-pay-bonus {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
